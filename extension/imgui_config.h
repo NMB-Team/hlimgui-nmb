@@ -74,6 +74,12 @@
 #include <hl.h>
 #include "types.h"
 
+#if defined(_WIN32) && defined(_GUID)
+// HashLink defines _GUID as a primitive signature macro, which conflicts with
+// the Windows SDK's struct _GUID when Dear ImGui includes Windows.h.
+#undef _GUID
+#endif
+
 #define IM_VEC2_CLASS_EXTRA                                                 \
         ImVec2(vdynamic* dyn) { x = hl_dyn_getf(dyn, hl_hash_utf8("x")); y = hl_dyn_getf(dyn, hl_hash_utf8("y")); } \
         operator vdynamic*() const { vdynamic* vec2 = (vdynamic*)hl_alloc_dynobj(); hl_dyn_setf(vec2, hl_hash_utf8("x"), x); hl_dyn_setf(vec2, hl_hash_utf8("y"), y); return vec2; }\
