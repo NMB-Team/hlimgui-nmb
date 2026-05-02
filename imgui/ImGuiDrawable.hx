@@ -296,7 +296,7 @@ class ImGuiDrawable extends h2d.Drawable {
 			io.DisplaySize.x = scene.width;
 			io.DisplaySize.y = scene.height;
 
-			this.scene_size = {width: scene.width, height:scene.width};
+			this.scene_size = {width: scene.width, height:scene.height};
 		}
 		#if hlimgui_cursor
 		// Somewhat hacky solution to enforce a cursor: But that's what we can do.
@@ -314,8 +314,8 @@ class ImGuiDrawable extends h2d.Drawable {
 
 
 		#if multidriver
-		var x=0;
-		var y=0;
+		var x = 0;
+		var y = 0;
 		sdl.Sdl.getGlobalMouseState(x, y);
 		io.addMousePosEvent( x, y );
 		#end

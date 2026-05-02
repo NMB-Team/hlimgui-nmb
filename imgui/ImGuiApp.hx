@@ -102,7 +102,7 @@ class ImGuiApp extends hxd.App {
 			@:privateAccess
 			{
 				#if hldx
-				var w = new hxd.Window("ImGui Viewport", 100,100,false);
+				var w = new hxd.Window("ImGui Viewport", 100, 100, { fixed: false });
 				var e = new h3d.Engine();
 				e.window = w;
 				var d3dDriver = new DirectXDriver();
@@ -113,8 +113,8 @@ class ImGuiApp extends hxd.App {
 				#elseif hlsdl
 
 				var mainWindow = hxd.Window.inst;
-				var w = new hxd.Window("ImGui Viewport", 100,100,false);
-				w.displayMode = Borderless;
+				var w = new hxd.Window("ImGui Viewport", 100, 100, { fixed: false });
+				w.displayMode = hxd.Window.DisplayMode.Borderless;
 				var e = h3d.Engine.getCurrent();
 				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
 				w.vsync = false;
@@ -170,25 +170,22 @@ class ImGuiApp extends hxd.App {
 
 			@:privateAccess
 			{
+				var w = v.PlatformHandle;
 				#if hlsdl
 				// !! HACK !!
 				// We stored off glctx so we could restore it here and destroy it when the window
 				// is destroyed. We need to do this so we don't accidentally destoy our main
 				// ctx, these are just junk contexts we created because heaps does it automatically
-				v.PlatformHandle.window.glctx = cast v.PlatformHandleRaw;
+				if( w != null )
+					w.window.glctx = cast v.PlatformHandleRaw;
 				#end
 
-				var w = v.PlatformHandle;
 				if( w != null )
 					w.close();
 
-				// !! HACK !!
-				// Add the window back to the list and pump events. This lets us
-				// catch the close-specific events SDL sends that will do bookkeeping
-				// on key release/etc.
-				hxd.Window.WINDOWS.push(w);
-				sdl.Sdl.processEvents(@:privateAccess hxd.Window.dispatchEvent);
-				hxd.Window.WINDOWS.remove(w);
+				// Avoid pumping SDL events from inside an ImGui destroy callback.
+				// In multidriver mode that can re-enter Heaps window routing while
+				// the viewport window is only partially torn down.
 
 				v.RendererUserData = null;
 				v.PlatformUserData = null;
@@ -199,11 +196,15 @@ class ImGuiApp extends hxd.App {
 
 		pio.Platform_ShowWindow = ( v: ImGuiViewport ) -> {
 			#if hlsdl
-			@:privateAccess v.PlatformHandle.window.visible = true;
+			if( v.PlatformHandle != null )
+				@:privateAccess v.PlatformHandle.window.visible = true;
 			#end
 		};
 
 		pio.Platform_SetWindowPos =  ( v: ImGuiViewport, size: ImVec2 ) -> {
+			if( v.PlatformHandle == null )
+				return;
+
 			#if hldx
 			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
 			w.setPosition( cast size.x, cast size.y );
@@ -216,11 +217,19 @@ class ImGuiApp extends hxd.App {
 			#if hlsdl
 			@:privateAccess
 			{
-				var x = 0;
-				var y = 0;
-				sdl.Window.winGetPosition( v.PlatformHandle.window.win, x, y );
-				pos.x = cast x;
-				pos.y = cast y;
+				if( v.PlatformHandle != null )
+				{
+					var x = 0;
+					var y = 0;
+					sdl.Window.winGetPosition( v.PlatformHandle.window.win, x, y );
+					pos.x = cast x;
+					pos.y = cast y;
+				}
+				else
+				{
+					pos.x = v.Pos.x;
+					pos.y = v.Pos.y;
+				}
 			}
 			#else
 			pos.x = 0;
@@ -229,6 +238,9 @@ class ImGuiApp extends hxd.App {
 		};
 
 		pio.Platform_SetWindowSize = ( v: ImGuiViewport, size: ImVec2 ) -> {
+			if( v.PlatformHandle == null )
+				return;
+
 			if( v.PlatformHandle.width == size.x && v.PlatformHandle.height == size.y )
 				return;
 
@@ -242,6 +254,11 @@ class ImGuiApp extends hxd.App {
 				size.x = window.width;
 				size.y = window.height;
 			}
+			else
+			{
+				size.x = v.Size.x;
+				size.y = v.Size.y;
+			}
 		};
 
 		pio.Platform_SetWindowFocus = ( v: ImGuiViewport ) -> {
@@ -249,7 +266,7 @@ class ImGuiApp extends hxd.App {
 		};
 
 		pio.Platform_GetWindowFocus = ( v: ImGuiViewport ) -> {
-			return v.PlatformHandle.isFocused;
+			return v.PlatformHandle != null && v.PlatformHandle.isFocused;
 		};
 
 		pio.Platform_GetWindowMinimized = ( v: ImGuiViewport ) -> {
@@ -257,13 +274,17 @@ class ImGuiApp extends hxd.App {
 		};
 
 		pio.Platform_SetWindowTitle = ( v: ImGuiViewport, title: hl.Bytes ) -> {
+			if( v.PlatformHandle == null )
+				return;
+
 			var str = @:privateAccess String.fromUTF8( title );
 			v.PlatformHandle.title = str;
 		};
 
 		pio.Platform_SetWindowAlpha = ( v: ImGuiViewport, alpha: Single ) -> {
 			#if hlsdl
-			@:privateAccess v.PlatformHandle.window.opacity = alpha;
+			if( v.PlatformHandle != null )
+				@:privateAccess v.PlatformHandle.window.opacity = alpha;
 			#end
 		};
 
@@ -286,7 +307,8 @@ class ImGuiApp extends hxd.App {
 			{
 				var oldW = e.width;
 				var oldH = e.height;
-
+				var oldSceneWidth = s2d.width;
+				var oldSceneHeight = s2d.height;
 				var oldScaleMode = s2d.scaleMode;
 
 				e.window = w;
@@ -298,9 +320,13 @@ class ImGuiApp extends hxd.App {
 				s2d.width = w.width;
 				s2d.height = w.height;
 				s2d.scaleMode = Fixed(w.width, w.height, 1);
+				if ((v.Flags & ImGuiViewportFlags.NoRendererClear) == 0) {
+					e.setRenderZone();
+					e.clear(e.backgroundColor == null ? 0 : e.backgroundColor, 1, 0);
+				}
 				s2d.render( e );
-				s2d.width = oldW;
-				s2d.height = oldH;
+				s2d.width = oldSceneWidth;
+				s2d.height = oldSceneHeight;
 
 				//w.window.present();
 
@@ -315,6 +341,9 @@ class ImGuiApp extends hxd.App {
 
 
 		pio.Renderer_SwapBuffers =  ( v: ImGuiViewport, arg: Dynamic ) -> {
+			if( !v.PlatformWindowCreated || v.PlatformHandle == null )
+				return;
+
 			var oldWin = hxd.Window.getInstance();
 			var w = v.PlatformHandle;
 			w.setCurrent();

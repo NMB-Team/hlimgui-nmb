@@ -68,7 +68,7 @@ Here is a list of unsupported features and changes:
 ImGui viewports are implemented with a mostly identical API, with a few minor exceptions. The default heaps base includes built-in support when using `-D multidriver`, else it can be used as a reference implementation.
 
 #### Wayland specific quirks
-Viewports do not (and may never) work in wayland due to it's lack of support for setting window size/position. You may be able to work around this by setting `sdl.Sdl.setHint("SDL_VIDEODRIVER", "x11");`, in environments that support XWayland. There are still bugs here but it should be *usable*.
+Viewports do not (and may never) work in wayland due to it's lack of support for setting window size/position. You may be able to work around this by setting `sdl.Sdl.setHint("SDL_VIDEO_DRIVER", "x11");`, in environments that support XWayland. There are still bugs here but it should be *usable*.
 
 ## References
 Input functions often take a `Ref<T>` / `imgui.FieldRef<T>` argument.

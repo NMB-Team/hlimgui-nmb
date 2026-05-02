@@ -841,7 +841,7 @@ typedef ImGuiID = Int;
 
 	public inline function setColor(colWAlpha: Int): ImVec4
 	{
-		return set(((colWAlpha) & 0xff) / 0xff, ((colWAlpha >> 8) & 0xff) / 0xff, ((colWAlpha >> 16) & 0xff) / 0xff, ((colWAlpha >> 24) & 0xff) / 0xff);
+		return set(((colWAlpha >> 16) & 0xff) / 0xff, ((colWAlpha >> 8) & 0xff) / 0xff, ((colWAlpha) & 0xff) / 0xff, ((colWAlpha >> 24) & 0xff) / 0xff);
 	}
 
 	public inline function setColorRGB(col: Int, alpha: Float = 1.0): ImVec4
@@ -1468,14 +1468,17 @@ typedef ImGuiDockNode = imgui.types.ImGuiDockNode;
 	public var Flags: ImGuiViewportFlags;
 	@:flatten public var Pos: ImVec2S;
 	@:flatten public var Size: ImVec2S;
+	@:flatten public var FramebufferScale: ImVec2S;
 	@:flatten public var WorkPos: ImVec2S;
 	@:flatten public var WorkSize: ImVec2S;
 	public var DpiScale: Single;
 	public var ParentViewportId: ImGuiID;
+	@:noCompletion public var ParentViewport: hl.Bytes; // ImGuiViewport*
 	@:noCompletion public var DrawData: hl.Bytes; // ImDrawData*
 
 	@:noCompletion public var RendererUserData: hl.Bytes; // void*
 	public var PlatformUserData: h3d.Engine; // void*
+	@:noCompletion public var PlatformIconData: hl.Bytes; // void*
 	public var PlatformHandle: hxd.Window; // void*
 	@:noCompletion public var PlatformHandleRaw: Dynamic; // void*
 
