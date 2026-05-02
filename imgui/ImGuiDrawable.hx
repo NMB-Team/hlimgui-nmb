@@ -289,7 +289,7 @@ class ImGuiDrawable extends h2d.Drawable {
 	public function update(dt:Float) {
 		var io = ImGui.getIO();
 
-		io.DeltaTime = dt;
+		io.DeltaTime = dt > 0 ? dt : 1 / 60;
 
 		var scene = getScene();
 		if (scene.width != this.scene_size.width || scene.height != this.scene_size.height) {

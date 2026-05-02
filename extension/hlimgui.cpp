@@ -204,6 +204,9 @@ HL_PRIM void HL_NAME(set_display_size)(int display_width, int display_height)
 
 HL_PRIM void HL_NAME(new_frame)()
 {
+	ImGuiIO& io = ImGui::GetIO();
+	if (io.DeltaTime <= 0.0f)
+		io.DeltaTime = 1.0f / 60.0f;
 	ImGui::NewFrame();
 }
 
