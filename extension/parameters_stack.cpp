@@ -92,12 +92,12 @@ HL_PRIM void HL_NAME(pop_text_wrap_pos)()
 
 HL_PRIM void HL_NAME(push_allow_keyboard_focus)(bool allow_keyboard_focus)
 {
-	ImGui::PushAllowKeyboardFocus(allow_keyboard_focus);
+	ImGui::PushTabStop(allow_keyboard_focus);
 }
 
 HL_PRIM void HL_NAME(pop_allow_keyboard_focus)()
 {
-	ImGui::PopAllowKeyboardFocus();
+	ImGui::PopTabStop();
 }
 
 HL_PRIM void HL_NAME(push_button_repeat)(bool repeat)

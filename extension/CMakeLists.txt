@@ -5,9 +5,94 @@ set(TARGET_EXT .hdll)
 
 project(${TARGET_NAME})
 
+set(HASHLINK_ROOT_CANDIDATES "")
+foreach(HASHLINK_ENV_NAME HASHLINK_BIN HASHLINK_PATH HASHLINKPATH)
+    if(DEFINED ENV{${HASHLINK_ENV_NAME}} AND NOT "$ENV{${HASHLINK_ENV_NAME}}" STREQUAL "")
+        list(APPEND HASHLINK_ROOT_CANDIDATES "$ENV{${HASHLINK_ENV_NAME}}")
+    endif()
+endforeach()
+
+list(APPEND HASHLINK_ROOT_CANDIDATES
+    "C:/HaxeToolkit/hashlink"
+    "C:/HashLink"
+    "/usr/local"
+    "/opt/homebrew"
+    "/opt/hashlink"
+)
+
+find_program(HASHLINK_EXECUTABLE
+    NAMES hl hl.exe
+    HINTS ${HASHLINK_ROOT_CANDIDATES}
+    PATH_SUFFIXES "" bin
+)
+
+if(HASHLINK_EXECUTABLE)
+    get_filename_component(HASHLINK_EXECUTABLE_DIR "${HASHLINK_EXECUTABLE}" DIRECTORY)
+    get_filename_component(HASHLINK_EXECUTABLE_PARENT "${HASHLINK_EXECUTABLE_DIR}" DIRECTORY)
+    list(APPEND HASHLINK_ROOT_CANDIDATES "${HASHLINK_EXECUTABLE_DIR}" "${HASHLINK_EXECUTABLE_PARENT}")
+endif()
+
+find_path(HASHLINK_INCLUDE_DIR
+    NAMES hl.h
+    HINTS ${HASHLINK_ROOT_CANDIDATES}
+    PATH_SUFFIXES include
+)
+
+find_library(HASHLINK_LIBRARY
+    NAMES libhl hl
+    HINTS ${HASHLINK_ROOT_CANDIDATES}
+    PATH_SUFFIXES "" lib
+)
+
+if(NOT HASHLINK_INCLUDE_DIR OR NOT HASHLINK_LIBRARY)
+    message(FATAL_ERROR "Could not locate HashLink. Set HASHLINK_BIN, HASHLINK_PATH, HASHLINKPATH, or make hl available in PATH.")
+endif()
+
+message(STATUS "Using HashLink include: ${HASHLINK_INCLUDE_DIR}")
+message(STATUS "Using HashLink library: ${HASHLINK_LIBRARY}")
+
 option(NODE_EDITOR "Include imgui-node-editor (required to use NodeEditor.hx)" ON)
 option(NEO_SEQUENCER "Include imgui-neo_sequencer (required to use NeoSequencer.hx). DEPRECATED." OFF)
 option(MARKDOWN "Include markdown support (required to use Imgui.TextMarkdown)" ON)
+
+if( NODE_EDITOR )
+    set(IMGUI_NODE_EDITOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/imgui-node-editor")
+    set(IMGUI_NODE_EDITOR_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/patches/imgui-node-editor-imgui-1.92.patch")
+    find_package(Git QUIET)
+
+    if(NOT GIT_FOUND)
+        message(FATAL_ERROR "Git is required to apply the imgui-node-editor compatibility patch.")
+    endif()
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} apply --check --ignore-whitespace "${IMGUI_NODE_EDITOR_PATCH}"
+        WORKING_DIRECTORY "${IMGUI_NODE_EDITOR_DIR}"
+        RESULT_VARIABLE IMGUI_NODE_EDITOR_PATCH_CHECK
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+    if(IMGUI_NODE_EDITOR_PATCH_CHECK EQUAL 0)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} apply --ignore-whitespace "${IMGUI_NODE_EDITOR_PATCH}"
+            WORKING_DIRECTORY "${IMGUI_NODE_EDITOR_DIR}"
+            RESULT_VARIABLE IMGUI_NODE_EDITOR_PATCH_APPLY
+        )
+        if(NOT IMGUI_NODE_EDITOR_PATCH_APPLY EQUAL 0)
+            message(FATAL_ERROR "Failed to apply imgui-node-editor compatibility patch.")
+        endif()
+    else()
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} apply --reverse --check --ignore-whitespace "${IMGUI_NODE_EDITOR_PATCH}"
+            WORKING_DIRECTORY "${IMGUI_NODE_EDITOR_DIR}"
+            RESULT_VARIABLE IMGUI_NODE_EDITOR_PATCH_REVERSE_CHECK
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+        if(NOT IMGUI_NODE_EDITOR_PATCH_REVERSE_CHECK EQUAL 0)
+            message(FATAL_ERROR "imgui-node-editor compatibility patch is neither applicable nor already applied.")
+        endif()
+    endif()
+endif()
 
 file(GLOB SOURCES "*.cpp")
 file(GLOB IMGUI_SOURCES "lib/imgui/*.cpp")
@@ -48,17 +133,12 @@ set_target_properties(${TARGET_NAME}${TARGET_EXT}
     SUFFIX ${TARGET_EXT}
 )
 
-IF (WIN32)
-target_include_directories(${TARGET_NAME}${TARGET_EXT} PUBLIC $ENV{HASHLINKPATH}/include lib/imgui/ )
-target_link_libraries(${TARGET_NAME}${TARGET_EXT} $ENV{HASHLINKPATH}/libhl.lib)
-ELSEIF (APPLE)
+target_include_directories(${TARGET_NAME}${TARGET_EXT} PUBLIC ${HASHLINK_INCLUDE_DIR} lib/imgui/ )
+target_link_libraries(${TARGET_NAME}${TARGET_EXT} ${HASHLINK_LIBRARY})
+
+IF (APPLE)
 find_library(APPLICATION_SERVICES_FRAMEWORK ApplicationServices REQUIRED)
-set(HLPATH /usr/local)
-target_include_directories(${TARGET_NAME}${TARGET_EXT} PUBLIC ${HLPATH}/include lib/imgui/)
-target_link_libraries(${TARGET_NAME}${TARGET_EXT} ${HLPATH}/lib/libhl.dylib ${APPLICATION_SERVICES_FRAMEWORK})
-ELSE()
-target_include_directories(${TARGET_NAME}${TARGET_EXT} PUBLIC $ENV{HASHLINKPATH}/include lib/imgui/ )
-target_link_libraries(${TARGET_NAME}${TARGET_EXT} $ENV{HASHLINKPATH}/libhl.so)
+target_link_libraries(${TARGET_NAME}${TARGET_EXT} ${APPLICATION_SERVICES_FRAMEWORK})
 ENDIF()
 
 add_custom_command(TARGET ${TARGET_NAME}${TARGET_EXT} POST_BUILD

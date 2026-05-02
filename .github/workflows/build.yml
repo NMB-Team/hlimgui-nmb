@@ -27,11 +27,6 @@ jobs:
         with:
           arch: x64
 
-      - name: Set up Haxe
-        uses: krdlab/setup-haxe@v2.0.2
-        with:
-          haxe-version: 4.3.7
-
       - name: Install NMB HashLink
         env:
           GH_TOKEN: ${{ github.token }}

@@ -38,7 +38,7 @@ class ImGuiDrawableBuffers {
 		ImGui.setRenderCallback(renderDrawList);
 
 		var io = ImGui.getIO();
-		var fonts = io.Fonts;
+		var fonts = ImGui.getFontAtlas();
 
 		if( addDefaultFont )
 		{

@@ -12,7 +12,7 @@ HL_PRIM void HL_NAME(show_metrics_window)(bool* p_open)
 
 HL_PRIM void HL_NAME(show_stack_tool_window)(bool* p_open)
 {
-	ImGui:: ShowStackToolWindow(p_open);
+	ImGui::ShowIDStackToolWindow(p_open);
 }
 
 HL_PRIM void HL_NAME(show_about_window)(bool* p_open)

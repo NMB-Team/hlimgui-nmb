@@ -22,7 +22,7 @@ HL_PRIM vimvec2* HL_NAME(get_window_content_region_max)()
 
 HL_PRIM float HL_NAME(get_window_content_region_width)()
 {
-	return ImGui::GetWindowContentRegionWidth();
+	return ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x;
 }
 
 DEFINE_PRIM(_IMVEC2, get_content_region_max, _NO_ARG);

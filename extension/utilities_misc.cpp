@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "lib/imgui/imgui_internal.h"
 
 HL_PRIM bool HL_NAME(is_rect_visible)(vimvec2* size)
 {
@@ -27,17 +28,38 @@ HL_PRIM vbyte* HL_NAME(get_style_color_name)(ImGuiCol idx)
 
 HL_PRIM void HL_NAME(calc_list_clipping)(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end)
 {
-    return ImGui::CalcListClipping(items_count, items_height, out_items_display_start, out_items_display_end);
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+    if (g.LogEnabled)
+    {
+        *out_items_display_start = 0;
+        *out_items_display_end = items_count;
+        return;
+    }
+    if (window->SkipItems)
+    {
+        *out_items_display_start = *out_items_display_end = 0;
+        return;
+    }
+
+    ImRect rect = window->ClipRect;
+    const ImVec2 pos = window->DC.CursorPos;
+    int start = (int)((rect.Min.y - pos.y) / items_height);
+    int end = (int)((rect.Max.y - pos.y) / items_height);
+    start = ImClamp(start, 0, items_count);
+    end = ImClamp(end + 1, start, items_count);
+    *out_items_display_start = start;
+    *out_items_display_end = end;
 }
 
 HL_PRIM bool HL_NAME(begin_child_frame)(ImGuiID id, vimvec2* size, ImGuiWindowFlags* flags)
 {
-    return ImGui::BeginChildFrame(id, getImVec2(size), convertPtr(flags, 0));
+    return ImGui::BeginChild(id, getImVec2(size), ImGuiChildFlags_FrameStyle, convertPtr(flags, 0));
 }
 
 HL_PRIM void HL_NAME(end_child_frame)()
 {
-    ImGui::EndChildFrame();
+    ImGui::EndChild();
 }
 
 HL_PRIM void HL_NAME(begin_disabled)(bool disabled) {
@@ -139,7 +161,7 @@ HL_PRIM bool CL_NAME(step)(hl_list_clipper* c)
 
 HL_PRIM void CL_NAME(force_display_range_by_indices)(hl_list_clipper* c, int item_min, int item_max)
 {
-    return c->clipper.ForceDisplayRangeByIndices(item_min, item_max);
+    c->clipper.IncludeItemsByIndex(item_min, item_max);
 }
 
 DEFINE_PRIM(_STRUCT, imlistclipper_init, _NO_ARG);

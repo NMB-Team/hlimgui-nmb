@@ -83,7 +83,7 @@ HL_PRIM vimvec2* HL_NAME(get_item_rect_size)()
 
 HL_PRIM void HL_NAME(set_item_allow_overlap)()
 {
-    ImGui::SetItemAllowOverlap();
+    ImGui::SetNextItemAllowOverlap();
 }
 
 HL_PRIM void HL_NAME(set_key_owner)( ImGuiKey key, ImGuiID owner_id, ImGuiInputFlags* flags )

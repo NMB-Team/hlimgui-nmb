@@ -23,7 +23,9 @@ HL_PRIM bool HL_NAME(begin_list_box)(vstring* label, vimvec2* size)
 
 HL_PRIM bool HL_NAME(list_box_header2)(vstring* label, int items_count, int* height_in_items)
 {
-    return ImGui::ListBoxHeader(convertString(label), items_count, convertPtr(height_in_items, -1));
+    int height_items = convertPtr(height_in_items, -1);
+    float height = ImGui::GetTextLineHeightWithSpacing() * ((height_items < 0 ? (items_count < 7 ? items_count : 7) : height_items) + 0.25f) + ImGui::GetStyle().FramePadding.y * 2.0f;
+    return ImGui::BeginListBox(convertString(label), ImVec2(0.0f, height));
 }
 
 HL_PRIM void HL_NAME(end_list_box)()

@@ -2,7 +2,7 @@
 
 HL_PRIM int HL_NAME(get_key_index)(ImGuiKey imgui_key)
 {
-    return ImGui::GetKeyIndex(imgui_key);
+    return imgui_key;
 }
 
 HL_PRIM bool HL_NAME(is_key_down)(ImGuiKey user_key_index)
@@ -27,7 +27,7 @@ HL_PRIM int HL_NAME(get_key_pressed_amount)(ImGuiKey key_index, float repeat_del
 
 HL_PRIM void HL_NAME(capture_keyboard_from_app)(bool* want_capture_keyboard_value)
 {
-    ImGui::CaptureKeyboardFromApp(convertPtr(want_capture_keyboard_value, true));
+    ImGui::SetNextFrameWantCaptureKeyboard(convertPtr(want_capture_keyboard_value, true));
 }
 
 DEFINE_PRIM(_I32, get_key_index, _I32);

@@ -1,0 +1,64 @@
+diff --git a/imgui_extra_math.h b/imgui_extra_math.h
+index 3df615a..86c5360 100644
+--- a/imgui_extra_math.h
++++ b/imgui_extra_math.h
+@@ -34,7 +34,9 @@ struct ImLine
+ inline bool operator==(const ImVec2& lhs, const ImVec2& rhs);
+ inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs);
+ # endif
++# if IMGUI_VERSION_NUM < 19270
+ inline ImVec2 operator*(const float lhs, const ImVec2& rhs);
++# endif
+ # if IMGUI_VERSION_NUM < 18955
+ inline ImVec2 operator-(const ImVec2& lhs);
+ # endif
+diff --git a/imgui_extra_math.inl b/imgui_extra_math.inl
+index 8e2347f..0ce243c 100644
+--- a/imgui_extra_math.inl
++++ b/imgui_extra_math.inl
+@@ -31,10 +31,12 @@ inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs)
+ }
+ # endif
+ 
++# if IMGUI_VERSION_NUM < 19270
+ inline ImVec2 operator*(const float lhs, const ImVec2& rhs)
+ {
+     return ImVec2(lhs * rhs.x, lhs * rhs.y);
+ }
++# endif
+ 
+ # if IMGUI_VERSION_NUM < 18955
+ inline ImVec2 operator-(const ImVec2& lhs)
+diff --git a/imgui_node_editor.cpp b/imgui_node_editor.cpp
+index 3ca9eb3..639f8a2 100644
+--- a/imgui_node_editor.cpp
++++ b/imgui_node_editor.cpp
+@@ -4410,15 +4410,15 @@ ed::EditorAction::AcceptResult ed::ShortcutAction::Accept(const Control& control
+     Action candidateAction = None;
+ 
+     auto& io = ImGui::GetIO();
+-    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_X)))
++    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_X))
+         candidateAction = Cut;
+-    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
++    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_C))
+         candidateAction = Copy;
+-    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_V)))
++    if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_V))
+         candidateAction = Paste;
+     if (io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(GetKeyIndexForD()))
+         candidateAction = Duplicate;
+-    if (!io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Space)))
++    if (!io.KeyCtrl && !io.KeyShift && !io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_Space))
+         candidateAction = CreateNode;
+ 
+     if (candidateAction != None)
+@@ -4972,7 +4972,7 @@ ed::EditorAction::AcceptResult ed::DeleteItemsAction::Accept(const Control& cont
+         return False;
+ 
+     auto& io = ImGui::GetIO();
+-    if (Editor->CanAcceptUserInput() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)) && Editor->AreShortcutsEnabled())
++    if (Editor->CanAcceptUserInput() && ImGui::IsKeyPressed(ImGuiKey_Delete) && Editor->AreShortcutsEnabled())
+     {
+         auto& selection = Editor->GetSelectedObjects();
+         if (!selection.empty())

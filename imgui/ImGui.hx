@@ -980,11 +980,15 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 @:build(imgui._ImGuiInternalMacro.buildFlatStruct())
 @:hlNative("hlimgui")
 @:struct class ImGuiStyle {
+	var FontSizeBase: Single;
+	var FontScaleMain: Single;
+	var FontScaleDpi: Single;
 	var Alpha: Single;                      // Global alpha applies to everything in Dear ImGui.
 	var DisabledAlpha: Single;              // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
 	@:flatten var WindowPadding: ImVec2S;              // Padding within a window.
 	var WindowRounding: Single;             // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
 	var WindowBorderSize: Single;           // Thickness of border around windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
+	var WindowBorderHoverPadding: Single;
 	@:flatten var WindowMinSize: ImVec2S;              // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
 	@:flatten var WindowTitleAlign: ImVec2S;           // Alignment for title bar text. Defaults to (0.0f,0.5f) for left-aligned,vertically centered.
 	var WindowMenuButtonPosition: ImGuiDir;   // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
@@ -1003,20 +1007,40 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var ColumnsMinSpacing: Single;          // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
 	var ScrollbarSize: Single;              // Width of the vertical scrollbar, Height of the horizontal scrollbar.
 	var ScrollbarRounding: Single;          // Radius of grab corners for scrollbar.
+	var ScrollbarPadding: Single;
 	var GrabMinSize: Single;                // Minimum width/height of a grab box for slider/scrollbar.
 	var GrabRounding: Single;               // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
 	var LogSliderDeadzone: Single;          // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
+	var ImageRounding: Single;
+	var ImageBorderSize: Single;
 	var TabRounding: Single;                // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
 	var TabBorderSize: Single;              // Thickness of border around tabs.
-	var TabMinWidthForCloseButton: Single;  // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
+	var TabMinWidthBase: Single;
+	var TabMinWidthShrink: Single;
+	var TabCloseButtonMinWidthSelected: Single;
+	var TabCloseButtonMinWidthUnselected: Single;
+	var TabBarBorderSize: Single;
+	var TabBarOverlineSize: Single;
+	var TableAngledHeadersAngle: Single;
+	@:flatten var TableAngledHeadersTextAlign: ImVec2S;
+	var TreeLinesFlags: ImGuiTreeNodeFlags;
+	var TreeLinesSize: Single;
+	var TreeLinesRounding: Single;
+	var DragDropTargetRounding: Single;
+	var DragDropTargetBorderSize: Single;
+	var DragDropTargetPadding: Single;
+	var ColorMarkerSize: Single;
 	var ColorButtonPosition: ImGuiDir;        // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
 	@:flatten var ButtonTextAlign: ImVec2S;            // Alignment of button text when button is larger than text. Defaults to (0.5f, 0.5f) (centered).
 	@:flatten var SelectableTextAlign: ImVec2S;        // Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+	var SeparatorSize: Single;
 	var SeparatorTextBorderSize: Single;				// Alignment of button text when button is larger than text.
 	@:flatten var SeparatorTextAlign: ImVec2S;// Alignment of text within the separator. Defaults to (0.0f, 0.5f) (left aligned, center).
     @:flatten var SeparatorTextPadding: ImVec2S;// Horizontal offset of text from each edge of the separator + spacing on other axis. Generally small values. .y is recommended to be == FramePadding.y.
 	@:flatten var DisplayWindowPadding: ImVec2S;       // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
 	@:flatten var DisplaySafeAreaPadding: ImVec2S;     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
+	var DockingNodeHasCloseButton: Bool;
+	var DockingSeparatorSize: Single;
 	var MouseCursorScale: Single;           // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
 	var AntiAliasedLines: Bool;           // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
 	var AntiAliasedLinesUseTex: Bool;     // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering. Latched at the beginning of the frame (copied to ImDrawList).
@@ -1024,6 +1048,13 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var CurveTessellationTol: Single;       // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
 	var CircleTessellationMaxError: Single; // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 	@:flattenMap(ImGuiCol) var Colors : ImVec4S;
+	var HoverStationaryDelay: Single;
+	var HoverDelayShort: Single;
+	var HoverDelayNormal: Single;
+	var HoverFlagsForTooltipMouse: ImGuiHoveredFlags;
+	var HoverFlagsForTooltipNav: ImGuiHoveredFlags;
+	@:noCompletion var _MainScale: Single;
+	@:noCompletion var _NextFrameFontSizeBase: Single;
 
 	public function new() {
 		// Match allocation via C: Set default values andn use default colors.
@@ -1061,27 +1092,29 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigFlags: ImGuiConfigFlags;
 	var BackendFlags: ImGuiBackendFlags;
 	@:flatten var DisplaySize: ImVec2S;
+	@:flatten var DisplayFramebufferScale: ImVec2S;
 	var DeltaTime: Single;
 	var IniSavingRate: Single;
 	var IniFilemame: hl.Bytes;
 	var LogFilename: hl.Bytes;
-	var MouseDoubleClickTime: Single;
-	var MouseDoubleClickMaxDist: Single;
-	var MouseDragThreshold: Single;
-	var KeyRepeatDelay: Single;
-	var KeyRepeatRate: Single;
-	var HoverDelayNormal: Single;
-	var HoverDelayShort: Single;
 	var UserData: hl.Bytes;
 
 	var Fonts: ImFontAtlas;
-	var FontGlobalScale: Single;
-	var FontAllowUserScaling: Bool;
 	var FontDefault: ImFont;
-	@:flatten var DisplayFramebufferScale: ImVec2S;
+	var FontAllowUserScaling: Bool;
+
+	// Keyboard/Gamepad Navigation options
+	var ConfigNavSwapGamepadButtons: Bool;
+	var ConfigNavMoveSetMousePos: Bool;
+	var ConfigNavCaptureKeyboard: Bool;
+	var ConfigNavEscapeClearFocusItem: Bool;
+	var ConfigNavEscapeClearFocusWindow: Bool;
+	var ConfigNavCursorVisibleAuto: Bool;
+	var ConfigNavCursorVisibleAlways: Bool;
 
 	// Docking options (when ImGuiConfigFlags_DockingEnable is set)
 	var ConfigDockingNoSplit: Bool;
+	var ConfigDockingNoDockingOver: Bool;
 	var ConfigDockingWithShift: Bool;
 	var ConfigDockingAlwaysTabBar: Bool;
 	var ConfigDockingTransparentPayload: Bool;
@@ -1091,6 +1124,11 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigViewportsNoTaskBarIcon: Bool;
 	var ConfigViewportsNoDecoration: Bool;
 	var ConfigViewportsNoDefaultParent: Bool;
+	var ConfigViewportsPlatformFocusSetsImGuiFocus: Bool;
+
+	// DPI/Scaling options
+	var ConfigDpiScaleFonts: Bool;
+	var ConfigDpiScaleViewports: Bool;
 
 	// Miscellaneous options
 	var MouseDrawCursor: Bool;
@@ -1101,7 +1139,29 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigDragClickToInputText: Bool;
 	var ConfigWindowsResizeFromEdges: Bool;
 	var ConfigWindowsMoveFromTitleBarOnly: Bool;
+	var ConfigWindowsCopyContentsWithCtrlC: Bool;
+	var ConfigScrollbarScrollByPage: Bool;
 	var ConfigMemoryCompactTimer: Single;
+
+	// Inputs Behaviors
+	var MouseDoubleClickTime: Single;
+	var MouseDoubleClickMaxDist: Single;
+	var MouseDragThreshold: Single;
+	var KeyRepeatDelay: Single;
+	var KeyRepeatRate: Single;
+
+	// Debug options
+	var ConfigErrorRecovery: Bool;
+	var ConfigErrorRecoveryEnableAssert: Bool;
+	var ConfigErrorRecoveryEnableDebugLog: Bool;
+	var ConfigErrorRecoveryEnableTooltip: Bool;
+	var ConfigDebugIsDebuggerPresent: Bool;
+	var ConfigDebugHighlightIdConflicts: Bool;
+	var ConfigDebugHighlightIdConflictsShowItemPicker: Bool;
+	var ConfigDebugBeginReturnValueOnce: Bool;
+	var ConfigDebugBeginReturnValueLoop: Bool;
+	var ConfigDebugIgnoreFocusLoss: Bool;
+	var ConfigDebugIniSettings: Bool;
 
 	//------------------------------------------------------------------
     // Platform Functions
@@ -1112,17 +1172,6 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var BackendPlatformUserData: hl.Bytes;
 	var BackendRendererUserData: hl.Bytes;
 	var BackendLanguageUserData: hl.Bytes;
-
-	// Optional: Access OS clipboard
-    // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
-    @:noCompletion var GetClipboardTextFn: hl.Bytes;
-    @:noCompletion var SetClipboardTextFn: hl.Bytes;
-    var ClipboardUserData: hl.Bytes;
-
-	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
-    // (default to use native imm32 api on Windows)
-	@:noCompletion var SetPlatformImeDataFn: hl.Bytes;
-	@:noCompletion var _UnusedPadding: hl.Bytes;
 
     //------------------------------------------------------------------
     // Input - Call before calling NewFrame()
@@ -1178,12 +1227,11 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
     var NavActive: Bool;                          // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
     var NavVisible: Bool;                         // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
     var Framerate: Single;                        // Estimate of application framerate (rolling average over 60 frames, based on io.DeltaTime), in frame per second. Solely for convenience. Slow applications may not want to use a moving average or may want to reset underlying buffers occasionally.
-    var MetricsRenderVertices: Int;               // Vertices output during last call to Render()
-    var MetricsRenderIndices: Int;                // Indices output during last call to Render() = number of triangles * 3
-    var MetricsRenderWindows: Int;                // Number of visible windows
-    var MetricsActiveWindows: Int;                // Number of active windows
-    var MetricsActiveAllocations: Int;            // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-    @:flatten var MouseDelta: ImVec2S;            // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
+	var MetricsRenderVertices: Int;               // Vertices output during last call to Render()
+	var MetricsRenderIndices: Int;                // Indices output during last call to Render() = number of triangles * 3
+	var MetricsRenderWindows: Int;                // Number of visible windows
+	var MetricsActiveWindows: Int;                // Number of active windows
+	@:flatten var MouseDelta: ImVec2S;            // Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.
 
 	//------------------------------------------------------------------
     // [Internal] Dear ImGui will maintain those fields. Forward compatibility not guaranteed!
@@ -1191,6 +1239,7 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	// Main Input State
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
+	@:noCompletion var Ctx: hl.Bytes;
 	@:flatten var MousePos: ImVec2S;
 	// @todo: This is broken
 	//@:flattenMap(ImGuiMouseButton) var MouseDown: Bool;
@@ -1203,6 +1252,7 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	// end hack
 	var MouseWheel: Single;
 	var MouseWheelH: Single;
+	var MouseSource: Int;
 	var MouseHoveredViewport: ImGuiID;
 	var KeyCtrl: Bool;
 	var KeyShift: Bool;
@@ -2202,7 +2252,7 @@ class ImGui
 	@:deprecated public static function getConfigFlags() : ImGuiConfigFlags {return 0;} // ConfigFlags
 	@:deprecated public static function setUserData(data : Dynamic) {} // UserData; Should be safe to store anything and not be GCd.
 	@:deprecated public static function getUserData() : Dynamic {return null;} // UserData
-	@:deprecated public static function getFontAtlas(): ImFontAtlas { return null; }
+	public static function getFontAtlas(): ImFontAtlas { return null; }
 
 	// internal functions
 	public static function setRenderCallback(render_fn:RenderList->Void) {}
@@ -2224,7 +2274,7 @@ class ImGui
 		provideTypes();
 		createContext();
 		setRenderCallback(render_fn);
-		var fonts = getIO().Fonts;
+		var fonts = getFontAtlas();
 		fonts.addFontDefault();
 		var output = new ImFontTexData();
 		fonts.getTexDataAsRGBA32(output);

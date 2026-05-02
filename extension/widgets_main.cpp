@@ -34,15 +34,21 @@ HL_PRIM void HL_NAME(image)(ImTextureID user_texture_id, vimvec2* size, vimvec2*
 
 HL_PRIM bool HL_NAME(image_button)(ImTextureID user_texture_id, vimvec2* size, vimvec2* uv0, vimvec2* uv1, int* frame_padding, vimvec4* bg_col, vimvec4* tint_col)
 {
-	return ImGui::ImageButton(
-		user_texture_id,
+	bool has_frame_padding = frame_padding != nullptr && *frame_padding >= 0;
+	if (has_frame_padding) ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2((float)*frame_padding, (float)*frame_padding));
+	ImGui::PushID((int)user_texture_id);
+	bool result = ImGui::ImageButton(
+		"##image_button",
+		ImTextureRef(user_texture_id),
 		getImVec2(size),
 		getImVec2(uv0),
 		getImVec2(uv1, ImVec2(1, 1)),
-		frame_padding != nullptr ? *frame_padding : -1,
 		getImVec4(bg_col),
 		getImVec4(tint_col, ImVec4(1, 1, 1, 1))
 	);
+	ImGui::PopID();
+	if (has_frame_padding) ImGui::PopStyleVar();
+	return result;
 }
 
 HL_PRIM bool HL_NAME(checkbox)(vstring* label, bool* v)

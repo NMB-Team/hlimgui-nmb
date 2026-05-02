@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "lib/imgui/imgui_internal.h"
 
 #define _TFONTATLAS _ABSTRACT(imfontatlas)
 #define _TFONT _ABSTRACT(imfont)
@@ -131,7 +132,7 @@ HL_PRIM int F_NAME(add_custom_rect_font_glyph)(ImFontAtlas* fonts, ImFont* font,
 
 HL_PRIM ImFontAtlasCustomRect* F_NAME(get_custom_rect_by_index)(ImFontAtlas* fonts, int index)
 {
-	return fonts->GetCustomRectByIndex(index);
+	return const_cast<ImFontAtlasCustomRect*>(fonts->GetCustomRectByIndex(index));
 }
 
 HL_PRIM void F_NAME(calc_custom_rect_uv)(ImFontAtlas* fonts, ImFontAtlasCustomRect* rect, vimvec2* out_uv_min, vimvec2* out_uv_max)
@@ -150,7 +151,14 @@ typedef struct {
 
 HL_PRIM bool F_NAME(get_mouse_cursor_tex_data)(ImFontAtlas* fonts, ImGuiMouseCursor cursor, vcursordata* output)
 {
-	return fonts->GetMouseCursorTexData(cursor, output->offset->v(), output->size->v(), output->uv_border->vmin(), output->uv_fill->vmin());
+	ImVec2 uv_border[2];
+	ImVec2 uv_fill[2];
+	bool result = ImFontAtlasGetMouseCursorTexData(fonts, cursor, output->offset->v(), output->size->v(), uv_border, uv_fill);
+	*output->uv_border->vmin() = uv_border[0];
+	*output->uv_border->vmax() = uv_border[1];
+	*output->uv_fill->vmin() = uv_fill[0];
+	*output->uv_fill->vmax() = uv_fill[1];
+	return result;
 }
 
 HL_PRIM void HL_NAME(push_font)(ImFont *font)

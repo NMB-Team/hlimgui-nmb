@@ -65,8 +65,8 @@ class Run {
     Args:
       \u001B[93m[output]\u001B[0m            The directory to which copy the generated .hdll file.
                           If not given, will try to copy it to the location of `hl.exe` by
-                          looking for it `HASHLINK_BIN`, `HASHLINK_PATH` and `HASHLINKPATH`
-                          environment variables, then in `PATH`.",
+                          looking for it in `HASHLINK_BIN`, `HASHLINK_PATH`,
+                          `HASHLINKPATH`, `PATH`, and common install locations.",
 			exec: (args, _) -> {
 				final hdllPath = Path.join([libPath, HLIMGUI_HDLL]);
 				if (!FileSystem.exists(hdllPath)) {
@@ -75,15 +75,7 @@ class Run {
 				}
 				var outputPath = null;
 				if (args.length == 0) {
-					outputPath = Sys.getEnv("HASHLINK_BIN") ?? Sys.getEnv("HASHLINK_PATH") ?? Sys.getEnv("HASHLINKPATH");
-					if (outputPath == null) {
-						for (dir in Sys.getEnv("PATH").split(";")) {
-							if (FileSystem.exists(Path.join([dir, "hl.exe"]))) {
-								outputPath = dir;
-								break;
-							}
-						}
-					}
+					outputPath = findHashLinkBin();
 					if (outputPath == null) Sys.println("Warning: Could not locate hl.exe, .hdll file won't be copied for easy access!");
 				} else {
 					outputPath = args.shift();
@@ -135,6 +127,52 @@ class Run {
 		}
 		
 		command.exec(args, flags);
+	}
+	
+	static function findHashLinkBin(): Null<String> {
+		for (name in ["HASHLINK_BIN", "HASHLINK_PATH", "HASHLINKPATH"]) {
+			final dir = hashLinkBinFrom(Sys.getEnv(name));
+			if (dir != null) return dir;
+		}
+		
+		final pathEnv = Sys.getEnv("PATH");
+		if (pathEnv != null) {
+			final separator = Sys.systemName() == "Windows" ? ";" : ":";
+			for (dir in pathEnv.split(separator)) {
+				final found = hashLinkBinFrom(dir);
+				if (found != null) return found;
+			}
+		}
+		
+		final commonPaths = Sys.systemName() == "Windows"
+			? ["C:\\HaxeToolkit\\hashlink", "C:\\HashLink"]
+			: ["/usr/local/bin", "/usr/local", "/opt/homebrew/bin", "/opt/homebrew", "/opt/hashlink/bin", "/opt/hashlink"];
+		for (path in commonPaths) {
+			final dir = hashLinkBinFrom(path);
+			if (dir != null) return dir;
+		}
+		
+		return null;
+	}
+	
+	static function hashLinkBinFrom(path: Null<String>): Null<String> {
+		if (path == null) return null;
+		path = path.trim();
+		if (path.length == 0) return null;
+		if ((path.startsWith("\"") && path.endsWith("\"")) || (path.startsWith("'") && path.endsWith("'"))) {
+			path = path.substr(1, path.length - 2);
+		}
+		
+		if (FileSystem.exists(path) && !FileSystem.isDirectory(path)) {
+			final file = Path.withoutDirectory(path).toLowerCase();
+			if (file == "hl.exe" || file == "hl") return Path.directory(path);
+		}
+		
+		if (!FileSystem.isDirectory(path)) return null;
+		for (exe in ["hl.exe", "hl"]) {
+			if (FileSystem.exists(Path.join([path, exe]))) return path;
+		}
+		return null;
 	}
 	
 	static function help(args: Array<String>) {

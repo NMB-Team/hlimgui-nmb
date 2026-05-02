@@ -77,7 +77,7 @@ HL_PRIM void HL_NAME(set_mouse_cursor)(ImGuiMouseCursor cursor_type)
 
 HL_PRIM void HL_NAME(capture_mouse_from_app)(bool* want_capture_mouse_value)
 {
-    ImGui::CaptureMouseFromApp(convertPtr(want_capture_mouse_value, true));
+    ImGui::SetNextFrameWantCaptureMouse(convertPtr(want_capture_mouse_value, true));
 }
 
 DEFINE_PRIM(_BOOL, is_mouse_down, _I32);

@@ -68,7 +68,7 @@ HL_PRIM void HL_NAME(io_set_app_accepting_events)(ImGuiIO* hl_io, bool accepting
 
 HL_PRIM void HL_NAME(io_clear_input_characters)(ImGuiIO* hl_io  )
 {
-	hl_io->ClearInputCharacters( );
+	hl_io->InputQueueCharacters.resize(0);
 }
 
 HL_PRIM void HL_NAME(io_clear_input_keys)(ImGuiIO* hl_io  )

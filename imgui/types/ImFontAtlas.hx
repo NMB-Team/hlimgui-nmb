@@ -8,32 +8,38 @@ import imgui.types.Pointers;
 @:keep
 @:build(imgui._ImGuiInternalMacro.buildFlatStruct())
 @:struct class ImFontConfig {
-	@:noCompletion var FontData: Bytes;                    // TTF/OTF data
-	var FontDataSize: Int;                  // TTF/OTF data size
-	var FontDataOwnedByAtlas: Bool;         // Force-set to false when adding from memory because GC.
-	var FontNo: Int;                        // Index of font within TTF/OTF file
-	var SizePixels: Single;                 // Size in pixels for rasterizer (more or less maps to the resulting font height).
-	var OversampleH: Int;                   // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
-	var OversampleV: Int;                   // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
-	var PixelSnapH: Bool;                   // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
-	@:flatten var GlyphExtraSpacing: ImVec2S;// Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
-	@:flatten var GlyphOffset: ImVec2S;      // Offset all glyphs from this font input.
-	@:noCompletion var GlyphRanges: Bytes;  // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
-	var GlyphMinAdvanceX: Single;           // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
-	var GlyphMaxAdvanceY: Single;           // Maximum AdvanceX for glyphs
-	var MergeMode: Bool;                    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
-	var FontBuilderFlags: Int;              // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
-	var RasterizerMultiply: Single;         // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
-	var EllipsisChar: hl.UI16;              // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
-
-	// [Internal]
-	// There's a char[40] buffer here for some reason...
+	// char Name[40]
 	@:noCompletion var name1: Int; @:noCompletion var name2: Int; @:noCompletion var name3: Int;
 	@:noCompletion var name4: Int; @:noCompletion var name5: Int; @:noCompletion var name6: Int;
 	@:noCompletion var name7: Int; @:noCompletion var name8: Int; @:noCompletion var name9: Int;
 	@:noCompletion var name10: Int;
+	@:noCompletion var FontData: Bytes;                    // TTF/OTF data
+	var FontDataSize: Int;                  // TTF/OTF data size
+	var FontDataOwnedByAtlas: Bool;         // Force-set to false when adding from memory because GC.
+	var MergeMode: Bool;                    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs).
+	var PixelSnapH: Bool;                   // Align every glyph to pixel boundary.
+	var OversampleH: hl.UI8;                // Rasterize at higher quality for sub-pixel positioning.
+	var OversampleV: hl.UI8;                // Rasterize at higher quality for sub-pixel positioning.
+	var EllipsisChar: hl.UI16;              // Explicitly specify unicode codepoint of ellipsis character.
+	var SizePixels: Single;                 // Size in pixels for rasterizer (more or less maps to the resulting font height).
+	@:noCompletion var GlyphRanges: Bytes;  // Pointer to a user-provided list of Unicode range.
+	@:noCompletion var GlyphExcludeRanges: Bytes; // Pointer to a user-provided list of Unicode ranges to exclude.
+	@:flatten var GlyphOffset: ImVec2S;      // Offset all glyphs from this font input.
+	var GlyphMinAdvanceX: Single;           // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
+	var GlyphMaxAdvanceX: Single;           // Maximum AdvanceX for glyphs
+	var GlyphExtraAdvanceX: Single;         // Extra spacing (in pixels) between glyphs.
+	var FontNo: Int;                        // Index of font within TTF/OTF file
+	var FontBuilderFlags: Int;              // Renamed FontLoaderFlags in Dear ImGui 1.92.
+	var RasterizerMultiply: Single;         // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
+	var RasterizerDensity: Single;          // DPI scale multiplier for rasterization.
+	var ExtraSizeScale: Single;             // Extra rasterizer scale over SizePixels.
 
-	@:noCompletion var DstFont: Bytes;
+	// [Internal]
+	@:noCompletion var Flags: Int;
+	@:noCompletion var DstFont: ImFont;
+	@:noCompletion var FontLoader: Bytes;
+	@:noCompletion var FontLoaderData: Bytes;
+	@:noCompletion var PixelSnapV: Bool;
 
 	public function new() {
 		init(this);
@@ -108,17 +114,14 @@ class ImCursorData {
 @:keep
 @:struct class ImFontAtlasCustomRect {
 	
-	public var width: hl.UI16;
-	public var height: hl.UI16;
 	public var x: hl.UI16;
 	public var y: hl.UI16;
-	public var glyphId: Int;
-	public var glyphAdvanceX: Single;
-	public var glyphOffsetX: Single; // ImVec2
-	public var glyphOffsetY: Single; // ImVec2
-	public var font: ImFont;
+	public var w: hl.UI16;
+	public var h: hl.UI16;
+	@:flatten public var uv0: ImVec2S;
+	@:flatten public var uv1: ImVec2S;
 	
-	public inline function isPacked(): Bool { return x != 0xffff; }
+	public inline function isPacked(): Bool { return x != 0 || y != 0 || w != 0 || h != 0; }
 }
 
 @:hlNative("hlimgui", "imfontatlas_")
