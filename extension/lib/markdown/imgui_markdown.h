@@ -3,18 +3,17 @@
 #define hl_call1fixed(ret,cl,t,v)\
 	(cl->hasValue ? ((ret(*)(vdynamic*,t))cl->fun)((vdynamic*)cl->value,v) : ((ret(*)(t))cl->fun)(v))
 
-
 // License: zlib
 // Copyright (c) 2019 Juliette Foucaut & Doug Binks
-// 
+//
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
-// 
+//
 // Permission is granted to anyone to use this software for any purpose,
 // including commercial applications, and to alter it and redistribute it
 // freely, subject to the following restrictions:
-// 
+//
 // 1. The origin of this software must not be misrepresented; you must not
 //    claim that you wrote the original software. If you use this software
 //    in a product, an acknowledgment in the product documentation would be
@@ -49,10 +48,10 @@ imgui_markdown currently supports the following markdown functionality:
  - Link
  - Image
  - Horizontal rule
- 
+
 Syntax
 
-Wrapping: 
+Wrapping:
 Text wraps automatically. To add a new line, use 'Return'.
 
 Headers:
@@ -66,16 +65,16 @@ _emphasis_
 **strong emphasis**
 __strong emphasis__
 
-Indents: 
+Indents:
 On a new line, at the start of the line, add two spaces per indent.
   Indent level 1
-    Indent level 2
+	Indent level 2
 
-Unordered lists: 
-On a new line, at the start of the line, add two spaces, an asterisks and a space. 
+Unordered lists:
+On a new line, at the start of the line, add two spaces, an asterisks and a space.
 For nested lists, add two additional spaces in front of the asterisk per list level increment.
   * Unordered List level 1
-    * Unordered List level 2
+	* Unordered List level 2
 
 Link:
 [link description](https://...)
@@ -91,7 +90,7 @@ ___
 
 // Example use on Windows with links opening in a browser
 
-#include "ImGui.h"                // https://github.com/ocornut/imgui
+#include "imgui.h"                // https://github.com/ocornut/imgui
 #include "imgui_markdown.h"       // https://github.com/juliettef/imgui_markdown
 #include "IconsFontAwesome5.h"    // https://github.com/juliettef/IconFontCppHeaders
 
@@ -108,106 +107,106 @@ static ImFont* H1 = NULL;
 static ImFont* H2 = NULL;
 static ImFont* H3 = NULL;
 
-static ImGui::MarkdownConfig mdConfig; 
+static ImGui::MarkdownConfig mdConfig;
 
 
 void LinkCallback( ImGui::MarkdownLinkCallbackData data_ )
 {
-    std::string url( data_.link, data_.linkLength );
-    if( !data_.isImage )
-    {
-        ShellExecuteA( NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL );
-    }
+	std::string url( data_.link, data_.linkLength );
+	if( !data_.isImage )
+	{
+		ShellExecuteA( NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL );
+	}
 }
 
 inline ImGui::MarkdownImageData ImageCallback( ImGui::MarkdownLinkCallbackData data_ )
 {
-    // In your application you would load an image based on data_ input. Here we just use the imgui font texture.
-    ImTextureID image = ImGui::GetIO().Fonts->TexID;
-    // > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
-    ImGui::MarkdownImageData imageData;
-    imageData.isValid =         true;
-    imageData.useLinkCallback = false;
-    imageData.user_texture_id = image;
-    imageData.size =            ImVec2( 40.0f, 20.0f );
-    
-    // For image resize when available size.x > image width, add
-    ImVec2 const contentSize = ImGui::GetContentRegionAvail();
-    if( imageData.size.x > contentSize.x )
-    {
-        float const ratio = imageData.size.y/imageData.size.x;
-        imageData.size.x = contentSize.x;
-        imageData.size.y = contentSize.x*ratio;
-    }
+	// In your application you would load an image based on data_ input. Here we just use the imgui font texture.
+	ImTextureID image = ImGui::GetIO().Fonts->TexID;
+	// > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
+	ImGui::MarkdownImageData imageData;
+	imageData.isValid =         true;
+	imageData.useLinkCallback = false;
+	imageData.user_texture_id = image;
+	imageData.size =            ImVec2( 40.0f, 20.0f );
 
-    return imageData;
+	// For image resize when available size.x > image width, add
+	ImVec2 const contentSize = ImGui::GetContentRegionAvail();
+	if( imageData.size.x > contentSize.x )
+	{
+		float const ratio = imageData.size.y/imageData.size.x;
+		imageData.size.x = contentSize.x;
+		imageData.size.y = contentSize.x*ratio;
+	}
+
+	return imageData;
 }
 
 void LoadFonts( float fontSize_ = 12.0f )
 {
-    ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->Clear();
-    // Base font
-    io.Fonts->AddFontFromFileTTF( "myfont.ttf", fontSize_ );
-    // Bold headings H2 and H3
-    H2 = io.Fonts->AddFontFromFileTTF( "myfont-bold.ttf", fontSize_ );
-    H3 = mdConfig.headingFormats[ 1 ].font;
-    // bold heading H1
-    float fontSizeH1 = fontSize_ * 1.1f;
-    H1 = io.Fonts->AddFontFromFileTTF( "myfont-bold.ttf", fontSizeH1 );
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->Clear();
+	// Base font
+	io.Fonts->AddFontFromFileTTF( "myfont.ttf", fontSize_ );
+	// Bold headings H2 and H3
+	H2 = io.Fonts->AddFontFromFileTTF( "myfont-bold.ttf", fontSize_ );
+	H3 = mdConfig.headingFormats[ 1 ].font;
+	// bold heading H1
+	float fontSizeH1 = fontSize_ * 1.1f;
+	H1 = io.Fonts->AddFontFromFileTTF( "myfont-bold.ttf", fontSizeH1 );
 }
 
 void ExampleMarkdownFormatCallback( const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_ )
 {
-    // Call the default first so any settings can be overwritten by our implementation.
-    // Alternatively could be called or not called in a switch statement on a case by case basis.
-    // See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
-    ImGui::defaultMarkdownFormatCallback( markdownFormatInfo_, start_ );        
-       
-    switch( markdownFormatInfo_.type )
-    {
-    // example: change the colour of heading level 2
-    case ImGui::MarkdownFormatType::HEADING:
-    {
-        if( markdownFormatInfo_.level == 2 )
-        {
-            if( start_ )
-            {
-                ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
-            }
-            else
-            {
-                ImGui::PopStyleColor();
-            }
-        }
-        break;
-    }
-    default:
-    {
-        break;
-    }
-    }
+	// Call the default first so any settings can be overwritten by our implementation.
+	// Alternatively could be called or not called in a switch statement on a case by case basis.
+	// See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
+	ImGui::defaultMarkdownFormatCallback( markdownFormatInfo_, start_ );
+
+	switch( markdownFormatInfo_.type )
+	{
+	// example: change the colour of heading level 2
+	case ImGui::MarkdownFormatType::HEADING:
+	{
+		if( markdownFormatInfo_.level == 2 )
+		{
+			if( start_ )
+			{
+				ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
+			}
+			else
+			{
+				ImGui::PopStyleColor();
+			}
+		}
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
 }
 
 void Markdown( const std::string& markdown_ )
 {
-    // You can make your own Markdown function with your prefered string container and markdown config.
-    // > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
-    mdConfig.linkCallback =         LinkCallback;
-    mdConfig.tooltipCallback =      NULL;
-    mdConfig.imageCallback =        ImageCallback;
-    mdConfig.linkIcon =             ICON_FA_LINK;
-    mdConfig.headingFormats[0] =    { H1, true };
-    mdConfig.headingFormats[1] =    { H2, true };
-    mdConfig.headingFormats[2] =    { H3, false };
-    mdConfig.userData =             NULL;
-    mdConfig.formatCallback =       ExampleMarkdownFormatCallback;
-    ImGui::Markdown( markdown_.c_str(), markdown_.length(), mdConfig );
+	// You can make your own Markdown function with your prefered string container and markdown config.
+	// > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
+	mdConfig.linkCallback =         LinkCallback;
+	mdConfig.tooltipCallback =      NULL;
+	mdConfig.imageCallback =        ImageCallback;
+	mdConfig.linkIcon =             ICON_FA_LINK;
+	mdConfig.headingFormats[0] =    { H1, true };
+	mdConfig.headingFormats[1] =    { H2, true };
+	mdConfig.headingFormats[2] =    { H3, false };
+	mdConfig.userData =             NULL;
+	mdConfig.formatCallback =       ExampleMarkdownFormatCallback;
+	ImGui::Markdown( markdown_.c_str(), markdown_.length(), mdConfig );
 }
 
 void MarkdownExample()
 {
-    const std::string markdownText = u8R"(
+	const std::string markdownText = u8R"(
 # H1 Header: Text and Links
 You can add [links like this one to enkisoftware](https://www.enkisoftware.com/) and lines will wrap well.
 You can also insert images ![image alt text](image identifier e.g. filename)
@@ -217,244 +216,248 @@ ___
 *Emphasis* and **strong emphasis** change the appearance of the text.
 ## H2 Header: indented text.
   This text has an indent (two leading spaces).
-    This one has two.
+	This one has two.
 ### H3 Header: Lists
   * Unordered lists
-    * Lists can be indented with two extra spaces.
+	* Lists can be indented with two extra spaces.
   * Lists can have [links like this one to Avoyd](https://www.avoyd.com/) and *emphasized text*
 )";
-    Markdown( markdownText );
+	Markdown( markdownText );
 }
 
 ===============================================================================
 */
 
-
 #include <stdint.h>
-#include "../../utils.h"
+
+typedef int ImGuiMarkdownFormatFlags;
+
+enum ImGuiMarkdownFormatFlags_
+{
+	ImGuiMarkdownFormatFlags_None                        = 0,
+	ImGuiMarkdownFormatFlags_DiscardExtraNewLines        = 1 << 0,  // (Accurate parsing) Provided markdown will discard all redundant newlines
+	ImGuiMarkdownFormatFlags_NoNewLineBeforeHeading      = 1 << 1,  // (Accurate parsing) Provided markdown will not format a newline after the first line if it is a heading
+	ImGuiMarkdownFormatFlags_SeparatorDoesNotAdvance     = 1 << 2,  // (Accurate parsing) Provided markdown will not advance to the next line after formatting a separator
+	ImGuiMarkdownFormatFlags_ExoticIndents               = 1 << 3,  // (Accurate parsing) Provided markdown will process indents based on number of leading spaces rather than fixed 2-space indents
+	ImGuiMarkdownFormatFlags_IncludeAllListPrefixes      = 1 << 4, // (Accurate parsing) Provided markdown will include all list prefixes such as '-', '+', '*' for unordered lists and '1.', '2.' etc. for ordered lists, rather than just '*'
+	ImGuiMarkdownFormatFlags_IgnoreHtml                  = 1 << 3,  // Ignore and skip HTML tags in the markdown
+	ImGuiMarkdownFormatFlags_GithubStyle                 = ImGuiMarkdownFormatFlags_DiscardExtraNewLines | ImGuiMarkdownFormatFlags_NoNewLineBeforeHeading | ImGuiMarkdownFormatFlags_SeparatorDoesNotAdvance,
+	ImGuiMarkdownFormatFlags_CommonMarkAll               = ImGuiMarkdownFormatFlags_DiscardExtraNewLines | ImGuiMarkdownFormatFlags_NoNewLineBeforeHeading | ImGuiMarkdownFormatFlags_SeparatorDoesNotAdvance,
+};
 
 namespace ImGui
 {
-    //-----------------------------------------------------------------------------
-    // Basic types
-    //-----------------------------------------------------------------------------
+	//-----------------------------------------------------------------------------
+	// Basic types
+	//-----------------------------------------------------------------------------
 
-    struct Link;
-    struct MarkdownConfig;
+	struct Link;
+	struct MarkdownConfig;
 
-    struct MarkdownLinkCallbackData                                 // for both links and images
-    {
-        const char*             text;                               // text between square brackets []
-        int                     textLength;
-        const char*             link;                               // text between brackets ()
-        int                     linkLength;
-        void*                   userData;
-        bool                    isImage;                            // true if '!' is detected in front of the link syntax
-    };
+	struct MarkdownLinkCallbackData                                 // for both links and images
+	{
+		const char*             text;                               // text between square brackets []
+		int                     textLength;
+		const char*             link;                               // text between brackets ()
+		int                     linkLength;
+		void*                   userData;
+		bool                    isImage;                            // true if '!' is detected in front of the link syntax
+	};
 
-    struct MarkdownTooltipCallbackData                              // for tooltips
-    {
-        MarkdownLinkCallbackData linkData;
-        const char*              linkIcon;
-    };
-    
-    struct MarkdownImageData
-    {
-        bool                    isValid = false;                    // if true, will draw the image
-        bool                    useLinkCallback = false;            // if true, linkCallback will be called when image is clicked
-        ImTextureID             user_texture_id = 0;                // see ImGui::Image
-        ImVec2                  size = ImVec2( 100.0f, 100.0f );    // see ImGui::Image
-        ImVec2                  uv0 = ImVec2( 0, 0 );               // see ImGui::Image
-        ImVec2                  uv1 = ImVec2( 1, 1 );               // see ImGui::Image
-        ImVec4                  tint_col = ImVec4( 1, 1, 1, 1 );    // see ImGui::Image
-        ImVec4                  border_col = ImVec4( 0, 0, 0, 0 );  // see ImGui::Image
-    };
+	struct MarkdownTooltipCallbackData                              // for tooltips
+	{
+		MarkdownLinkCallbackData linkData;
+		const char*              linkIcon;
+	};
 
-    enum class MarkdownFormatType
-    {
-         NORMAL_TEXT,
-         HEADING,
-         UNORDERED_LIST,
-         LINK,
-         EMPHASIS,
-    };
+	struct MarkdownImageData
+	{
+		bool                    isValid = false;                    // if true, will draw the image
+		bool                    useLinkCallback = false;            // if true, linkCallback will be called when image is clicked
+		ImTextureID             user_texture_id = {};               // see ImGui::Image
+		ImVec2                  size = ImVec2( 100.0f, 100.0f );    // see ImGui::Image
+		ImVec2                  uv0 = ImVec2( 0, 0 );               // see ImGui::Image
+		ImVec2                  uv1 = ImVec2( 1, 1 );               // see ImGui::Image
+		ImVec4                  tint_col = ImVec4( 1, 1, 1, 1 );    // see ImGui::Image
+		ImVec4                  border_col = ImVec4( 0, 0, 0, 0 );  // see ImGui::Image
+		ImVec4                  bg_col = ImVec4( 0, 0, 0, 0 );      // see ImGui::Image
+	};
 
-    struct MarkdownFormatInfo
-    {
-        MarkdownFormatType      type    = MarkdownFormatType::NORMAL_TEXT;
-        int32_t                 level   = 0;                               // Set for headings: 1 for H1, 2 for H2 etc.
-        bool                    itemHovered = false;                       // Currently only set for links when mouse hovered, only valid when start_ == false
-        const MarkdownConfig*   config  = NULL;
-    };
+	enum class MarkdownFormatType
+	{
+		 NORMAL_TEXT,
+		 HEADING,
+		 UNORDERED_LIST,
+		 LINK,
+		 EMPHASIS,
+		 CODE,
+		 TABLE
+	};
 
-    typedef void                MarkdownLinkCallback( MarkdownLinkCallbackData data );    
-    typedef void                MarkdownTooltipCallback( MarkdownTooltipCallbackData data );
+	struct MarkdownFormatInfo
+	{
+		MarkdownFormatType      type    = MarkdownFormatType::NORMAL_TEXT;
+		int32_t                 level   = 0;                               // Set for headings: 1 for H1, 2 for H2 etc.
+		bool                    itemHovered = false;                       // Currently only set for links when mouse hovered, only valid when start_ == false
+		const MarkdownConfig*   config  = NULL;
+		const char*             text    = NULL;
+		int32_t                 textLength = 0;
+	};
 
-    inline void defaultMarkdownTooltipCallback( MarkdownTooltipCallbackData data_ )
-    {
-        if( data_.linkData.isImage )
-        {
-            ImGui::SetTooltip( "%.*s", data_.linkData.linkLength, data_.linkData.link );
-        }
-        else
-        {
-            ImGui::SetTooltip( "%s Open in browser\n%.*s", data_.linkIcon, data_.linkData.linkLength, data_.linkData.link );
-        }
-    }
+	typedef void                (MarkdownLinkCallback)( MarkdownLinkCallbackData data );
+	typedef void                (MarkdownTooltipCallback)( MarkdownTooltipCallbackData data );
 
-    typedef MarkdownImageData   MarkdownImageCallback( MarkdownLinkCallbackData data );
-    typedef void                MarkdownFormalCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ );
+	inline void defaultMarkdownTooltipCallback( MarkdownTooltipCallbackData data_ )
+	{
+		if( data_.linkData.isImage )
+		{
+			ImGui::SetTooltip( "%.*s", data_.linkData.linkLength, data_.linkData.link );
+		}
+		else
+		{
+			ImGui::SetTooltip( "%s Open in browser\n%.*s", data_.linkIcon, data_.linkData.linkLength, data_.linkData.link );
+		}
+	}
 
-    inline void defaultMarkdownFormatCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ );
+	typedef MarkdownImageData   MarkdownImageCallback( MarkdownLinkCallbackData data );
+	typedef void                MarkdownFormalCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ );
 
-    struct MarkdownHeadingFormat
-    {   
-        ImFont*                 font;                               // ImGui font
-        bool                    separator;                          // if true, an underlined separator is drawn after the header
-    };
+	inline void defaultMarkdownFormatCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ );
 
-    // Configuration struct for Markdown
-    // - linkCallback is called when a link is clicked on
-    // - linkIcon is a string which encode a "Link" icon, if available in the current font (e.g. linkIcon = ICON_FA_LINK with FontAwesome + IconFontCppHeaders https://github.com/juliettef/IconFontCppHeaders)
-    // - headingFormats controls the format of heading H1 to H3, those above H3 use H3 format
-    struct MarkdownConfig
-    {
-        static const int        NUMHEADINGS = 3;
-        MarkdownHeadingFormat   headingFormats[ NUMHEADINGS ] = { { NULL, true }, { NULL, true }, { NULL, true } };
-        const char*             linkIcon = "";                      // icon displayd in link tooltip
+	struct MarkdownHeadingFormat
+	{
+		ImFont*                 font;                               // ImGui font
+		bool                    separator;                          // if true, an underlined separator is drawn after the header
+		#ifdef IMGUI_HAS_TEXTURES // used to detect dynamic font capability: https://github.com/ocornut/imgui/issues/8465#issuecomment-2701570771
+		float                   fontSize = 0.0f;                    // Font size if using dynamic fonts
+		#endif
+	};
 
-        void*                   userData = NULL; 
+	// Configuration struct for Markdown
+	// - linkCallback is called when a link is clicked on
+	// - linkIcon is a string which encode a "Link" icon, if available in the current font (e.g. linkIcon = ICON_FA_LINK with FontAwesome + IconFontCppHeaders https://github.com/juliettef/IconFontCppHeaders)
+	// - headingFormats controls the format of heading H1 to H3, those above H3 use H3 format
+	struct MarkdownConfig
+	{
+		static const int         NUMHEADINGS = 3;
+		static const int         INDENTSTACKSIZE = 8;  // Internal use only
 
-//        vclosure*               linkCallbackClosure = nullptr;
-//        vclosure*               tooltipCallbackClosure = nullptr;
-        vclosure*               imageCallbackClosure = nullptr;  
-        vclosure*               linkCallbackClosure = nullptr;
-        vclosure*               tooltipCallbackClosure = nullptr;
-    
-        MarkdownFormalCallback *formatCallback = defaultMarkdownFormatCallback;
-        
-        
-        
-    };
+		MarkdownLinkCallback*    linkCallback = NULL;
+		MarkdownTooltipCallback* tooltipCallback = NULL;
+		MarkdownImageCallback*   imageCallback = NULL;
+		const char*              linkIcon = "";                      // icon displayd in link tooltip
+		MarkdownHeadingFormat    headingFormats[ NUMHEADINGS ] = { { NULL, true }, { NULL, true }, { NULL, true } };
+		void*                    userData = NULL;
+		MarkdownFormalCallback*  formatCallback = defaultMarkdownFormatCallback;
+		ImGuiMarkdownFormatFlags formatFlags = ImGuiMarkdownFormatFlags_None;  // Configure this to change how Markdown gets formatted. By default imgui_markdown uses psuedo-Markdown for backwards compatibility.
+	};
 
-    //-----------------------------------------------------------------------------
-    // External interface
-    //-----------------------------------------------------------------------------
+	//-----------------------------------------------------------------------------
+	// External interface
+	//-----------------------------------------------------------------------------
 
-    inline void Markdown( const char* markdown_, size_t markdownLength_, const MarkdownConfig& mdConfig_ );
+	inline void Markdown( const char* markdown_, size_t markdownLength_, const MarkdownConfig& mdConfig_ );
 
-    //-----------------------------------------------------------------------------
-    // Internals
-    //-----------------------------------------------------------------------------
+	//-----------------------------------------------------------------------------
+	// Internals
+	//-----------------------------------------------------------------------------
 
-    struct TextRegion;
-    struct Line;
-    inline void UnderLine( ImColor col_ );
-    inline void RenderLine( const char* markdown_, Line& line_, TextRegion& textRegion_, const MarkdownConfig& mdConfig_ );
+	struct TextRegion;
+	struct Line;
+	inline void UnderLine( ImColor col_ );
+	inline void RenderLine( const char* markdown_, Line& line_, TextRegion& textRegion_, const MarkdownConfig& mdConfig_ );
+	inline Line* DetectTargetLineAsIndent( const Line& self, Line indentLines_[MarkdownConfig::INDENTSTACKSIZE], int indentLinesCount_, bool& isDeeplyNested_ );
+	inline void RenderTableRow( const char* markdown_, int lineStart_, int lineEnd_, int columnCount_, bool isHeader_, const MarkdownConfig& mdConfig_ );
 
-    struct TextRegion
-    {
-        TextRegion() : indentX( 0.0f )
-        {
-        }
-        ~TextRegion()
-        {
-            ResetIndent();
-        }
+	struct TextRegion
+	{
+		TextRegion() : indentX( 0.0f )
+		{
+		}
+		~TextRegion()
+		{
+			ResetIndent();
+		}
 
-        // ImGui::TextWrapped will wrap at the starting position
-        // so to work around this we render using our own wrapping for the first line
-        void RenderTextWrapped( const char* text_, const char* text_end_, bool bIndentToHere_ = false )
-        {
-            float       scale = ImGui::GetIO().FontGlobalScale;
-            float       widthLeft = GetContentRegionAvail().x;
-            const char* endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
-            ImGui::TextUnformatted( text_, endLine );
-            if( bIndentToHere_ )
-            {
-                float indentNeeded = GetContentRegionAvail().x - widthLeft;
-                if( indentNeeded )
-                {
-                    ImGui::Indent( indentNeeded );
-                    indentX += indentNeeded;
-                }
-            }
-            widthLeft = GetContentRegionAvail().x;
-            while( endLine < text_end_ )
-            {
-                text_ = endLine;
-                if( *text_ == ' ' ) { ++text_; }    // skip a space at start of line
-                endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
-                if( text_ == endLine ) 
-                {
-                    endLine++;
-                }
-                ImGui::TextUnformatted( text_, endLine );
-            }
-        }
+		void RenderTextWrapped( const char* text_, const char* text_end_, bool bIndentToHere_ = false );
 
-        void RenderListTextWrapped( const char* text_, const char* text_end_ )
-        {
-            ImGui::Bullet();
-            ImGui::SameLine();
-            RenderTextWrapped( text_, text_end_, true );
-        }
+		void RenderListTextWrapped( const char* text_, const char* text_end_ )
+		{
+			ImGui::Bullet();
+			ImGui::SameLine();
+			RenderTextWrapped( text_, text_end_, true );
+		}
 
-        bool RenderLinkText( const char* text_, const char* text_end_, const Link& link_, 
-            const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_ );
+		bool RenderLinkText( const char* text_, const char* text_end_, const Link& link_,
+			const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_ );
 
-        void RenderLinkTextWrapped( const char* text_, const char* text_end_, const Link& link_,
-            const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_, bool bIndentToHere_ = false );
+		void RenderLinkTextWrapped( const char* text_, const char* text_end_, const Link& link_,
+			const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_, bool bIndentToHere_ = false );
 
-        void ResetIndent()
-        {
-            if( indentX > 0.0f )
-            {
-                ImGui::Unindent( indentX );
-            }
-            indentX = 0.0f;
-        }
+		void ResetIndent()
+		{
+			if( indentX > 0.0f )
+			{
+				ImGui::Unindent( indentX );
+			}
+			indentX = 0.0f;
+		}
 
-    private:
-        float       indentX;
-    };
+	private:
+		float       indentX;
+	};
 
-    // Text that starts after a new line (or at beginning) and ends with a newline (or at end)
-    struct Line {
-        bool isHeading = false;
-        bool isEmphasis = false;
-        bool isUnorderedListStart = false;
-        bool isLeadingSpace = true;     // spaces at start of line
-        int  leadSpaceCount = 0;
-        int  headingCount = 0;
-        int  emphasisCount = 0;
-        int  lineStart = 0;
-        int  lineEnd   = 0;
-        int  lastRenderPosition = 0;     // lines may get rendered in multiple pieces
-    };
+	// Text that starts after a new line (or at beginning) and ends with a newline (or at end)
+	struct Line {
+		bool isHeading = false;
+		bool isEmphasis = false;
+		bool isCode = false;
+		char unorderedListChar = '\0';
+		bool isLeadingSpace = true;     // spaces at start of line
+		bool isTableRow = false;
+		bool isTableSeparator = false;
+		int  leadSpaceCount = 0;
+		int  headingCount = 0;
+		int  emphasisCount = 0;
+		int  indentCount = 0;
+		int  lineStart = 0;
+		int  lineEnd   = 0;
+		int  lastRenderPosition = 0;     // lines may get rendered in multiple pieces
+	};
 
-    struct TextBlock {                  // subset of line
-        int start = 0;
-        int stop  = 0;
-        int size() const
-        {
-            return stop - start;
-        }
-    };
+	struct TextBlock {                  // subset of line
+		int start = 0;
+		int stop  = 0;
+		int size() const
+		{
+			return stop - start;
+		}
+	};
 
-    struct Link {
-        enum LinkState {
-            NO_LINK,
-            HAS_SQUARE_BRACKET_OPEN,
-            HAS_SQUARE_BRACKETS,
-            HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN,
-        };
-        LinkState state = NO_LINK;
-        TextBlock text;
-        TextBlock url;
-        bool isImage = false;
-        int num_brackets_open = 0;
-    };
+	struct Link {
+		enum LinkState {
+			NO_LINK,
+			HAS_SQUARE_BRACKET_OPEN,
+			HAS_SQUARE_BRACKETS,
+			HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN,
+			HAS_ANGLE_BRACKET_OPEN,
+		};
+		LinkState state = NO_LINK;
+		TextBlock text;
+		TextBlock url;
+		bool isImage = false;
+		int num_square_brackets_open = 0;
+		int num_brackets_open = 0;
+	};
+
+	struct Code {
+		enum State {
+			NONE,
+			LEFT,
+		};
+		State state = NONE;
+		TextBlock text;
+	};
 
 	struct Emphasis {
 		enum EmphasisState {
@@ -463,52 +466,114 @@ namespace ImGui
 			MIDDLE,
 			RIGHT,
 		};
-        EmphasisState state = NONE;
-        TextBlock text;
-        char sym;
+		EmphasisState state = NONE;
+		TextBlock text;
+		char sym;
 	};
 
-    inline void UnderLine( ImColor col_ )
-    {
-        ImVec2 min = ImGui::GetItemRectMin();
-        ImVec2 max = ImGui::GetItemRectMax();
-        min.y = max.y;
-        ImGui::GetWindowDrawList()->AddLine( min, max, col_, 1.0f );
-    }
+	struct Table {
+		enum State {
+			NONE,
+			HEADER,
+			SEPARATOR,
+			ROWS,
+		};
+		State state = NONE;
+		int columnCount = 0;
+		int rowStart = 0;
+		bool active = false;
+	};
 
-    inline void RenderLine( const char* markdown_, Line& line_, TextRegion& textRegion_, const MarkdownConfig& mdConfig_ )
-    {
-        // indent
-        int indentStart = 0;
-        if( line_.isUnorderedListStart )    // ImGui unordered list render always adds one indent
-        { 
-            indentStart = 1; 
-        }
-        for( int j = indentStart; j < line_.leadSpaceCount / 2; ++j )    // add indents
-        {
-            ImGui::Indent();
-        }
+	inline void UnderLine( ImColor col_ )
+	{
+		ImVec2 min = ImGui::GetItemRectMin();
+		ImVec2 max = ImGui::GetItemRectMax();
+		min.y = max.y;
+		ImGui::GetWindowDrawList()->AddLine( min, max, col_, 1.0f );
+	}
 
-        // render
-        MarkdownFormatInfo formatInfo;
-        formatInfo.config = &mdConfig_;
-        int textStart = line_.lastRenderPosition + 1;
-        int textSize = line_.lineEnd - textStart;
-        if( line_.isUnorderedListStart )    // render unordered list
-        {
-            formatInfo.type = MarkdownFormatType::UNORDERED_LIST;
-            mdConfig_.formatCallback( formatInfo, true );
-            const char* text = markdown_ + textStart + 1;
-            textRegion_.RenderListTextWrapped( text, text + textSize - 1 );
-        }
-        else if( line_.isHeading )          // render heading
-        {
-            formatInfo.level = line_.headingCount;
-            formatInfo.type = MarkdownFormatType::HEADING;
-            mdConfig_.formatCallback( formatInfo, true );
-            const char* text = markdown_ + textStart + 1;
-            textRegion_.RenderTextWrapped( text, text + textSize - 1 );
-        }
+	inline void RenderTableRow( const char* markdown_, int lineStart_, int lineEnd_, int columnCount_, bool isHeader_, const MarkdownConfig& mdConfig_ )
+	{
+		// Parse cells separated by pipes
+		int cellStart = lineStart_;
+		int cellIndex = 0;
+
+		// Skip leading pipe
+		while( cellStart < lineEnd_ && markdown_[cellStart] == '|' )
+		{
+			cellStart++;
+		}
+
+		for( int i = cellStart; i <= lineEnd_ && cellIndex < columnCount_; ++i )
+		{
+			if( i == lineEnd_ || markdown_[i] == '|' )
+			{
+				// Found end of cell
+				int cellEnd = i;
+
+				// Trim leading/trailing spaces
+				while( cellStart < cellEnd && markdown_[cellStart] == ' ' )
+				{
+					cellStart++;
+				}
+				while( cellEnd > cellStart && markdown_[cellEnd - 1] == ' ' )
+				{
+					cellEnd--;
+				}
+
+				ImGui::TableNextColumn();
+
+				if( isHeader_ )
+				{
+					MarkdownFormatInfo formatInfo;
+					formatInfo.config = &mdConfig_;
+					formatInfo.type = MarkdownFormatType::EMPHASIS;
+					formatInfo.level = 2; // Bold for headers
+					mdConfig_.formatCallback( formatInfo, true );
+					ImGui::TextUnformatted( markdown_ + cellStart, markdown_ + cellEnd );
+					mdConfig_.formatCallback( formatInfo, false );
+				}
+				else
+				{
+					ImGui::TextUnformatted( markdown_ + cellStart, markdown_ + cellEnd );
+				}
+
+				cellStart = i + 1;
+				cellIndex++;
+			}
+		}
+	}
+
+	inline void RenderLine( const char* markdown_, Line& line_, TextRegion& textRegion_, const MarkdownConfig& mdConfig_ )
+	{
+		// indent
+		for( int j = 0; j < line_.indentCount; ++j )    // add indents
+		{
+			ImGui::Indent();
+		}
+
+		// render
+		MarkdownFormatInfo formatInfo;
+		formatInfo.config = &mdConfig_;
+		int textStart = line_.lastRenderPosition + 1;
+		int textSize = line_.lineEnd - textStart;
+		if( line_.unorderedListChar != '\0' )    // render unordered list
+		{
+			formatInfo.type = MarkdownFormatType::UNORDERED_LIST;
+			mdConfig_.formatCallback( formatInfo, true );
+			const char* text = markdown_ + textStart + 1;
+			textRegion_.RenderListTextWrapped( text, text + textSize - 1 );
+		}
+		else if( line_.isHeading )          // render heading
+		{
+			formatInfo.level = line_.headingCount;
+			formatInfo.type = MarkdownFormatType::HEADING;
+			const char* text = markdown_ + textStart + 1;
+			formatInfo.text = text;
+			formatInfo.textLength = textSize - 1;
+			mdConfig_.formatCallback( formatInfo, true );
+			textRegion_.RenderTextWrapped( text, text + textSize - 1 );
+		}
 		else if( line_.isEmphasis )         // render emphasis
 		{
 			formatInfo.level = line_.emphasisCount;
@@ -517,213 +582,531 @@ namespace ImGui
 			const char* text = markdown_ + textStart;
 			textRegion_.RenderTextWrapped(text, text + textSize);
 		}
-        else                                // render a normal paragraph chunk
-        {
-            formatInfo.type = MarkdownFormatType::NORMAL_TEXT;
-            mdConfig_.formatCallback( formatInfo, true );
-            const char* text = markdown_ + textStart;
-            textRegion_.RenderTextWrapped( text, text + textSize );
-        }
-        mdConfig_.formatCallback( formatInfo, false );
+		else if( line_.isCode )
+		{
+			formatInfo.type = MarkdownFormatType::CODE;
+			mdConfig_.formatCallback( formatInfo, true );
+			const char* text = markdown_ + textStart;
+			textRegion_.RenderTextWrapped( text, text + textSize );
+		}
+		else                                // render a normal paragraph chunk
+		{
+			formatInfo.type = MarkdownFormatType::NORMAL_TEXT;
+			mdConfig_.formatCallback( formatInfo, true );
+			const char* text = markdown_ + textStart;
+			textRegion_.RenderTextWrapped( text, text + textSize );
+		}
+		mdConfig_.formatCallback( formatInfo, false );
 
-        // unindent
-        for( int j = indentStart; j < line_.leadSpaceCount / 2; ++j )
-        {
-            ImGui::Unindent();
-        }
-    }
-    
-    // render markdown
-    inline void Markdown( const char* markdown_, size_t markdownLength_, const MarkdownConfig& mdConfig_ )
-    {
-        static const char* linkHoverStart = NULL; // we need to preserve status of link hovering between frames
-        ImGuiStyle& style = ImGui::GetStyle();
-        Line        line;
-        Link        link;
-        Emphasis    em;
-        TextRegion  textRegion;
+		// unindent
+		for( int j = 0; j < line_.indentCount; ++j )
+		{
+			ImGui::Unindent();
+		}
+	}
 
-        char c = 0;
-        for( int i=0; i < (int)markdownLength_; ++i )
-        {
-            c = markdown_[i];               // get the character at index
-            if( c == 0 ) { break; }         // shouldn't happen but don't go beyond 0.
+	inline Line* DetectTargetLineAsIndent( const Line& self, Line indentLines_[MarkdownConfig::INDENTSTACKSIZE], int indentLinesCount_, bool& isDeeplyNested )
+	{
+		isDeeplyNested = false;
+		if (indentLinesCount_ >= MarkdownConfig::INDENTSTACKSIZE)
+		{
+			return nullptr; // too deep nesting
+		}
+		else
+		{
+			if (indentLinesCount_ > 0) // Sub-lists have special handling from root lists
+			{
+				// We traverse the list bottom-up to see if we are in a sub-list
+				for (int j = indentLinesCount_ - 1; j >= 0; --j)
+				{
+					Line* listLine = indentLines_ + j;
+					int indentDiff = self.leadSpaceCount - listLine->leadSpaceCount;
+					if (indentDiff > 5) // Too many spaces, not a sub-list
+					{
+						isDeeplyNested = true;
+						return nullptr;
+					}
 
-            // If we're at the beginning of the line, count any spaces
-            if( line.isLeadingSpace )
-            {
-                if( c == ' ' )
-                {
-                    ++line.leadSpaceCount;
-                    continue;
-                }
-                else
-                {
-                    line.isLeadingSpace = false;
-                    line.lastRenderPosition = i - 1;
-                    if(( c == '*' ) && ( line.leadSpaceCount >= 2 ))
-                    {
-                        if( ( (int)markdownLength_ > i + 1 ) && ( markdown_[ i + 1 ] == ' ' ) )    // space after '*'
-                        {
-                            line.isUnorderedListStart = true;
-                            ++i;
-                            ++line.lastRenderPosition;
-                        }
-                        // carry on processing as could be emphasis
-                    }
-                    else if( c == '#' )
-                    {
-                        line.headingCount++;
-                        bool bContinueChecking = true;
-                        int j = i;
-                        while( ++j < (int)markdownLength_ && bContinueChecking )
-                        {
-                            c = markdown_[j];
-                            switch( c )
-                            {
-                            case '#':
-                                line.headingCount++;
-                                break;
-                            case ' ':
-                                line.lastRenderPosition = j - 1;
-                                i = j;
-                                line.isHeading = true;
-                                bContinueChecking = false;
-                                break;
-                            default:
-                                line.isHeading = false;
-                                bContinueChecking = false;
-                                break;
-                            }
-                        }
-                        if( line.isHeading )
-                        {
-                            // reset emphasis status, we do not support emphasis around headers for now
-                            em = Emphasis();
-                            continue;
-                        }
-                    }
-                }
-            }
+					if (indentDiff >= 2) // Sub-lists have at least 2 spaces more indent
+					{
+						return listLine;
+					}
+				}
+				return nullptr;
+			}
+			else
+			{
+				return nullptr; // Root list
+			}
+		}
+	}
 
-            // Test to see if we have a link
-            switch( link.state )
-            {
-            case Link::NO_LINK:
-                if( c == '[' && !line.isHeading ) // we do not support headings with links for now
-                {
-                    link.state = Link::HAS_SQUARE_BRACKET_OPEN;
-                    link.text.start = i + 1;
-                    if( i > 0 && markdown_[i - 1] == '!' )
-                    {
-                        link.isImage = true;
-                    }
-                }
-                break;
-            case Link::HAS_SQUARE_BRACKET_OPEN:
-                if( c == ']' )
-                {
-                    link.state = Link::HAS_SQUARE_BRACKETS;
-                    link.text.stop = i;
-                }
-                break;
-            case Link::HAS_SQUARE_BRACKETS:
-                if( c == '(' )
-                {
-                    link.state = Link::HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN;
-                    link.url.start = i + 1;
-                    link.num_brackets_open = 1;
-                }
-                break;
-            case Link::HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN:
-                if( c == '(' )
-                {
-                    ++link.num_brackets_open;
-                }
-                else if( c == ')' )
-                {
-                    --link.num_brackets_open;
-                }
-                if( link.num_brackets_open == 0 )
-                {
-                    // reset emphasis status, we do not support emphasis around links for now
-                    em = Emphasis();
-                    // render previous line content
-                    line.lineEnd = link.text.start - ( link.isImage ? 2 : 1 );
-                    RenderLine( markdown_, line, textRegion, mdConfig_ );
-                    line.leadSpaceCount = 0;
-                    link.url.stop = i;
-                    line.isUnorderedListStart = false;    // the following text shouldn't have bullets
-                    ImGui::SameLine( 0.0f, 0.0f );
-                    if( link.isImage )   // it's an image, render it.
-                    {
-                        bool drawnImage = false;
-                        bool useLinkCallback = false;
-                        if( mdConfig_.imageCallbackClosure )
-                        {
-                            MarkdownLinkCallbackData data = { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true };
-                            MarkdownImageData imageData = {};
+	// render markdown
+	inline void Markdown( const char* markdown_, size_t markdownLength_, const MarkdownConfig& mdConfig_ )
+	{
+		static const char* s_linkHoverStart = NULL; // we need to preserve status of link hovering between frames
+		static ImGuiID     s_linkHoverID    = 0;
+		const char* linkHoverStart = NULL;
+		ImGuiID linkHoverID = ImGui::GetID("MDLHS");
+		if( linkHoverID == s_linkHoverID )
+		{
+			linkHoverStart = s_linkHoverStart;
+		}
 
-                            hl_call2(void, mdConfig_.imageCallbackClosure, MarkdownLinkCallbackData*, &data, MarkdownImageData*, &imageData);
+		Line       line;
+		Line       prevLine;
+		Link       link;
+		Emphasis   em;
+		Code        code;
+		Table       table;
+		TextRegion textRegion;
 
-                            useLinkCallback = imageData.useLinkCallback;
-                            if( imageData.isValid )
-                            {
-                                ImGui::Image( imageData.user_texture_id, imageData.size, imageData.uv0, imageData.uv1, imageData.tint_col, imageData.border_col );
-                                drawnImage = true;
-                            }
-                        }
-                        if( !drawnImage )
-                        {
-                            ImGui::Text( "( Image %.*s not loaded )", link.url.size(), markdown_ + link.url.start );
-                        }
-                        if( ImGui::IsItemHovered() )
-                        {
-                            if( ImGui::IsMouseReleased( 0 ) && mdConfig_.linkCallbackClosure && useLinkCallback )
-                            {
-                                MarkdownLinkCallbackData data = { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true };
-                                hl_call1(void,mdConfig_.linkCallbackClosure,MarkdownLinkCallbackData*,&data);
-                            
-                            }
-                            if( link.text.size() > 0 && mdConfig_.tooltipCallbackClosure )
-                            {
-                                MarkdownTooltipCallbackData data = { { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true }, mdConfig_.linkIcon };
-                                hl_call1(void,mdConfig_.tooltipCallbackClosure,MarkdownTooltipCallbackData*,&data);                                
-                            }
-                        }
-                    }
-                    else                 // it's a link, render it.
-                    {
-                        textRegion.RenderLinkTextWrapped( markdown_ + link.text.start, markdown_ + link.text.start + link.text.size(), link, markdown_, mdConfig_, &linkHoverStart, false );
-                    }
-                    ImGui::SameLine( 0.0f, 0.0f );
-                    // reset the link by reinitializing it
-                    link = Link();
-                    line.lastRenderPosition = i;
-                    break;
-                }
-            }
+		int concurrentEmptyNewlines = 0;
+		bool appliedExtraNewline = false;
 
-            // Test to see if we have emphasis styling
+		Line lineIndentStack[MarkdownConfig::INDENTSTACKSIZE];
+		int lineIndentStackCount = 0;
+		int nextIndentStackCount = -1;
+
+		char c = 0;
+		for( int i=0; i < (int)markdownLength_; ++i )
+		{
+			c = markdown_[i];               // get the character at index
+			if( c == 0 ) { break; }         // shouldn't happen but don't go beyond 0.
+
+			// Skip HTML tags if the flag is set
+			if( ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_IgnoreHtml ) && c == '<' )
+			{
+				// Check if this looks like an HTML tag
+				int j = i + 1;
+
+				// Check for closing tag
+				if( j < (int)markdownLength_ && markdown_[j] == '/' )
+				{
+					j++;
+				}
+
+				// Check for valid tag name (starts with letter)
+				if( j < (int)markdownLength_ && ( ( markdown_[j] >= 'a' && markdown_[j] <= 'z' ) || ( markdown_[j] >= 'A' && markdown_[j] <= 'Z' ) ) )
+				{
+					// Find the closing >
+					while( j < (int)markdownLength_ && markdown_[j] != '>' )
+					{
+						j++;
+					}
+
+					if( j < (int)markdownLength_ && markdown_[j] == '>' )
+					{
+						// Valid HTML tag found, skip it
+						i = j;
+						continue;
+					}
+				}
+				else if( c == '|' )
+				{
+					// Detect table rows
+					line.isTableRow = true;
+					line.isLeadingSpace = false;
+
+					// Count columns by counting pipes
+					int pipeCount = 0;
+					int j = i;
+					bool isAllDashes = true;
+					bool hasDash = false;
+
+					while( j < (int)markdownLength_ && markdown_[j] != '\n' )
+					{
+						if( markdown_[j] == '|' )
+						{
+							pipeCount++;
+						}
+						else if( markdown_[j] == '-' )
+						{
+							hasDash = true;
+						}
+						else if( markdown_[j] != ' ' && markdown_[j] != ':' )
+						{
+							isAllDashes = false;
+						}
+						j++;
+					}
+
+					// Check if this is a separator row (all dashes and pipes)
+					if( isAllDashes && hasDash && pipeCount >= 2 )
+					{
+						line.isTableSeparator = true;
+						table.state = Table::SEPARATOR;
+						table.columnCount = pipeCount - 1;
+					}
+					else if( pipeCount >= 2 )
+					{
+						if( table.state == Table::NONE )
+						{
+							table.state = Table::HEADER;
+							table.columnCount = pipeCount - 1;
+						}
+						else if( table.state == Table::SEPARATOR )
+						{
+							table.state = Table::ROWS;
+						}
+					}
+				}
+			}
+
+			// Check if we need to end an active table
+			if( !line.isLeadingSpace && table.active && !line.isTableRow )
+			{
+				// We're in a table but this line is not a table row - end the table
+				ImGui::EndTable();
+				table = Table();
+			}
+
+			// If we're at the beginning of the line, count any spaces
+			if( line.isLeadingSpace )
+			{
+				if ( (mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_ExoticIndents) )
+				{
+					if ( c == '\n' )
+					{
+						lineIndentStackCount = 0;  // reset indents on multiple newlines
+					}
+					else if ( ( c == '\r' ) && ( (int)markdownLength_ > i + 1 ) && ( markdown_[i + 1] == '\n' ) )
+					{
+						lineIndentStackCount = 0;  // reset indents on multiple newlines
+					}
+				}
+
+				if ( (mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_DiscardExtraNewLines) ) // Discard LF and CRLF newlines by markdown spec
+				{
+					if ( c == '\n' )
+					{
+						concurrentEmptyNewlines++;
+						line.lineStart += 1;
+						continue;
+					}
+					else if ( ( c == '\r' ) && ( (int)markdownLength_ > i + 1 ) && ( markdown_[i + 1] == '\n' ) )
+					{
+						concurrentEmptyNewlines++;
+						line.lineStart += 2;
+						i += 1;
+						continue;
+					}
+				}
+
+				if( c == ' ' )
+				{
+					++line.leadSpaceCount;
+					continue;
+				}
+				else
+				{
+					line.isLeadingSpace = false;
+					line.lastRenderPosition = i - 1;
+					bool isDeeplyNested = false;
+					Line* targetIndentLine = nullptr;
+					if ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_ExoticIndents )
+					{
+						targetIndentLine = DetectTargetLineAsIndent(line, lineIndentStack, lineIndentStackCount, isDeeplyNested);
+						// This is assuming plain-text, which is tabbed to the deepest indentation on the stack
+						line.indentCount = lineIndentStackCount > 0 ? lineIndentStack[lineIndentStackCount - 1].indentCount + 1 : 0;
+					}
+					else
+					{
+						line.indentCount = line.leadSpaceCount / 2;
+					}
+					// Deeply nested text always acts as plain-text, regardless of characters found
+					if ( !isDeeplyNested )  // this is always false without ImGuiMarkdownFormatFlags_ExoticIndents
+					{
+						bool marksUnorderedListing = ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_IncludeAllListPrefixes ) ? ( c == '*' || c == '-' || c == '+' ) : ( c == '*' );
+						marksUnorderedListing &= ( (int)markdownLength_ > i + 1 ) && ( markdown_[ i + 1 ] == ' ' );
+						if ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_ExoticIndents )
+						{
+							if ( !targetIndentLine )
+							{
+								marksUnorderedListing &= line.leadSpaceCount < 4;  // root lists require less than 4 leading spaces
+							}
+						}
+						else
+						{
+							marksUnorderedListing &= line.leadSpaceCount >= 2;  // default imgui_markdown behavior
+						}
+						if ( marksUnorderedListing )
+						{
+							line.unorderedListChar = c;
+							++i;
+							++line.lastRenderPosition;
+							if ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_ExoticIndents )
+							{
+								// This is for unordered lists, rather than plain-text
+								line.indentCount = targetIndentLine ? targetIndentLine->indentCount + 1 : 0;
+								nextIndentStackCount = line.indentCount + 1;
+							}
+						}
+						else if( c == '#' )
+						{
+							line.headingCount++;
+							bool bContinueChecking = true;
+							int j = i;
+							while( ++j < (int)markdownLength_ && bContinueChecking )
+							{
+								c = markdown_[j];
+								switch( c )
+								{
+								case '#':
+									line.headingCount++;
+									break;
+								case ' ':
+									line.lastRenderPosition = j - 1;
+									i = j;
+									line.isHeading = true;
+									if ( ( mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_ExoticIndents ) )
+									{
+										// Headings act as lists do, except child lines are not allowed, so they retreat
+										line.indentCount = targetIndentLine ? targetIndentLine->indentCount + 1 : 0;
+										nextIndentStackCount = line.indentCount;
+									}
+									bContinueChecking = false;
+									break;
+								default:
+									line.isHeading = false;
+									bContinueChecking = false;
+									break;
+								}
+							}
+							if( line.isHeading )
+							{
+								// reset emphasis status, we do not support emphasis around headers for now
+								em = Emphasis();
+								continue;
+							}
+						}
+					}
+				}
+			}
+
+			if ( (mdConfig_.formatFlags & ImGuiMarkdownFormatFlags_DiscardExtraNewLines) )
+			{
+				// In markdown spec, 2 or more consecutive newlines gets converted to a single blank
+				// line. The first newline is always digested by this parser so we check for 1 or more here.
+				if (!appliedExtraNewline && !prevLine.isHeading && concurrentEmptyNewlines >= 1) {
+					ImGui::NewLine();
+					appliedExtraNewline = true;
+				}
+			}
+
+			// Skip inline parsing for table rows
+			if( line.isTableRow )
+			{
+				// Just continue to newline handling
+				if( c != '\n' )
+				{
+					continue;
+				}
+			}
+
+			if( code.state == Code::NONE && c == '`' && !line.isHeading && link.state == Link::NO_LINK )
+			{
+				int lineEnd = i;
+				if( lineEnd > line.lineStart )
+				{
+					line.lineEnd = lineEnd;
+					RenderLine( markdown_, line, textRegion, mdConfig_ );
+					ImGui::SameLine( 0.0f, 0.0f );
+					line.unorderedListChar = '\0';
+					line.leadSpaceCount = 0;
+				}
+				code.state = Code::LEFT;
+				code.text.start = i;
+				line.isCode = true;
+				line.lineStart = i + 1;
+				line.lastRenderPosition = i;
+				continue;
+			}
+			else if( code.state == Code::LEFT )
+			{
+				if( c == '`' )
+				{
+					line.lineEnd = i;
+					if( line.lineEnd > line.lineStart )
+					{
+						RenderLine( markdown_, line, textRegion, mdConfig_ );
+						ImGui::SameLine( 0.0f, 0.0f );
+					}
+					code.state = Code::NONE;
+					line.isCode = false;
+					line.lineStart = i + 1;
+					line.lastRenderPosition = i;
+					continue;
+				}
+				if( c != '\n' )
+				{
+					continue;
+				}
+			}
+
+			// Test to see if we have a link
+			switch( link.state )
+			{
+			case Link::NO_LINK:
+				if( !line.isHeading ) // we do not support headings with links for now
+				{
+					if( c == '[' )
+					{
+						link.state = Link::HAS_SQUARE_BRACKET_OPEN;
+						link.text.start = i + 1;
+						link.num_square_brackets_open = 1;
+						if( i > 0 && markdown_[i - 1] == '!' )
+						{
+							link.isImage = true;
+						}
+					}
+					else if( c == '<' )
+					{
+						link.state = Link::HAS_ANGLE_BRACKET_OPEN;
+						link.text.start = i + 1;
+						link.url.start = i + 1;
+						// I don't think autolinks have image support
+					}
+				}
+				break;
+			case Link::HAS_SQUARE_BRACKET_OPEN:
+				if( c == '[' )
+				{
+					++link.num_square_brackets_open;
+				}
+				else if( c == ']' )
+				{
+					--link.num_square_brackets_open;
+				}
+				if( link.num_square_brackets_open == 0 )
+				{
+					link.state = Link::HAS_SQUARE_BRACKETS;
+					link.text.stop = i;
+				}
+				break;
+			case Link::HAS_SQUARE_BRACKETS:
+				if( c == '(' )
+				{
+					link.state = Link::HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN;
+					link.url.start = i + 1;
+					link.num_brackets_open = 1;
+				}
+				break;
+			case Link::HAS_SQUARE_BRACKETS_ROUND_BRACKET_OPEN:
+				if( c == '(' )
+				{
+					++link.num_brackets_open;
+				}
+				else if( c == ')' )
+				{
+					--link.num_brackets_open;
+				}
+				if( link.num_brackets_open == 0 )
+				{
+					// reset emphasis status, we do not support emphasis around links for now
+					em = Emphasis();
+					// render previous line content
+					line.lineEnd = link.text.start - ( link.isImage ? 2 : 1 );
+					RenderLine( markdown_, line, textRegion, mdConfig_ );
+					line.leadSpaceCount = 0;
+					link.url.stop = i;
+					line.unorderedListChar = '\0';    // the following text shouldn't have bullets
+					ImGui::SameLine( 0.0f, 0.0f );
+					if( link.isImage )   // it's an image, render it.
+					{
+						bool drawnImage = false;
+						bool useLinkCallback = false;
+						if( mdConfig_.imageCallback )
+						{
+							MarkdownImageData imageData = mdConfig_.imageCallback( { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true } );
+							useLinkCallback = imageData.useLinkCallback;
+							if( imageData.isValid )
+							{
+#if IMGUI_VERSION_NUM < 19185
+								if( imageData.bg_col.w > 0.0f )
+								{
+									ImVec2 p = ImGui::GetCursorScreenPos();
+									ImGui::GetWindowDrawList()->AddRectFilled( p, ImVec2( p.x + imageData.size.x, p.y + imageData.size.y ), ImGui::GetColorU32( imageData.bg_col ));
+								}
+								ImGui::Image( imageData.user_texture_id, imageData.size, imageData.uv0, imageData.uv1, imageData.tint_col, imageData.border_col );
+#else
+								ImGui::PushStyleColor( ImGuiCol_Border, imageData.border_col );
+								ImGui::ImageWithBg( imageData.user_texture_id, imageData.size, imageData.uv0, imageData.uv1, imageData.bg_col, imageData.tint_col );
+								ImGui::PopStyleColor();
+#endif
+								drawnImage = true;
+							}
+						}
+						if( !drawnImage )
+						{
+							textRegion.RenderLinkTextWrapped( markdown_ + link.text.start, markdown_ + link.text.start + link.text.size(), link, markdown_, mdConfig_, &linkHoverStart, false );
+						}
+						if( ImGui::IsItemHovered() )
+						{
+							ImGui::SetMouseCursor( ImGuiMouseCursor_Hand );
+							if( ImGui::IsMouseReleased( 0 ) && mdConfig_.linkCallback && useLinkCallback )
+							{
+								mdConfig_.linkCallback( { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true } );
+							}
+							if( link.text.size() > 0 && mdConfig_.tooltipCallback )
+							{
+								mdConfig_.tooltipCallback( { { markdown_ + link.text.start, link.text.size(), markdown_ + link.url.start, link.url.size(), mdConfig_.userData, true }, mdConfig_.linkIcon } );
+							}
+						}
+					}
+					else                 // it's a link, render it.
+					{
+						textRegion.RenderLinkTextWrapped( markdown_ + link.text.start, markdown_ + link.text.start + link.text.size(), link, markdown_, mdConfig_, &linkHoverStart, false );
+					}
+					ImGui::SameLine( 0.0f, 0.0f );
+					// reset the link by reinitializing it
+					link = Link();
+					line.lastRenderPosition = i;
+				}
+				break;
+
+			case Link::HAS_ANGLE_BRACKET_OPEN:
+				if( c == '>' )
+				{
+					// reset emphasis status, we do not support emphasis around links for now
+					em = Emphasis();
+					// render previous line content
+					line.lineEnd = link.text.start - 1;
+					RenderLine( markdown_, line, textRegion, mdConfig_ );
+					line.leadSpaceCount = 0;
+					link.text.stop = i;
+					link.url.stop = i;
+					line.unorderedListChar = '\0';    // the following text shouldn't have bullets
+					ImGui::SameLine( 0.0f, 0.0f );
+					textRegion.RenderLinkTextWrapped( markdown_ + link.text.start, markdown_ + link.text.start + link.text.size(), link, markdown_, mdConfig_, &linkHoverStart, false );
+					ImGui::SameLine( 0.0f, 0.0f );
+					// reset the link by reinitializing it
+					link = Link();
+					line.lastRenderPosition = i;
+				}
+				break;
+			}
+
+			// Test to see if we have emphasis styling
 			switch( em.state )
 			{
 			case Emphasis::NONE:
 				if( link.state == Link::NO_LINK && !line.isHeading )
-                {
-                    int next = i + 1;
-                    int prev = i - 1;
+				{
+					int next = i + 1;
+					int prev = i - 1;
 					if( ( c == '*' || c == '_' )
-                        && ( i == line.lineStart
-                            || markdown_[ prev ] == ' '
-                            || markdown_[ prev ] == '\t' ) // empasis must be preceded by whitespace or line start
-                        && (int)markdownLength_ > next // emphasis must precede non-whitespace
-                        && markdown_[ next ] != ' '
-                        && markdown_[ next ] != '\n'
-                        && markdown_[ next ] != '\t' )
-                    {
+						&& ( i == line.lineStart
+							|| markdown_[ prev ] == ' '
+							|| markdown_[ prev ] == '\t' ) // empasis must be preceded by whitespace or line start
+						&& (int)markdownLength_ > next // emphasis must precede non-whitespace
+						&& markdown_[ next ] != ' '
+						&& markdown_[ next ] != '\n'
+						&& markdown_[ next ] != '\t' )
+					{
 						em.state = Emphasis::LEFT;
 						em.sym = c;
-                        em.text.start = i;
+						em.text.start = i;
 						line.emphasisCount = 1;
 						continue;
 					}
@@ -731,322 +1114,489 @@ namespace ImGui
 				break;
 			case Emphasis::LEFT:
 				if( em.sym == c )
-                {
+				{
 					++line.emphasisCount;
 					continue;
 				}
-                else
-                {
+				else
+				{
 					em.text.start = i;
 					em.state = Emphasis::MIDDLE;
 				}
 				break;
 			case Emphasis::MIDDLE:
 				if( em.sym == c )
-                {
+				{
 					em.state = Emphasis::RIGHT;
 					em.text.stop = i;
-                   // pass through to case Emphasis::RIGHT
+				   // pass through to case Emphasis::RIGHT
 				}
-                else
-                {
-                    break;
-                }
+				else
+				{
+					break;
+				}
+			#if __cplusplus >= 201703L
+				  [[fallthrough]];
+			#endif
 			case Emphasis::RIGHT:
 				if( em.sym == c )
-                {
+				{
 					if( line.emphasisCount < 3 && ( i - em.text.stop + 1 == line.emphasisCount ) )
-                    {
-                        // render text up to emphasis
-                        int lineEnd = em.text.start - line.emphasisCount;
-                        if( lineEnd > line.lineStart )
-                        {
-                            line.lineEnd = lineEnd;
-                            RenderLine( markdown_, line, textRegion, mdConfig_ );
-						    ImGui::SameLine( 0.0f, 0.0f );
-                            line.isUnorderedListStart = false;
-                            line.leadSpaceCount = 0;
-                        }
+					{
+						// render text up to emphasis
+						int lineEnd = em.text.start - line.emphasisCount;
+						if( lineEnd > line.lineStart )
+						{
+							line.lineEnd = lineEnd;
+							RenderLine( markdown_, line, textRegion, mdConfig_ );
+							ImGui::SameLine( 0.0f, 0.0f );
+							line.unorderedListChar = '\0';
+							line.leadSpaceCount = 0;
+						}
 						line.isEmphasis = true;
 						line.lastRenderPosition = em.text.start - 1;
-                        line.lineStart = em.text.start;
-					    line.lineEnd = em.text.stop;
-					    RenderLine( markdown_, line, textRegion, mdConfig_ );
-					    ImGui::SameLine( 0.0f, 0.0f );
-					    line.isEmphasis = false;
-					    line.lastRenderPosition = i;
-					    em = Emphasis();
-                    }
-                    continue;
-				} 
-                else
-                {
-                    em.state = Emphasis::NONE;
-                    // render text up to here
-                    int start = em.text.start - line.emphasisCount;
-                    if( start < line.lineStart )
-                    {
-                        line.lineEnd = line.lineStart;
-                        line.lineStart = start;
-                        line.lastRenderPosition = start - 1;
-                        RenderLine(markdown_, line, textRegion, mdConfig_);
-                        line.lineStart          = line.lineEnd;
-                        line.lastRenderPosition = line.lineStart - 1;
-                    }
-                }
+						line.lineStart = em.text.start;
+						line.lineEnd = em.text.stop;
+						RenderLine( markdown_, line, textRegion, mdConfig_ );
+						ImGui::SameLine( 0.0f, 0.0f );
+						line.isEmphasis = false;
+						line.lastRenderPosition = i;
+						em = Emphasis();
+					}
+					continue;
+				}
+				else
+				{
+					em.state = Emphasis::NONE;
+					// render text up to here
+					int start = em.text.start - line.emphasisCount;
+					if( start < line.lineStart )
+					{
+						line.lineEnd = line.lineStart;
+						line.lineStart = start;
+						line.lastRenderPosition = start - 1;
+						RenderLine( markdown_, line, textRegion, mdConfig_ );
+						line.lineStart          = line.lineEnd;
+						line.lastRenderPosition = line.lineStart - 1;
+					}
+				}
 				break;
 			}
 
-            // handle end of line (render)
-            if( c == '\n' )
-            {
-                // first check if the line is a horizontal rule
-                line.lineEnd = i;
-                if( em.state == Emphasis::MIDDLE && line.emphasisCount >=3 &&
-                    ( line.lineStart + line.emphasisCount ) == i )
-                {
-                    ImGui::Separator();
-                }
-                else
-                {
-                    // render the line: multiline emphasis requires a complex implementation so not supporting
-                    RenderLine( markdown_, line, textRegion, mdConfig_ );
-                }
+			// handle end of line (render)
+			if( c == '\n' )
+			{
+				// first check if the line is a horizontal rule
+				line.lineEnd = i;
+				if( em.state == Emphasis::MIDDLE && line.emphasisCount >=3 &&
+					( line.lineStart + line.emphasisCount ) == i )
+				{
+					ImGui::Separator();
+				}
+				else if( line.isTableRow )
+				{
+					// Handle table rendering
+					if( table.state == Table::HEADER )
+					{
+						// Start new table
+						if( ImGui::BeginTable( "##mdtable", table.columnCount, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg ) )
+						{
+							table.active = true;
+							ImGui::TableNextRow( ImGuiTableRowFlags_Headers );
+							RenderTableRow( markdown_, line.lineStart, line.lineEnd, table.columnCount, true, mdConfig_ );
+						}
+					}
+					else if( line.isTableSeparator && table.active )
+					{
+						// Skip separator row, already handled by BeginTable with headers
+					}
+					else if( table.state == Table::ROWS && table.active )
+					{
+						// Render data row
+						ImGui::TableNextRow();
+						RenderTableRow( markdown_, line.lineStart, line.lineEnd, table.columnCount, false, mdConfig_ );
+					}
+				}
+				else
+				{
+					// End table if we were in one
+					if( table.active )
+					{
+						ImGui::EndTable();
+						table = Table();
+					}
+					// render the line: multiline emphasis requires a complex implementation so not supporting
+					RenderLine( markdown_, line, textRegion, mdConfig_ );
+				}
 
-                // reset the line and emphasis state
+				if( 0 < nextIndentStackCount && nextIndentStackCount < MarkdownConfig::INDENTSTACKSIZE )
+				{
+					lineIndentStack[nextIndentStackCount - 1] = line;
+					lineIndentStackCount = nextIndentStackCount;
+				}
+				else if ( nextIndentStackCount == 0 )
+				{
+					lineIndentStackCount = 0;
+				}
+
+				// reset the line and emphasis state
+				prevLine = line;
 				line = Line();
-                em = Emphasis();
+				em = Emphasis();
+				code = Code();
 
-                line.lineStart = i + 1;
-                line.lastRenderPosition = i;
+				line.lineStart = i + 1;
+				line.lastRenderPosition = i;
+				nextIndentStackCount = -1;
 
-                textRegion.ResetIndent();
-                
-                // reset the link
-                link = Link();
-            }
-        }
+				textRegion.ResetIndent();
 
-        if( em.state == Emphasis::LEFT && line.emphasisCount >= 3 )
-        {
-            ImGui::Separator();
-        }
-        else
-        {
-            // render any remaining text if last char wasn't 0
-            if( markdownLength_ && line.lineStart < (int)markdownLength_ && markdown_[ line.lineStart ] != 0 )
-            {
-                // handle both null terminated and non null terminated strings
-                line.lineEnd = (int)markdownLength_;
-                if( 0 == markdown_[ line.lineEnd - 1 ] )
-                {
-                    --line.lineEnd;
-                }
-                RenderLine( markdown_, line, textRegion, mdConfig_ );
-            }
-        }
-    }
+				// reset the link
+				link = Link();
 
-    inline bool TextRegion::RenderLinkText( const char* text_, const char* text_end_, const Link& link_,
-        const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_ )
-    {
-        MarkdownFormatInfo formatInfo;
-        formatInfo.config = &mdConfig_;
-        formatInfo.type = MarkdownFormatType::LINK;
-        mdConfig_.formatCallback( formatInfo, true );
-        ImGui::PushTextWrapPos( -1.0f );
-        ImGui::TextUnformatted( text_, text_end_ );
-        ImGui::PopTextWrapPos();
+				concurrentEmptyNewlines = 0;
+				appliedExtraNewline = false;
+			}
+		}
 
-        bool bThisItemHovered = ImGui::IsItemHovered();
-        if(bThisItemHovered)
-        {
-            *linkHoverStart_ = markdown_ + link_.text.start;
-        }
-        bool bHovered = bThisItemHovered || ( *linkHoverStart_ == ( markdown_ + link_.text.start ) );
+		if( em.state == Emphasis::LEFT && line.emphasisCount >= 3 )
+		{
+			ImGui::Separator();
+		}
+		else
+		{
+			// Close any open table
+			if( table.active )
+			{
+				ImGui::EndTable();
+				table = Table();
+			}
 
-        formatInfo.itemHovered = bHovered;
-        mdConfig_.formatCallback( formatInfo, false );
+			// render any remaining text if last char wasn't 0
+			if( markdownLength_ && line.lineStart < (int)markdownLength_ && markdown_[ line.lineStart ] != 0 )
+			{
+				// handle both null terminated and non null terminated strings
+				line.lineEnd = (int)markdownLength_;
+				if( 0 == markdown_[ line.lineEnd - 1 ] )
+				{
+					--line.lineEnd;
+				}
+				RenderLine( markdown_, line, textRegion, mdConfig_ );
+			}
+		}
 
-        if(bHovered)
-        {
-            if( ImGui::IsMouseReleased( 0 ) && mdConfig_.linkCallbackClosure )
-            {
-                MarkdownLinkCallbackData data = { markdown_ + link_.text.start, link_.text.size(), markdown_ + link_.url.start, link_.url.size(), mdConfig_.userData, false };
-                hl_call1(void,mdConfig_.linkCallbackClosure,MarkdownLinkCallbackData*,&data);
-            }
-            if( mdConfig_.tooltipCallbackClosure )
-            {
-                MarkdownTooltipCallbackData data = { { markdown_ + link_.text.start, link_.text.size(), markdown_ + link_.url.start, link_.url.size(), mdConfig_.userData, false }, mdConfig_.linkIcon } ;
-                hl_call1(void,mdConfig_.tooltipCallbackClosure,MarkdownTooltipCallbackData*,&data);      
-            }
-        }
-        return bThisItemHovered;
-    }
+		if( NULL != linkHoverStart || linkHoverID == s_linkHoverID )
+		{
+			s_linkHoverStart = linkHoverStart;
+			s_linkHoverID    = linkHoverID;
+		}
+	}
 
-    // IsCharInsideWord based on ImGui's CalcWordWrapPositionA
-    inline bool IsCharInsideWord( char c_ )
-    {
-        return c_ != ' ' && c_ != '.' && c_ != ',' && c_ != ';' && c_ != '!' && c_ != '?' && c_ != '\"';
-    }
+	inline bool TextRegion::RenderLinkText( const char* text_, const char* text_end_, const Link& link_,
+		const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_ )
+	{
+		MarkdownFormatInfo formatInfo;
+		formatInfo.config = &mdConfig_;
+		formatInfo.type = MarkdownFormatType::LINK;
+		mdConfig_.formatCallback( formatInfo, true );
+		ImGui::PushTextWrapPos( -1.0f );
+		ImGui::TextUnformatted( text_, text_end_ );
+		ImGui::PopTextWrapPos();
 
-    inline void TextRegion::RenderLinkTextWrapped( const char* text_, const char* text_end_, const Link& link_,
-        const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_, bool bIndentToHere_ )
-        {
-            float       scale = ImGui::GetIO().FontGlobalScale;
-            float       widthLeft = GetContentRegionAvail().x;
-            const char* endLine = text_;
-            if( widthLeft > 0.0f )
-            {
-                endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
-            }
+		bool bThisItemHovered = ImGui::IsItemHovered();
+		if(bThisItemHovered)
+		{
+			*linkHoverStart_ = markdown_ + link_.text.start;
+		}
+		bool bHovered = bThisItemHovered || ( *linkHoverStart_ == ( markdown_ + link_.text.start ) );
 
-            if( endLine > text_ && endLine < text_end_ )
-            {
-                if( IsCharInsideWord( *endLine ) )
-                {
-                    // see if we can do a better cut.
-                    float       widthNextLine = GetContentRegionMax().x;
-                    const char* endNextLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthNextLine );
-                    if( endNextLine == text_end_ || ( endNextLine <= text_end_ && !IsCharInsideWord( *endNextLine ) ) )
-                    {
-                        // can possibly do better if go to next line
-                        endLine = text_;
-                    }
-                }
-            }
-            bool bHovered = RenderLinkText( text_, endLine, link_, markdown_, mdConfig_, linkHoverStart_ );
-            if( bIndentToHere_ )
-            {
-                float indentNeeded = GetContentRegionAvail().x - widthLeft;
-                if( indentNeeded )
-                {
-                    ImGui::Indent( indentNeeded );
-                    indentX += indentNeeded;
-                }
-            }
-            widthLeft = GetContentRegionAvail().x;
-            while( endLine < text_end_ )
-            {
-                text_ = endLine;
-                if( *text_ == ' ' ) { ++text_; }    // skip a space at start of line
-                endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
-                if( text_ == endLine ) 
-                {
-                    endLine++;
-                }
-                bool bThisLineHovered = RenderLinkText( text_, endLine, link_, markdown_, mdConfig_, linkHoverStart_ );
-                bHovered = bHovered || bThisLineHovered;
-            }
-            if( !bHovered && *linkHoverStart_ == markdown_ + link_.text.start )
-            {
-                *linkHoverStart_ = NULL;
-            }
-        }
+		formatInfo.itemHovered = bHovered;
+		mdConfig_.formatCallback( formatInfo, false );
+
+		if(bHovered)
+		{
+			ImGui::SetMouseCursor( ImGuiMouseCursor_Hand );
+			if( ImGui::IsMouseReleased( 0 ) && mdConfig_.linkCallback )
+			{
+				mdConfig_.linkCallback( { markdown_ + link_.text.start, link_.text.size(), markdown_ + link_.url.start, link_.url.size(), mdConfig_.userData, false } );
+			}
+			if( mdConfig_.tooltipCallback )
+			{
+				mdConfig_.tooltipCallback( { { markdown_ + link_.text.start, link_.text.size(), markdown_ + link_.url.start, link_.url.size(), mdConfig_.userData, false }, mdConfig_.linkIcon } );
+			}
+		}
+		return bThisItemHovered;
+	}
+
+	// IsCharInsideWord based on ImGui's CalcWordWrapPositionA
+	inline bool IsCharInsideWord( char c_ )
+	{
+		return c_ != ' ' && c_ != '.' && c_ != ',' && c_ != ';' && c_ != '!' && c_ != '?' && c_ != '\"';
+	}
+
+	// ImGui::TextWrapped will wrap at the starting position
+	// so to work around this we render using our own wrapping for the first line
+	inline void TextRegion::RenderTextWrapped( const char* text_, const char* text_end_, bool bIndentToHere_ )
+	{
+	#if IMGUI_VERSION_NUM >= 19197
+		float       fontSize  = ImGui::GetFontSize();
+	#else
+		float       scale = ImGui::GetIO().FontGlobalScale;
+	#endif
+		float       widthLeft = GetContentRegionAvail().x;
+		const char* endLine = text_;
+		if( widthLeft > 0.0f )
+		{
+		#if IMGUI_VERSION_NUM >= 19197
+			endLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthLeft );
+		#else
+			endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
+		#endif
+		}
+
+		if( endLine > text_ && endLine < text_end_ )
+		{
+			if( IsCharInsideWord( *endLine ) )
+			{
+				// see if we can do a better cut.
+				float       widthNextLine = widthLeft + GetCursorScreenPos().x - GetWindowPos().x; // was GetContentRegionMax().x on IMGUI_VERSION_NUM < 19099
+			#if IMGUI_VERSION_NUM >= 19197
+				const char* endNextLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthNextLine );
+			#else
+				const char* endNextLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthNextLine );
+			#endif
+				if( endNextLine == text_end_ || ( endNextLine <= text_end_ && !IsCharInsideWord( *endNextLine ) ) )
+				{
+						// can possibly do better if go to next line
+					endLine = text_;
+				}
+			}
+		}
+		ImGui::TextUnformatted( text_, endLine );
+		if( bIndentToHere_ )
+		{
+			float indentNeeded = GetContentRegionAvail().x - widthLeft;
+			if( indentNeeded )
+			{
+				ImGui::Indent( indentNeeded );
+				indentX += indentNeeded;
+			}
+		}
+		widthLeft = GetContentRegionAvail().x;
+		while( endLine < text_end_ )
+		{
+			text_ = endLine;
+			if( *text_ == ' ' ) { ++text_; }    // skip a space at start of line
+		#if IMGUI_VERSION_NUM >= 19197
+			endLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthLeft );
+		#else
+			endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
+		#endif
+			if( text_ == endLine )
+			{
+				endLine++;
+			}
+			ImGui::TextUnformatted( text_, endLine );
+		}
+	}
+
+	inline void TextRegion::RenderLinkTextWrapped( const char* text_, const char* text_end_, const Link& link_,
+		const char* markdown_, const MarkdownConfig& mdConfig_, const char** linkHoverStart_, bool bIndentToHere_ )
+		{
+			#if IMGUI_VERSION_NUM >= 19197
+				float       fontSize  = ImGui::GetFontSize();
+			#else
+				float       scale = ImGui::GetIO().FontGlobalScale;
+			#endif
+			float       widthLeft = GetContentRegionAvail().x;
+			const char* endLine = text_;
+			if( widthLeft > 0.0f )
+			{
+				#if IMGUI_VERSION_NUM >= 19197
+					endLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthLeft );
+				#else
+					endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
+				#endif
+			}
+
+			if( endLine > text_ && endLine < text_end_ )
+			{
+				if( IsCharInsideWord( *endLine ) )
+				{
+					// see if we can do a better cut.
+					float       widthNextLine = widthLeft + GetCursorScreenPos().x - GetWindowPos().x; // was GetContentRegionMax().x on IMGUI_VERSION_NUM < 19099
+					#if IMGUI_VERSION_NUM >= 19197
+						const char* endNextLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthNextLine );
+					#else
+						const char* endNextLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthNextLine );
+					#endif
+					if( endNextLine == text_end_ || ( endNextLine <= text_end_ && !IsCharInsideWord( *endNextLine ) ) )
+					{
+						// can possibly do better if go to next line
+						endLine = text_;
+					}
+				}
+			}
+			bool bHovered = RenderLinkText( text_, endLine, link_, markdown_, mdConfig_, linkHoverStart_ );
+			if( bIndentToHere_ )
+			{
+				float indentNeeded = GetContentRegionAvail().x - widthLeft;
+				if( indentNeeded )
+				{
+					ImGui::Indent( indentNeeded );
+					indentX += indentNeeded;
+				}
+			}
+			widthLeft = GetContentRegionAvail().x;
+			while( endLine < text_end_ )
+			{
+				text_ = endLine;
+				if( *text_ == ' ' ) { ++text_; }    // skip a space at start of line
+				#if IMGUI_VERSION_NUM >= 19197
+					endLine = ImGui::GetFont()->CalcWordWrapPosition( fontSize, text_, text_end_, widthLeft );
+				#else
+					endLine = ImGui::GetFont()->CalcWordWrapPositionA( scale, text_, text_end_, widthLeft );
+				#endif
+				if( text_ == endLine )
+				{
+					endLine++;
+				}
+				bool bThisLineHovered = RenderLinkText( text_, endLine, link_, markdown_, mdConfig_, linkHoverStart_ );
+				bHovered = bHovered || bThisLineHovered;
+			}
+			if( !bHovered && *linkHoverStart_ == markdown_ + link_.text.start )
+			{
+				*linkHoverStart_ = NULL;
+			}
+		}
 
 
-    inline void defaultMarkdownFormatCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ )
-    {
-        switch( markdownFormatInfo_.type )
-        {
-        case MarkdownFormatType::NORMAL_TEXT:
-            break;
+	inline void defaultMarkdownFormatCallback( const MarkdownFormatInfo& markdownFormatInfo_, bool start_ )
+	{
+		switch( markdownFormatInfo_.type )
+		{
+		case MarkdownFormatType::NORMAL_TEXT:
+			break;
 		case MarkdownFormatType::EMPHASIS:
-        {
-            MarkdownHeadingFormat fmt;
-            // default styling for emphasis uses last headingFormats - for your own styling
-            // implement EMPHASIS in your formatCallback
-            if( markdownFormatInfo_.level == 1 )
-            {
-                // normal emphasis
- 			    if( start_ )
-			    {
-                    ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
-			    }
-                else
-			    {
-                    ImGui::PopStyleColor();
-			    }              
-            }
-            else
-            {
-                // strong emphasis
-                fmt = markdownFormatInfo_.config->headingFormats[ MarkdownConfig::NUMHEADINGS - 1 ];
-			    if( start_ )
-			    {
-				    if( fmt.font )
-				    {
-					    ImGui::PushFont( fmt.font );
-				    }
-			    }
-                else
-			    {
-				    if( fmt.font )
-				    {
-					    ImGui::PopFont();
-				    }
-			    }
-            }
-            break;
-        }
-        case MarkdownFormatType::HEADING:
-        {
-            MarkdownHeadingFormat fmt;
-            if( markdownFormatInfo_.level > MarkdownConfig::NUMHEADINGS )
-            {
-                fmt = markdownFormatInfo_.config->headingFormats[ MarkdownConfig::NUMHEADINGS - 1 ];
-            }
-            else
-            {
-                fmt = markdownFormatInfo_.config->headingFormats[ markdownFormatInfo_.level - 1 ];
-            }
-            if( start_ )
-            {
-                if( fmt.font  )
-                {
-                    ImGui::PushFont( fmt.font );
-                }
-                ImGui::NewLine();
-            }
-            else
-            {
-                if( fmt.separator )
-                {
-                    ImGui::Separator();
-                    ImGui::NewLine();
-                }
-                else
-                {
-                    ImGui::NewLine();
-                }
-                if( fmt.font )
-                {
-                    ImGui::PopFont();
-                }
-            }
-            break;
-        }
-        case MarkdownFormatType::UNORDERED_LIST:
-            break;
-        case MarkdownFormatType::LINK:
-            if( start_ )
-            {
-                ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_ButtonHovered ] );
-            }
-            else
-            {
-                ImGui::PopStyleColor();
-                if( markdownFormatInfo_.itemHovered )
-                {
-                    ImGui::UnderLine( ImGui::GetStyle().Colors[ ImGuiCol_ButtonHovered ] );
-                }
-                else
-                {
-                    ImGui::UnderLine( ImGui::GetStyle().Colors[ ImGuiCol_Button ] );
-                }
-            }
-            break;
-        }
-    }
-
+		{
+			MarkdownHeadingFormat fmt;
+			// default styling for emphasis uses last headingFormats - for your own styling
+			// implement EMPHASIS in your formatCallback
+			if( markdownFormatInfo_.level == 1 )
+			{
+				// normal emphasis
+ 				if( start_ )
+				{
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
+				}
+				else
+				{
+					ImGui::PopStyleColor();
+				}
+			}
+			else
+			{
+				// strong emphasis
+				fmt = markdownFormatInfo_.config->headingFormats[ MarkdownConfig::NUMHEADINGS - 1 ];
+				if( start_ )
+				{
+					if( fmt.font )
+					{
+						#ifdef IMGUI_HAS_TEXTURES // used to detect dynamic font capability:
+							ImGui::PushFont( fmt.font, 0.0f ); // Change font and keep current size
+						#else
+							ImGui::PushFont( fmt.font );
+						#endif
+					}
+				}
+				else
+				{
+					if( fmt.font )
+					{
+						ImGui::PopFont();
+					}
+				}
+			}
+			break;
+		}
+		case MarkdownFormatType::HEADING:
+		{
+			MarkdownHeadingFormat fmt;
+			if( markdownFormatInfo_.level > MarkdownConfig::NUMHEADINGS )
+			{
+				fmt = markdownFormatInfo_.config->headingFormats[ MarkdownConfig::NUMHEADINGS - 1 ];
+			}
+			else
+			{
+				fmt = markdownFormatInfo_.config->headingFormats[ markdownFormatInfo_.level - 1 ];
+			}
+			if (start_)
+			{
+				if ( 0 == ( markdownFormatInfo_.config->formatFlags & ImGuiMarkdownFormatFlags_NoNewLineBeforeHeading ) )
+				{
+					ImGui::NewLine();
+				}
+				if (fmt.font)
+				{
+#ifdef IMGUI_HAS_TEXTURES // used to detect dynamic font capability: https://github.com/ocornut/imgui/issues/8465#issuecomment-2701570771
+					ImGui::PushFont(fmt.font, fmt.fontSize > 0.0f ? fmt.fontSize : fmt.font->LegacySize);
+#else
+					ImGui::PushFont(fmt.font);
+#endif
+				}
+			}
+			else
+			{
+				if (fmt.separator)
+				{
+					// In markdown the separator does not advance the cursor
+					ImVec2 cursor = ImGui::GetCursorPos();
+					ImGui::Separator();
+					if ( (markdownFormatInfo_.config->formatFlags & ImGuiMarkdownFormatFlags_SeparatorDoesNotAdvance) ) {
+						ImGui::SetCursorPos(cursor);
+					}
+				}
+				if (fmt.font)
+				{
+					ImGui::PopFont();
+				}
+				ImGui::NewLine();
+			}
+			break;
+		}
+		case MarkdownFormatType::UNORDERED_LIST:
+			break;
+		case MarkdownFormatType::CODE:
+			if( start_ )
+			{
+				ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
+			}
+			else
+			{
+				ImGui::PopStyleColor();
+			}
+			break;
+		case MarkdownFormatType::LINK:
+			if( start_ )
+			{
+				ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_ButtonHovered ] );
+			}
+			else
+			{
+				ImGui::PopStyleColor();
+				if( markdownFormatInfo_.itemHovered )
+				{
+					ImGui::UnderLine( ImGui::GetStyle().Colors[ ImGuiCol_ButtonHovered ] );
+				}
+				else
+				{
+					ImGui::UnderLine( ImGui::GetStyle().Colors[ ImGuiCol_Button ] );
+				}
+			}
+			break;
+		case MarkdownFormatType::TABLE:
+			// Tables are handled inline during rendering
+			break;
+		}
+	}
 }
