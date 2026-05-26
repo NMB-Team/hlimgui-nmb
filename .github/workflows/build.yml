@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           submodules: recursive
 
@@ -124,7 +124,7 @@ jobs:
           Compress-Archive -Path 'dist\hlimgui\*' -DestinationPath 'hlimgui-windows.zip'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: hlimgui-windows
           path: dist/hlimgui
