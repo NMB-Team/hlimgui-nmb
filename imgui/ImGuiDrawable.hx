@@ -8,6 +8,11 @@ import h2d.Tile;
 import h3d.mat.Texture;
 import imgui.ImGui;
 import hxd.Key;
+#if limen
+import limen.platform.Platform as SdlPlatform;
+#elseif hlsdl
+import sdl.Sdl as SdlPlatform;
+#end
 
 class ImGuiDrawableBuffers {
 
@@ -314,9 +319,9 @@ class ImGuiDrawable extends h2d.Drawable {
 
 
 		#if multidriver
-		var x:Single = 0;
-		var y:Single = 0;
-		sdl.Sdl.getGlobalMouseState(x, y);
+		var x = 0;
+		var y = 0;
+		SdlPlatform.getGlobalMouseState(x, y);
 		io.addMousePosEvent( x, y );
 		#end
 
@@ -356,11 +361,8 @@ class ImGuiDrawable extends h2d.Drawable {
 
 		@:privateAccess
 		{
-			var x = 0;
-			var y = 0;
-			sdl.Window.winGetPosition( window.window.win, x, y );
-			event.relX += x;
-			event.relY += y;
+			event.relX += window.window.x;
+			event.relY += window.window.y;
 		}
 		onEvent( event );
 

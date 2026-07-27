@@ -2,6 +2,11 @@ package imgui;
 
 #if heaps
 import imgui.ImGui;
+#if limen
+import limen.platform.Platform as SdlPlatform;
+#elseif hlsdl
+import sdl.Sdl as SdlPlatform;
+#end
 
 /**
   A simplified Heaps App that can be used to get Imgui integrated without much hassle.
@@ -72,14 +77,23 @@ class ImGuiApp extends hxd.App {
 
 		}
 
-		#if hlsdl
+		#if (hlsdl || limen)
 		// This hint allows a focus click to also send events. Without this, you have to click a window
 		// once before you can interact with it, which feels really bad.
-		sdl.Sdl.setHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1");
+		SdlPlatform.setHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1");
 		io.ConfigDockingTransparentPayload = true;
 
-		for( d in sdl.Sdl.getDisplays() )
+		for( d in SdlPlatform.getDisplays() )
 		{
+			#if limen
+			pio.addMonitor( {
+				x: d.width,
+				y: d.height
+			}, {
+				x: d.x,
+				y: d.y
+			} );
+			#else
 			pio.addMonitor( {
 				x: d.right - d.left,
 				y: d.bottom - d.top
@@ -87,6 +101,7 @@ class ImGuiApp extends hxd.App {
 				x: d.left,
 				y: d.top
 			} );
+			#end
 
 		}
 		#else
@@ -110,16 +125,17 @@ class ImGuiApp extends hxd.App {
 				d3dDriver.window = w.window;
 				d3dDriver.reset();
 				d3dDriver.init(e.onCreate, !e.hardware);
-				#elseif hlsdl
+				#elseif (hlsdl || limen)
 
 				var mainWindow = hxd.Window.inst;
-				var w = new hxd.Window("ImGui Viewport", 100, 100, { fixed: false });
+				var w = new hxd.Window("ImGui Viewport", 100, 100, {fixed: false, hidden: true});
 				w.displayMode = hxd.Window.DisplayMode.Borderless;
 				var e = h3d.Engine.getCurrent();
 				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
 				w.vsync = false;
 
 
+				#if hlsdl
 				@:privateAccess
 				{
 					w.window.visible = false;
@@ -132,6 +148,9 @@ class ImGuiApp extends hxd.App {
 					w.window.glctx = mainWindow.window.glctx;
 
 				}
+				#else
+				@:privateAccess w.window.visible = false;
+				#end
 
 				#end
 
@@ -195,7 +214,7 @@ class ImGuiApp extends hxd.App {
 		};
 
 		pio.Platform_ShowWindow = ( v: ImGuiViewport ) -> {
-			#if hlsdl
+			#if (hlsdl || limen)
 			if( v.PlatformHandle != null )
 				@:privateAccess v.PlatformHandle.window.visible = true;
 			#end
@@ -208,22 +227,19 @@ class ImGuiApp extends hxd.App {
 			#if hldx
 			var w: dx.Window = @:privateAccess v.PlatformHandle.window;
 			w.setPosition( cast size.x, cast size.y );
-			#elseif hlsdl
+			#elseif (hlsdl || limen)
 			@:privateAccess v.PlatformHandle.window.setPosition( cast size.x, cast size.y );
 			#end
 		};
 
 		pio.Platform_GetWindowPos = ( v: ImGuiViewport, pos: ImGuiVec2Struct ) -> {
-			#if hlsdl
+			#if (hlsdl || limen)
 			@:privateAccess
 			{
 				if( v.PlatformHandle != null )
 				{
-					var x = 0;
-					var y = 0;
-					sdl.Window.winGetPosition( v.PlatformHandle.window.win, x, y );
-					pos.x = cast x;
-					pos.y = cast y;
+					pos.x = v.PlatformHandle.window.x;
+					pos.y = v.PlatformHandle.window.y;
 				}
 				else
 				{
@@ -282,7 +298,7 @@ class ImGuiApp extends hxd.App {
 		};
 
 		pio.Platform_SetWindowAlpha = ( v: ImGuiViewport, alpha: Single ) -> {
-			#if hlsdl
+			#if (hlsdl || limen)
 			if( v.PlatformHandle != null )
 				@:privateAccess v.PlatformHandle.window.opacity = alpha;
 			#end
