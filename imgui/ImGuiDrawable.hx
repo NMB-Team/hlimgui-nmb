@@ -8,6 +8,11 @@ import h2d.Tile;
 import h3d.mat.Texture;
 import imgui.ImGui;
 import hxd.Key;
+#if heaps_nmb
+import hxd.Key.KeyCode;
+#else
+import hxd.Key in KeyCode;
+#end
 #if limen
 import limen.platform.Platform as SdlPlatform;
 #elseif hlsdl
@@ -236,45 +241,45 @@ class ImGuiDrawable extends h2d.Drawable {
 		this.scene_size = {width: scene.width, height:scene.height};
 
 		this.keycode_map = [
-			Key.TAB => ImGuiKey.Tab,
-			Key.LEFT => ImGuiKey.LeftArrow,
-			Key.RIGHT => ImGuiKey.RightArrow,
-			Key.UP => ImGuiKey.UpArrow,
-			Key.DOWN => ImGuiKey.DownArrow,
-			Key.PGUP => ImGuiKey.PageUp,
-			Key.PGDOWN => ImGuiKey.PageDown,
-			Key.HOME => ImGuiKey.Home,
-			Key.END => ImGuiKey.End,
-			Key.INSERT => ImGuiKey.Insert,
-			Key.DELETE => ImGuiKey.Delete,
-			Key.BACKSPACE => ImGuiKey.Backspace,
-			Key.SPACE => ImGuiKey.Space,
-			Key.ENTER => ImGuiKey.Enter,
-			Key.ESCAPE => ImGuiKey.Escape,
-			Key.NUMPAD_ENTER => ImGuiKey.KeyPadEnter,
-			Key.LSHIFT => ImGuiKey.LeftShift,
-			Key.RSHIFT => ImGuiKey.RightShift,
-			Key.LALT => ImGuiKey.LeftAlt,
-			Key.RALT => ImGuiKey.RightAlt,
-			Key.LCTRL => ImGuiKey.LeftCtrl,
-			Key.RCTRL => ImGuiKey.RightCtrl,
-			Key.F1 => ImGuiKey.F1,
-			Key.F2 => ImGuiKey.F2,
-			Key.F3 => ImGuiKey.F3,
-			Key.F4 => ImGuiKey.F4,
-			Key.F5 => ImGuiKey.F5,
-			Key.F6 => ImGuiKey.F6,
-			Key.F7 => ImGuiKey.F7,
-			Key.F8 => ImGuiKey.F8,
-			Key.F9 => ImGuiKey.F9,
-			Key.F10 => ImGuiKey.F10,
-			Key.F11 => ImGuiKey.F11,
-			Key.F12 => ImGuiKey.F12,
+			KeyCode.TAB => ImGuiKey.Tab,
+			KeyCode.LEFT => ImGuiKey.LeftArrow,
+			KeyCode.RIGHT => ImGuiKey.RightArrow,
+			KeyCode.UP => ImGuiKey.UpArrow,
+			KeyCode.DOWN => ImGuiKey.DownArrow,
+			KeyCode.PGUP => ImGuiKey.PageUp,
+			KeyCode.PGDOWN => ImGuiKey.PageDown,
+			KeyCode.HOME => ImGuiKey.Home,
+			KeyCode.END => ImGuiKey.End,
+			KeyCode.INSERT => ImGuiKey.Insert,
+			KeyCode.DELETE => ImGuiKey.Delete,
+			KeyCode.BACKSPACE => ImGuiKey.Backspace,
+			KeyCode.SPACE => ImGuiKey.Space,
+			KeyCode.ENTER => ImGuiKey.Enter,
+			KeyCode.ESCAPE => ImGuiKey.Escape,
+			KeyCode.NUMPAD_ENTER => ImGuiKey.KeyPadEnter,
+			KeyCode.LSHIFT => ImGuiKey.LeftShift,
+			KeyCode.RSHIFT => ImGuiKey.RightShift,
+			KeyCode.LALT => ImGuiKey.LeftAlt,
+			KeyCode.RALT => ImGuiKey.RightAlt,
+			KeyCode.LCTRL => ImGuiKey.LeftCtrl,
+			KeyCode.RCTRL => ImGuiKey.RightCtrl,
+			KeyCode.F1 => ImGuiKey.F1,
+			KeyCode.F2 => ImGuiKey.F2,
+			KeyCode.F3 => ImGuiKey.F3,
+			KeyCode.F4 => ImGuiKey.F4,
+			KeyCode.F5 => ImGuiKey.F5,
+			KeyCode.F6 => ImGuiKey.F6,
+			KeyCode.F7 => ImGuiKey.F7,
+			KeyCode.F8 => ImGuiKey.F8,
+			KeyCode.F9 => ImGuiKey.F9,
+			KeyCode.F10 => ImGuiKey.F10,
+			KeyCode.F11 => ImGuiKey.F11,
+			KeyCode.F12 => ImGuiKey.F12,
 		];
 
 		// Add letters
 		for( ko in 0...26)
-			keycode_map[Key.A + ko] = ImGuiKey.A + ko;
+			keycode_map[KeyCode.A + ko] = ImGuiKey.A + ko;
 
 		#if !multidriver
 		scene.addEventListener(onEvent);
@@ -311,10 +316,10 @@ class ImGuiDrawable extends h2d.Drawable {
 
 		// Update modifier states
 		#if !multidriver
-		io.addKeyEvent( ImGuiKey.ModShift, Key.isDown( Key.SHIFT ) );
-		io.addKeyEvent( ImGuiKey.ModAlt, Key.isDown( Key.ALT ) );
-		io.addKeyEvent( ImGuiKey.ModCtrl, Key.isDown( Key.CTRL ) );
-		//ImGui.addKeyEvent( ImGuiKey.ModSuper, Key.isDown( Key.SUPER ) ); // Unsupported currently.
+		io.addKeyEvent( ImGuiKey.ModShift, Key.isDown( KeyCode.SHIFT ) );
+		io.addKeyEvent( ImGuiKey.ModAlt, Key.isDown( KeyCode.ALT ) );
+		io.addKeyEvent( ImGuiKey.ModCtrl, Key.isDown( KeyCode.CTRL ) );
+		//ImGui.addKeyEvent( ImGuiKey.ModSuper, Key.isDown( KeyCode.SUPER ) ); // Unsupported currently.
 		#end
 
 
@@ -454,11 +459,11 @@ class ImGuiDrawable extends h2d.Drawable {
 		var io = ImGui.getIO();
 		switch( code )
 		{
-			case Key.LCTRL | Key.RCTRL:
+			case KeyCode.LCTRL | KeyCode.RCTRL:
 				io.addKeyEvent( ImGuiKey.ModCtrl, down );
-			case Key.LALT | Key.RALT:
+			case KeyCode.LALT | KeyCode.RALT:
 				io.addKeyEvent( ImGuiKey.ModAlt, down );
-			case Key.LSHIFT | Key.RSHIFT:
+			case KeyCode.LSHIFT | KeyCode.RSHIFT:
 				io.addKeyEvent( ImGuiKey.ModShift, down );
 		}
 
