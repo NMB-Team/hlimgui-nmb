@@ -28,38 +28,51 @@ enum abstract ImGuiWindowFlags(Int) from Int to Int {
 	var NoBringToFrontOnFocus : Int = 8192;
 	var AlwaysVerticalScrollbar : Int = 16384;
 	var AlwaysHorizontalScrollbar : Int = 32768;
-	var AlwaysUseWindowPadding : Int = 65536;
-	var NoNavInputs : Int = 262144;
-	var NoNavFocus : Int = 524288;
-	var UnsavedDocument : Int = 1048576;
-	var NoDocking : Int = 2097152;
-	var NoNav : Int = 786432;
+	var NoNavInputs : Int = 1 << 16;
+	var NoNavFocus : Int = 1 << 17;
+	var UnsavedDocument : Int = 1 << 18;
+	var NoDocking : Int = 1 << 19;
+	var NoNav : Int = NoNavInputs | NoNavFocus;
 	var NoDecoration : Int = 43;
-	var NoInputs : Int = 786944;
+	var NoInputs : Int = NoMouseInputs | NoNavInputs | NoNavFocus;
 
+	@:noCompletion var DockNodeHost: Int = 1 << 23;
 	@:noCompletion var ChildWindow: Int = 16777216;
 	@:noCompletion var Tooltip: Int = 33554432;
+	@:noCompletion var Popup: Int = 1 << 26;
+	@:noCompletion var Modal: Int = 1 << 27;
+	@:noCompletion var ChildMenu: Int = 1 << 28;
+}
+
+enum abstract ImGuiChildFlags(Int) from Int to Int {
+	var None = 0;
+	var Borders = 1 << 0;
+	var AlwaysUseWindowPadding = 1 << 1;
+	var ResizeX = 1 << 2;
+	var ResizeY = 1 << 3;
+	var AutoResizeX = 1 << 4;
+	var AutoResizeY = 1 << 5;
+	var AlwaysAutoResize = 1 << 6;
+	var FrameStyle = 1 << 7;
+	var NavFlattened = 1 << 8;
 }
 
 enum abstract ImGuiDockNodeFlags(Int) from Int to Int {
 	var None : Int = 0;
 	var KeepAliveOnly : Int = 1;
-	var NoCentralNode : Int = 2;
-	var NoDockingInCentralNode : Int = 4;
+	var NoDockingOverCentralNode : Int = 1 << 2;
 	var PassthruCentralNode : Int = 8;
-	var NoSplit : Int = 16;
+	var NoDockingSplit : Int = 16;
 	var NoResize : Int = 32;
 	var AutoHideTabBar : Int = 64;
-	// Private/experimental flags
-	var NoDocking : Int = 65536;
-	var NoDockingSplitMe : Int = 131072;
+	var NoUndocking : Int = 128;
 }
 
 enum abstract ImGuiTreeNodeFlags(Int) from Int to Int {
 	var None : Int = 0;
 	var Selected : Int = 1;
 	var Framed : Int = 2;
-	var AllowItemOverlap : Int = 4;
+	var AllowOverlap : Int = 4;
 	var NoTreePushOnOpen : Int = 8;
 	var NoAutoOpenOnLog : Int = 16;
 	var DefaultOpen : Int = 32;
@@ -70,8 +83,14 @@ enum abstract ImGuiTreeNodeFlags(Int) from Int to Int {
 	var FramePadding : Int = 1024;
 	var SpanAvailWidth : Int = 2048;
 	var SpanFullWidth : Int = 4096;
-	var NavLeftJumpsBackHere : Int = 8192;
+	var SpanLabelWidth : Int = 1 << 13;
+	var SpanAllColumns : Int = 1 << 14;
+	var LabelSpanAllColumns : Int = 1 << 15;
+	var NavLeftJumpsToParent : Int = 1 << 17;
 	var CollapsingHeader : Int = 26;
+	var DrawLinesNone : Int = 1 << 18;
+	var DrawLinesFull : Int = 1 << 19;
+	var DrawLinesToNodes : Int = 1 << 20;
 }
 
 enum abstract ImGuiTabItemFlags(Int) from Int to Int {
@@ -80,6 +99,11 @@ enum abstract ImGuiTabItemFlags(Int) from Int to Int {
 	var SetSelected : Int = 2;
 	var NoCloseWithMiddleMouseButton : Int = 4;
 	var NoPushId : Int = 8;
+	var NoTooltip : Int = 1 << 4;
+	var NoReorder : Int = 1 << 5;
+	var Leading : Int = 1 << 6;
+	var Trailing : Int = 1 << 7;
+	var NoAssumedClosure : Int = 1 << 8;
 }
 
 enum abstract ImGuiTabBarFlags(Int) from Int to Int {
@@ -90,10 +114,12 @@ enum abstract ImGuiTabBarFlags(Int) from Int to Int {
 	var NoCloseWithMiddleMouseButton : Int = 8;
 	var NoTabListScrollingButtons : Int = 16;
 	var NoTooltip : Int = 32;
-	var FittingPolicyResizeDown : Int = 64;
-	var FittingPolicyScroll : Int = 128;
-	var FittingPolicyMask_ : Int = 192;
-	var FittingPolicyDefault_ : Int = 64;
+	var DrawSelectedOverline : Int = 1 << 6;
+	var FittingPolicyMixed : Int = 1 << 7;
+	var FittingPolicyShrink : Int = 1 << 8;
+	var FittingPolicyScroll : Int = 1 << 9;
+	var FittingPolicyMask_ : Int = FittingPolicyMixed | FittingPolicyShrink | FittingPolicyScroll;
+	var FittingPolicyDefault_ : Int = FittingPolicyMixed;
 }
 
 enum abstract ImGuiStyleVar(Int) from Int to Int {
@@ -138,65 +164,92 @@ enum abstract ImGuiStyleVar(Int) from Int to Int {
 	/** float: use pushStyleVar() **/
 	var ScrollbarRounding;
 	/** float: use pushStyleVar() **/
+	var ScrollbarPadding;
+	/** float: use pushStyleVar() **/
 	var GrabMinSize;
 	/** float: use pushStyleVar() **/
 	var GrabRounding;
 	/** float: use pushStyleVar() **/
+	var ImageRounding;
+	/** float: use pushStyleVar() **/
+	var ImageBorderSize;
+	/** float: use pushStyleVar() **/
 	var TabRounding;
+	/** float: use pushStyleVar() **/
+	var TabBorderSize;
+	/** float: use pushStyleVar() **/
+	var TabMinWidthBase;
+	/** float: use pushStyleVar() **/
+	var TabMinWidthShrink;
+	/** float: use pushStyleVar() **/
+	var TabBarBorderSize;
+	/** float: use pushStyleVar() **/
+	var TabBarOverlineSize;
+	/** float: use pushStyleVar() **/
+	var TableAngledHeadersAngle;
+	/** ImVec2: use pushStyleVar2() **/
+	var TableAngledHeadersTextAlign;
+	/** float: use pushStyleVar() **/
+	var TreeLinesSize;
+	/** float: use pushStyleVar() **/
+	var TreeLinesRounding;
+	/** float: use pushStyleVar() **/
+	var MenuItemRounding;
+	/** float: use pushStyleVar() **/
+	var SelectableRounding;
+	/** float: use pushStyleVar() **/
+	var DragDropTargetRounding;
 	/** ImVec2: use pushStyleVar2() **/
 	var ButtonTextAlign;
 	/** ImVec2: use pushStyleVar2() **/
 	var SelectableTextAlign;
+	/** float: use pushStyleVar() **/
+	var SeparatorSize;
+	/** float: use pushStyleVar() **/
+	var SeparatorTextBorderSize;
+	/** ImVec2: use pushStyleVar2() **/
+	var SeparatorTextAlign;
+	/** ImVec2: use pushStyleVar2() **/
+	var SeparatorTextPadding;
+	/** float: use pushStyleVar() **/
+	var DockingSeparatorSize;
 	var COUNT;
 }
 
 enum abstract ImGuiPopupFlags(Int) from Int to Int {
 	final None                    = 0;
-	final MouseButtonLeft         = 0;        // For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
-	final MouseButtonRight        = 1;        // For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)
-	final MouseButtonMiddle       = 2;        // For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)
-	final MouseButtonMask_        = 0x1F;
-	final MouseButtonDefault_     = 1;
-	final NoOpenOverExistingPopup = 1 << 5;   // For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack
-	final NoOpenOverItems         = 1 << 6;   // For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
-	final AnyPopupId              = 1 << 7;   // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
-	final AnyPopupLevel           = 1 << 8;   // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
+	final MouseButtonLeft         = 1 << 2;
+	final MouseButtonRight        = 2 << 2;
+	final MouseButtonMiddle       = 3 << 2;
+	final NoReopen                = 1 << 5;
+	final NoOpenOverExistingPopup = 1 << 7;
+	final NoOpenOverItems         = 1 << 8;
+	final AnyPopupId              = 1 << 10;
+	final AnyPopupLevel           = 1 << 11;
 	final AnyPopup                = AnyPopupId | AnyPopupLevel;
+	final MouseButtonShift_       = 2;
+	final MouseButtonMask_        = 0x0C;
+	final InvalidMask_            = 0x03;
 }
 
 enum abstract ImGuiSelectableFlags(Int) from Int to Int {
 	var None : Int = 0;
-	var DontClosePopups : Int = 1;
+	var NoAutoClosePopups : Int = 1;
 	var SpanAllColumns : Int = 2;
 	var AllowDoubleClick : Int = 4;
 	var Disabled : Int = 8;
-	var AllowItemOverlap : Int = 16;
+	var AllowOverlap : Int = 16;
+	var Highlight : Int = 1 << 5;
+	var SelectOnNav : Int = 1 << 6;
 }
 
-enum abstract ImGuiNavInput(Int) from Int to Int {
-	var Activate : Int = 0;
-	var Cancel : Int = 1;
-	var Input : Int = 2;
-	var Menu : Int = 3;
-	var DpadLeft : Int = 4;
-	var DpadRight : Int = 5;
-	var DpadUp : Int = 6;
-	var DpadDown : Int = 7;
-	var LStickLeft : Int = 8;
-	var LStickRight : Int = 9;
-	var LStickUp : Int = 10;
-	var LStickDown : Int = 11;
-	var FocusPrev : Int = 12;
-	var FocusNext : Int = 13;
-	var TweakSlow : Int = 14;
-	var TweakFast : Int = 15;
-	var KeyMenu_ : Int = 16;
-	var KeyLeft_ : Int = 17;
-	var KeyRight_ : Int = 18;
-	var KeyUp_ : Int = 19;
-	var KeyDown_ : Int = 20;
-	var COUNT : Int = 21;
-	var InternalStart_ : Int = 16;
+enum abstract ImGuiButtonFlags(Int) from Int to Int {
+	var None : Int = 0;
+	var MouseButtonLeft : Int = 1 << 0;
+	var MouseButtonRight : Int = 1 << 1;
+	var MouseButtonMiddle : Int = 1 << 2;
+	var EnableNav : Int = 1 << 3;
+	var AllowOverlap : Int = 1 << 12;
 }
 
 enum abstract ImGuiMouseCursor(Int) from Int to Int {
@@ -259,11 +312,11 @@ enum abstract ImGuiKey(Int) from Int to Int {
 	//
 	var A: Int = 546;
 	//
-	var KeyPadEnter : Int = 615;
+	var KeypadEnter : Int = 627;
 	//
 	// Aliases: Mouse Buttons (auto-submitted from AddMouseButtonEvent() calls)
     // - This is mirroring the data also written to io.MouseDown[], io.MouseWheel, in a format allowing them to be accessed via standard key API.
-	var MouseLeft: Int = 641;
+	var MouseLeft: Int = 656;
 	var MouseRight;
 	var MouseMiddle;
 	var MouseX1;
@@ -287,27 +340,31 @@ class ImGuiKeyStringExtender {
 
 enum abstract ImGuiInputTextFlags(Int) from Int to Int {
 	var None : Int = 0;
-	var CharsDecimal : Int = 1;
-	var CharsHexadecimal : Int = 2;
-	var CharsUppercase : Int = 4;
-	var CharsNoBlank : Int = 8;
-	var AutoSelectAll : Int = 16;
-	var EnterReturnsTrue : Int = 32;
-	var CallbackCompletion : Int = 64;
-	var CallbackHistory : Int = 128;
-	var CallbackAlways : Int = 256;
-	var CallbackCharFilter : Int = 512;
-	var AllowTabInput : Int = 1024;
-	var CtrlEnterForNewLine : Int = 2048;
-	var NoHorizontalScroll : Int = 4096;
-	var AlwaysInsertMode : Int = 8192;
-	var ReadOnly : Int = 16384;
-	var Password : Int = 32768;
-	var NoUndoRedo : Int = 65536;
-	var CharsScientific : Int = 131072;
-	var CallbackResize : Int = 262144;
-	var Multiline : Int = 1048576;
-	var NoMarkEdited : Int = 2097152;
+	var CharsDecimal : Int = 1 << 0;
+	var CharsHexadecimal : Int = 1 << 1;
+	var CharsScientific : Int = 1 << 2;
+	var CharsUppercase : Int = 1 << 3;
+	var CharsNoBlank : Int = 1 << 4;
+	var AllowTabInput : Int = 1 << 5;
+	var EnterReturnsTrue : Int = 1 << 6;
+	var EscapeClearsAll : Int = 1 << 7;
+	var CtrlEnterForNewLine : Int = 1 << 8;
+	var ReadOnly : Int = 1 << 9;
+	var Password : Int = 1 << 10;
+	var AlwaysOverwrite : Int = 1 << 11;
+	var AutoSelectAll : Int = 1 << 12;
+	var ParseEmptyRefVal : Int = 1 << 13;
+	var DisplayEmptyRefVal : Int = 1 << 14;
+	var NoHorizontalScroll : Int = 1 << 15;
+	var NoUndoRedo : Int = 1 << 16;
+	var ElideLeft : Int = 1 << 17;
+	var CallbackCompletion : Int = 1 << 18;
+	var CallbackHistory : Int = 1 << 19;
+	var CallbackAlways : Int = 1 << 20;
+	var CallbackCharFilter : Int = 1 << 21;
+	var CallbackResize : Int = 1 << 22;
+	var CallbackEdit : Int = 1 << 23;
+	var WordWrap : Int = 1 << 24;
 }
 
 enum abstract ImGuiHoveredFlags(Int) from Int to Int {
@@ -318,16 +375,20 @@ enum abstract ImGuiHoveredFlags(Int) from Int to Int {
 	var NoPopupHierarchy              = 1 << 3;   // IsWindowHovered() only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow)
 	var DockHierarchy                 = 1 << 4;   // IsWindowHovered() only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow)
 	var AllowWhenBlockedByPopup       = 1 << 5;   // Return true even if a popup window is normally blocking access to this item/window
-	//var AllowWhenBlockedByModal     = 1 << 6;   // Return true even if a modal popup window is normally blocking access to this item/window. FIXME-TODO: Unavailable yet.
 	var AllowWhenBlockedByActiveItem  = 1 << 7;   // Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.
-	var AllowWhenOverlapped           = 1 << 8;   // IsItemHovered() only: Return true even if the position is obstructed or overlapped by another window
-	var AllowWhenDisabled             = 1 << 9;   // IsItemHovered() only: Return true even if the item is disabled
-	var NoNavOverride                 = 1 << 10;  // Disable using gamepad/keyboard navigation state when active; always query mouse.
+	var AllowWhenOverlappedByItem     = 1 << 8;
+	var AllowWhenOverlappedByWindow   = 1 << 9;
+	var AllowWhenDisabled             = 1 << 10;
+	var NoNavOverride                 = 1 << 11;
+	var AllowWhenOverlapped           = AllowWhenOverlappedByItem | AllowWhenOverlappedByWindow;
 	var RectOnly                      = AllowWhenBlockedByPopup | AllowWhenBlockedByActiveItem | AllowWhenOverlapped;
 	var RootAndChildWindows           = RootWindow | ChildWindows;
-	var DelayNormal                   = 1 << 11;  // Return true after io.HoverDelayNormal elapsed (~0.30 sec)
-    var DelayShort                    = 1 << 12;  // Return true after io.HoverDelayShort elapsed (~0.10 sec)
-    var NoSharedDelay                 = 1 << 13;  // Disable shared delay system where moving from one item t
+	var ForTooltip                    = 1 << 12;
+	var Stationary                    = 1 << 13;
+	var DelayNone                     = 1 << 14;
+	var DelayShort                    = 1 << 15;
+	var DelayNormal                   = 1 << 16;
+	var NoSharedDelay                 = 1 << 17;
 }
 
 enum abstract ImGuiFocusedFlags(Int) from Int to Int {
@@ -335,8 +396,9 @@ enum abstract ImGuiFocusedFlags(Int) from Int to Int {
 	var ChildWindows : Int = 1;
 	var RootWindow : Int = 2;
 	var AnyWindow : Int = 4;
+	var NoPopupHierarchy : Int = 1 << 3;
+	var DockHierarchy : Int = 1 << 4;
 	var RootAndChildWindows : Int = 3;
-	var DockHierarchy : Int = 4;
 }
 
 enum abstract ImGuiDragDropFlags(Int) from Int to Int {
@@ -346,10 +408,13 @@ enum abstract ImGuiDragDropFlags(Int) from Int to Int {
 	var SourceNoHoldToOpenOthers : Int = 4;
 	var SourceAllowNullID : Int = 8;
 	var SourceExtern : Int = 16;
-	var SourceAutoExpirePayload : Int = 32;
+	var PayloadAutoExpire : Int = 1 << 5;
+	var PayloadNoCrossContext : Int = 1 << 6;
+	var PayloadNoCrossProcess : Int = 1 << 7;
 	var AcceptBeforeDelivery : Int = 1024;
 	var AcceptNoDrawDefaultRect : Int = 2048;
 	var AcceptNoPreviewTooltip : Int = 4096;
+	var AcceptDrawAsHovered : Int = 1 << 13;
 	var AcceptPeekOnly : Int = 3072;
 }
 
@@ -381,8 +446,6 @@ enum abstract ImGuiConfigFlags(Int) from Int to Int {
     var None                   = 0;
     var NavEnableKeyboard      = 1 << 0;   // Master keyboard navigation enable flag. NewFrame() will automatically fill io.NavInputs[] based on io.AddKeyEvent() calls
     var NavEnableGamepad       = 1 << 1;   // Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.NavInputs[]. Backend also needs to set ImGuiBackendFlags_HasGamepad.
-    var NavEnableSetMousePos   = 1 << 2;   // Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.MousePos and set io.WantSetMousePos=true. If enabled you MUST honor io.WantSetMousePos requests in your backend, otherwise ImGui will react as if the mouse is jumping around back and forth.
-    var NavNoCaptureKeyboard   = 1 << 3;   // Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.
     var NoMouse                = 1 << 4;   // Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.
     var NoMouseCursorChange    = 1 << 5;   // Instruct backend to not alter mouse cursor shape and visibility. Use if the backend cursor changes are interfering with yours and you don't want to use SetMouseCursor() to change mouse cursor. You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
     var NoKeyboard             = 1 << 6;   // Instruct imgui to disable keyboard inputs and interactions.
@@ -393,8 +456,6 @@ enum abstract ImGuiConfigFlags(Int) from Int to Int {
     // [BETA] Viewports
     // When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable.
     var ViewportsEnable        = 1 << 10;  // Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
-    var DpiEnableScaleViewports= 1 << 14;  // [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
-    var DpiEnableScaleFonts    = 1 << 15;  // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
 
     // User storage (to allow your backend/engine to communicate to code that may be shared between multiple projects. Those flags are not used by core Dear ImGui)
     var IsSRGB                 = 1 << 20;  // Application is SRGB-aware.
@@ -417,38 +478,44 @@ enum abstract ImGuiComboFlags(Int) from Int to Int {
 	var HeightLargest : Int = 16;
 	var NoArrowButton : Int = 32;
 	var NoPreview : Int = 64;
+	var WidthFitPreview : Int = 1 << 7;
 	var HeightMask_ : Int = 30;
 }
 
 enum abstract ImGuiColorEditFlags(Int) from Int to Int {
 	var None : Int = 0;
-	var NoAlpha : Int = 2;
-	var NoPicker : Int = 4;
-	var NoOptions : Int = 8;
-	var NoSmallPreview : Int = 16;
-	var NoInputs : Int = 32;
-	var NoTooltip : Int = 64;
-	var NoLabel : Int = 128;
-	var NoSidePreview : Int = 256;
-	var NoDragDrop : Int = 512;
-	var AlphaBar : Int = 65536;
-	var AlphaPreview : Int = 131072;
-	var AlphaPreviewHalf : Int = 262144;
-	var HDR : Int = 524288;
-	var DisplayRGB : Int = 1048576;
-	var DisplayHSV : Int = 2097152;
-	var DisplayHex : Int = 4194304;
-	var Uint8 : Int = 8388608;
-	var Float : Int = 16777216;
-	var PickerHueBar : Int = 33554432;
-	var PickerHueWheel : Int = 67108864;
-	var InputRGB : Int = 134217728;
-	var InputHSV : Int = 268435456;
-	var _OptionsDefault : Int = 177209344;
-	var _DisplayMask : Int = 7340032;
-	var _DataTypeMask : Int = 25165824;
-	var _PickerMask : Int = 100663296;
-	var _InputMask : Int = 402653184;
+	var NoAlpha : Int = 1 << 1;
+	var NoPicker : Int = 1 << 2;
+	var NoOptions : Int = 1 << 3;
+	var NoSmallPreview : Int = 1 << 4;
+	var NoInputs : Int = 1 << 5;
+	var NoTooltip : Int = 1 << 6;
+	var NoLabel : Int = 1 << 7;
+	var NoSidePreview : Int = 1 << 8;
+	var NoDragDrop : Int = 1 << 9;
+	var NoBorder : Int = 1 << 10;
+	var NoColorMarkers : Int = 1 << 11;
+	var AlphaOpaque : Int = 1 << 12;
+	var AlphaNoBg : Int = 1 << 13;
+	var AlphaPreviewHalf : Int = 1 << 14;
+	var AlphaBar : Int = 1 << 18;
+	var HDR : Int = 1 << 19;
+	var DisplayRGB : Int = 1 << 20;
+	var DisplayHSV : Int = 1 << 21;
+	var DisplayHex : Int = 1 << 22;
+	var Uint8 : Int = 1 << 23;
+	var Float : Int = 1 << 24;
+	var PickerHueBar : Int = 1 << 25;
+	var PickerHueWheel : Int = 1 << 26;
+	var PickerNoRotate : Int = 1 << 27;
+	var InputRGB : Int = 1 << 28;
+	var InputHSV : Int = 1 << 29;
+	var _DefaultOptions : Int = Uint8 | DisplayRGB | InputRGB | PickerHueBar;
+	var _AlphaMask : Int = NoAlpha | AlphaOpaque | AlphaNoBg | AlphaPreviewHalf;
+	var _DisplayMask : Int = DisplayRGB | DisplayHSV | DisplayHex;
+	var _DataTypeMask : Int = Uint8 | Float;
+	var _PickerMask : Int = PickerHueWheel | PickerHueBar;
+	var _InputMask : Int = InputRGB | InputHSV;
 }
 
 enum abstract ImGuiCol(Int) from Int to Int {
@@ -471,6 +538,7 @@ enum abstract ImGuiCol(Int) from Int to Int {
 	var ScrollbarGrabHovered;
 	var ScrollbarGrabActive;
 	var CheckMark;
+	var CheckboxSelectedBg;
 	var SliderGrab;
 	var SliderGrabActive;
 	var Button;
@@ -485,11 +553,14 @@ enum abstract ImGuiCol(Int) from Int to Int {
 	var ResizeGrip;
 	var ResizeGripHovered;
 	var ResizeGripActive;
-	var Tab;
+	var InputTextCursor;
 	var TabHovered;
-	var TabActive;
-	var TabUnfocused;
-	var TabUnfocusedActive;
+	var Tab;
+	var TabSelected;
+	var TabSelectedOverline;
+	var TabDimmed;
+	var TabDimmedSelected;
+	var TabDimmedSelectedOverline;
 	var DockingPreview;
 	var DockingEmptyBg;
 	var PlotLines;
@@ -501,9 +572,13 @@ enum abstract ImGuiCol(Int) from Int to Int {
 	var TableBorderLight;
 	var TableRowBg;
 	var TableRowBgAlt;
+	var TextLink;
 	var TextSelectedBg;
+	var TreeLines;
 	var DragDropTarget;
-	var NavHighlight;
+	var DragDropTargetBg;
+	var UnsavedMarker;
+	var NavCursor;
 	var NavWindowingHighlight;
 	var NavWindowingDimBg;
 	var ModalWindowDimBg;
@@ -516,11 +591,11 @@ enum abstract ImGuiBackendFlags(Int) from Int to Int {
 	var HasMouseCursors : Int = 2;
 	var HasSetMousePos : Int = 4;
 	var RendererHasVtxOffset : Int = 8;
-
-	    // [BETA] Viewports
-	var PlatformHasViewports  = 1 << 10;  // Backend Platform supports multiple viewports.
-	var HasMouseHoveredViewport=1 << 11;  // Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE, ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend, GLFW 3.30+ backend can do this, SDL backend cannot). If this cannot be done, Dear ImGui needs to use a flawed heuristic to find the viewport under.
-	var RendererHasViewports  = 1 << 12;  // Backend Renderer supports multiple viewports.
+	var RendererHasTextures : Int = 1 << 4;
+	var RendererHasViewports : Int = 1 << 10;
+	var PlatformHasViewports : Int = 1 << 11;
+	var HasMouseHoveredViewport : Int = 1 << 12;
+	var HasParentViewport : Int = 1 << 13;
 }
 
 enum abstract ImFontAtlasFlags(Int) from Int to Int {
@@ -531,17 +606,24 @@ enum abstract ImFontAtlasFlags(Int) from Int to Int {
 
 enum abstract ImDrawListFlags(Int) from Int to Int {
 	var None : Int = 0;
-	var AntiAliasedLines : Int = 1;
-	var AntiAliasedFill : Int = 2;
-	var AllowVtxOffset : Int = 4;
+	var AntiAliasedLines : Int = 1 << 0;
+	var AntiAliasedLinesUseTex : Int = 1 << 1;
+	var AntiAliasedFill : Int = 1 << 2;
+	var AllowVtxOffset : Int = 1 << 3;
+	var TextNoPixelSnap : Int = 1 << 4;
 }
 
 enum abstract ImGuiSliderFlags(Int) from Int to Int {
 	var None : Int = 0;
-	var AlwaysClamp : Int = 16; // Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.
-	var Logarithmic : Int = 32; // Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
-	var NoRoundToFormat : Int = 64; // Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
-	var NoInput : Int = 128; // Disable CTRL+Click or Enter key allowing to input text directly into the widget
+	var Logarithmic : Int = 1 << 5;
+	var NoRoundToFormat : Int = 1 << 6;
+	var NoInput : Int = 1 << 7;
+	var WrapAround : Int = 1 << 8;
+	var ClampOnInput : Int = 1 << 9;
+	var ClampZeroRange : Int = 1 << 10;
+	var NoSpeedTweaks : Int = 1 << 11;
+	var ColorMarkers : Int = 1 << 12;
+	var AlwaysClamp : Int = ClampOnInput | ClampZeroRange;
 }
 
 enum abstract ImGuiTableFlags(Int) from Int to Int {
@@ -585,8 +667,9 @@ enum abstract ImGuiTableFlags(Int) from Int to Int {
     var ScrollX                    = 1 << 24;  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window; ScrollY is currently generally recommended when using ScrollX.
     var ScrollY                    = 1 << 25;  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
     // Sorting
-    var SortMulti                  = 1 << 26;  // Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
-    var SortTristate               = 1 << 27;  // Allow no sorting; disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
+	var SortMulti                  = 1 << 26;  // Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
+	var SortTristate               = 1 << 27;  // Allow no sorting; disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
+	var HighlightHoveredColumn     = 1 << 28;
 }
 
 enum abstract ImGuiTableRowFlags(Int) from Int to Int {
@@ -622,6 +705,7 @@ enum abstract ImGuiTableColumnFlags(Int) from Int to Int {
     var PreferSortDescending  = 1 << 15;  // Make the initial sort direction Descending when first sorting on this column.
     var IndentEnable          = 1 << 16;  // Use current Indent value when entering cell (default for column 0).
     var IndentDisable         = 1 << 17;  // Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
+	var AngledHeader          = 1 << 18;
 
     // Output status flags; read-only via TableGetColumnFlags()
     var IsEnabled             = 1 << 24;  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
@@ -632,55 +716,24 @@ enum abstract ImGuiTableColumnFlags(Int) from Int to Int {
 }
 
 enum abstract ImGuiInputFlags(Int) from Int to Int {
-	// Flags for IsKeyPressed(), IsMouseClicked(), Shortcut()
-    var None                = 0;
-    var Repeat              = 1 << 0;   // Return true on successive repeats. Default for legacy IsKeyPressed(). NOT Default for legacy IsMouseClicked(). MUST BE == 1.
-    var RepeatRateDefault   = 1 << 1;   // Repeat rate: Regular (default)
-    var RepeatRateNavMove   = 1 << 2;   // Repeat rate: Fast
-    var RepeatRateNavTweak  = 1 << 3;   // Repeat rate: Faster
-    var RepeatRateMask_     = RepeatRateDefault | RepeatRateNavMove | RepeatRateNavTweak;
-
-    // Flags for SetItemKeyOwner()
-    var CondHovered         = 1 << 4;   // Only set if item is hovered (default to both)
-    var CondActive          = 1 << 5;   // Only set if item is active (default to both)
-    var CondDefault_        = CondHovered | CondActive;
-    var CondMask_           = CondHovered | CondActive;
-
-    // Flags for SetKeyOwner(), SetItemKeyOwner()
-    var LockThisFrame       = 1 << 6;   // Access to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared at end of frame. This is useful to make input-owner-aware code steal keys from non-input-owner-aware code.
-    var LockUntilRelease    = 1 << 7;   // Access to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared when the key is released or at end of each frame if key is released. This is useful to make input-owner-aware code steal keys from non-input-owner-aware code.
-
-    // Routing policies for Shortcut() + low-level SetShortcutRouting()
-    // - The general idea is that several callers register interest in a shortcut, and only one owner gets it.
-    // - When a policy (other than _RouteAlways) is set, Shortcut() will register itself with SetShortcutRouting(),
-    //   allowing the system to decide where to route the input among other route-aware calls.
-    // - Shortcut() uses RouteFocused by default: meaning that a simple Shortcut() poll
-    //   will register a route and only succeed when parent window is in the focus stack and if no-one
-    //   with a higher priority is claiming the shortcut.
-    // - Using RouteAlways is roughly equivalent to doing e.g. IsKeyPressed(key) + testing mods.
-    // - Priorities: GlobalHigh > Focused (when owner is active item) > Global > Focused (when focused window) > GlobalLow.
-    // - Can select only 1 policy among all available.
-    var RouteFocused        = 1 << 8;   // (Default) Register focused route: Accept inputs if window is in focus stack. Deep-most focused window takes inputs. ActiveId takes inputs over deep-most focused window.
-    var RouteGlobalLow      = 1 << 9;   // Register route globally (lowest priority: unless a focused window or active item registered the route) -> recommended Global priority.
-    var RouteGlobal         = 1 << 10;  // Register route globally (medium priority: unless an active item registered the route, e.g. CTRL+A registered by InputText).
-    var RouteGlobalHigh     = 1 << 11;  // Register route globally (highest priority: unlikely you need to use that: will interfere with every active items)
-    var RouteMask_          = RouteFocused | RouteGlobal | RouteGlobalLow | RouteGlobalHigh; // _Always not part of this!
-    var RouteAlways         = 1 << 12;  // Do not register route, poll keys directly.
-    var RouteUnlessBgFocused= 1 << 13;  // Global routes will not be applied if underlying background/void is focused (== no Dear ImGui windows are focused). Useful for overlay applications.
-    var RouteExtraMask_     = RouteAlways | RouteUnlessBgFocused;
-
-    // [Internal] Mask of which function support which flags
-	var SupportedByIsKeyPressed     = Repeat | RepeatRateMask_;
-    var SupportedByShortcut         = Repeat | RepeatRateMask_ | RouteMask_ | RouteExtraMask_;
-    var SupportedBySetKeyOwner      = LockThisFrame | LockUntilRelease;
-    var SupportedBySetItemKeyOwner  = SupportedBySetKeyOwner | CondMask_;
+	var None = 0;
+	var Repeat = 1 << 0;
+	var RouteActive = 1 << 10;
+	var RouteFocused = 1 << 11;
+	var RouteGlobal = 1 << 12;
+	var RouteAlways = 1 << 13;
+	var RouteOverFocused = 1 << 14;
+	var RouteOverActive = 1 << 15;
+	var RouteUnlessBgFocused = 1 << 16;
+	var RouteFromRootWindow = 1 << 17;
+	var Tooltip = 1 << 18;
 }
 
 // Flags for ImDrawList functions
 // (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 enum abstract ImDrawFlags(Int) from Int to Int {
     var None                        = 0;
-    var Closed                      = 1 << 0; // PathStroke(); AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
+	var Closed                      = 1 << 9;
     var RoundCornersTopLeft         = 1 << 4; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0.0f; we default to all corners). Was 0x01.
     var RoundCornersTopRight        = 1 << 5; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0.0f; we default to all corners). Was 0x02.
     var RoundCornersBottomLeft      = 1 << 6; // AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f; we default to all corners). Was 0x04.
@@ -707,10 +760,11 @@ enum abstract ImGuiViewportFlags(Int) from Int to Int
    var NoFocusOnClick           = 1 << 6;   // Platform Window: Don't take focus when clicked on.
    var NoInputs                 = 1 << 7;   // Platform Window: Make mouse pass through so we can drag this window while peaking behind it.
    var NoRendererClear          = 1 << 8;   // Platform Window: Renderer doesn't need to clear the framebuffer ahead (because we will fill it entirely).
-   var TopMost                  = 1 << 9;   // Platform Window: Display on top (for tooltips only).
-   var Minimized                = 1 << 10;  // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
-   var NoAutoMerge              = 1 << 11;  // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
-   var CanHostOtherWindows      = 1 << 12;  // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+	var NoAutoMerge = 1 << 9;
+	var TopMost = 1 << 10;
+	var CanHostOtherWindows = 1 << 11;
+	var IsMinimized = 1 << 12;
+	var IsFocused = 1 << 13;
 }
 
 typedef ImEvents = {
@@ -1027,6 +1081,8 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var TreeLinesFlags: ImGuiTreeNodeFlags;
 	var TreeLinesSize: Single;
 	var TreeLinesRounding: Single;
+	var MenuItemRounding: Single;
+	var SelectableRounding: Single;
 	var DragDropTargetRounding: Single;
 	var DragDropTargetBorderSize: Single;
 	var DragDropTargetPadding: Single;
@@ -1034,6 +1090,7 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var ColorButtonPosition: ImGuiDir;        // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
 	@:flatten var ButtonTextAlign: ImVec2S;            // Alignment of button text when button is larger than text. Defaults to (0.5f, 0.5f) (centered).
 	@:flatten var SelectableTextAlign: ImVec2S;        // Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+	var InputTextCursorSize: Single;
 	var SeparatorSize: Single;
 	var SeparatorTextBorderSize: Single;				// Alignment of button text when button is larger than text.
 	@:flatten var SeparatorTextAlign: ImVec2S;// Alignment of text within the separator. Defaults to (0.0f, 0.5f) (left aligned, center).
@@ -1096,7 +1153,7 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	@:flatten var DisplayFramebufferScale: ImVec2S;
 	var DeltaTime: Single;
 	var IniSavingRate: Single;
-	var IniFilemame: hl.Bytes;
+	var IniFilename: hl.Bytes;
 	var LogFilename: hl.Bytes;
 	var UserData: hl.Bytes;
 
@@ -1121,7 +1178,7 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigDockingTransparentPayload: Bool;
 
 	// Viewport options (when ImGuiConfigFlags_ViewportsEnable is set; which it's not in hlimgui)
-	var ConfigViewportNoAutoMerge: Bool;
+	var ConfigViewportsNoAutoMerge: Bool;
 	var ConfigViewportsNoTaskBarIcon: Bool;
 	var ConfigViewportsNoDecoration: Bool;
 	var ConfigViewportsNoDefaultParent: Bool;
@@ -1131,22 +1188,31 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigDpiScaleFonts: Bool;
 	var ConfigDpiScaleViewports: Bool;
 
-	// Miscellaneous options
-	var MouseDrawCursor: Bool;
+	// Widget options
 	var ConfigMacOSXBehaviors: Bool;
 	var ConfigInputTrickleEventQueue: Bool;
 	var ConfigInputTextCursorBlink: Bool;
 	var ConfigInputTextEnterKeepActive: Bool;
+	var ConfigColorEditFlags: ImGuiColorEditFlags;
 	var ConfigDragClickToInputText: Bool;
 	var ConfigWindowsResizeFromEdges: Bool;
 	var ConfigWindowsMoveFromTitleBarOnly: Bool;
 	var ConfigWindowsCopyContentsWithCtrlC: Bool;
 	var ConfigScrollbarScrollByPage: Bool;
+
+	// Ini settings options
+	var ConfigIniSettingsSaveLastUsedDate: Bool;
+	var ConfigIniSettingsAutoDiscardMonths: Int;
+	var ConfigDebugIniSettings: Bool;
+
+	// Miscellaneous options
+	var MouseDrawCursor: Bool;
 	var ConfigMemoryCompactTimer: Single;
 
 	// Inputs Behaviors
 	var MouseDoubleClickTime: Single;
 	var MouseDoubleClickMaxDist: Single;
+	var MouseSingleClickDelay: Single;
 	var MouseDragThreshold: Single;
 	var KeyRepeatDelay: Single;
 	var KeyRepeatRate: Single;
@@ -1162,7 +1228,6 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigDebugBeginReturnValueOnce: Bool;
 	var ConfigDebugBeginReturnValueLoop: Bool;
 	var ConfigDebugIgnoreFocusLoss: Bool;
-	var ConfigDebugIniSettings: Bool;
 
 	//------------------------------------------------------------------
     // Platform Functions
@@ -1595,10 +1660,10 @@ class ImGui
 	public static function end() {}
 
 	// Child Windows
-	public static extern inline overload function beginChild(str_id : String, ?size : ImVec2, border : Bool = false, flags : ImGuiWindowFlags = 0) : Bool { return begin_child(str_id, size, border, flags); }
-	public static extern inline overload function beginChild(id : Int, ?size : ImVec2, border : Bool = false, flags : ImGuiWindowFlags = 0) : Bool { return begin_child2(id, size, border, flags); }
-	static function begin_child(str_id : String, ?size : ImVec2, border : Bool = false, flags : ImGuiWindowFlags = 0) : Bool {return false;}
-	static function begin_child2(id : Int, ?size : ImVec2, border : Bool = false, flags : ImGuiWindowFlags = 0) : Bool {return false;}
+	public static extern inline overload function beginChild(str_id : String, ?size : ImVec2, childFlags : ImGuiChildFlags = 0, windowFlags : ImGuiWindowFlags = 0) : Bool { return begin_child(str_id, size, childFlags, windowFlags); }
+	public static extern inline overload function beginChild(id : Int, ?size : ImVec2, childFlags : ImGuiChildFlags = 0, windowFlags : ImGuiWindowFlags = 0) : Bool { return begin_child2(id, size, childFlags, windowFlags); }
+	static function begin_child(str_id : String, ?size : ImVec2, childFlags : ImGuiChildFlags = 0, windowFlags : ImGuiWindowFlags = 0) : Bool {return false;}
+	static function begin_child2(id : Int, ?size : ImVec2, childFlags : ImGuiChildFlags = 0, windowFlags : ImGuiWindowFlags = 0) : Bool {return false;}
 
 	/** Always call `endChild()` regardless of `beginChild()` return value! **/
 	public static function endChild() {}
@@ -1749,7 +1814,7 @@ class ImGui
 	// Widgets: Main
 	public static function button(name : String, ?size : ImVec2) : Bool {return false;}
 	public static function smallButton(label : String) : Bool {return false;}
-	public static function invisibleButton(str_id : String, ?size : ImVec2) : Bool {return false;}
+	public static function invisibleButton(str_id : String, ?size : ImVec2, flags : ImGuiButtonFlags = 0) : Bool {return false;}
 	public static function arrowButton(str_id : String, dir : ImGuiDir) : Bool {return false;}
 	public static function image(user_texture_id: ImTextureID, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, ?tint_col: ImVec4, ?border_col: ImVec4) {}
 	public static function imageButton(user_texture_id: ImTextureID, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, frame_padding: Int = -1, ?bg_col: ImVec4, ?tint_col: ImVec4) : Bool {return false;}
@@ -1944,15 +2009,15 @@ class ImGui
 	public static function endPopup() {}
 
 	// Popups: open/close functions
-	public static function openPopup(str_id: String, flags: ImGuiPopupFlags = 0) {}
-	public static function openPopupId(id: ImGuiID, flags: ImGuiPopupFlags = 0) {}
-	public static function openPopupOnItemClick(str_id : String = null, flags : ImGuiPopupFlags = 1) : Void {}
+	public static function openPopup(str_id: String, flags: ImGuiPopupFlags = 0) : Bool {return false;}
+	public static function openPopupId(id: ImGuiID, flags: ImGuiPopupFlags = 0) : Bool {return false;}
+	public static function openPopupOnItemClick(str_id : String = null, flags : ImGuiPopupFlags = 0) : Bool {return false;}
 	public static function closeCurrentPopup() {}
 
 	// Popups: open+begin combined function helpers
-	public static function beginPopupContextItem(str_id : String = null, flags : ImGuiPopupFlags = 1) : Bool {return false;}
-	public static function beginPopupContextWindow(str_id : String = null, flags : ImGuiPopupFlags = 1) : Bool {return false;}
-	public static function beginPopupContextVoid(str_id : String = null, flags : ImGuiPopupFlags = 1) : Bool {return false;}
+	public static function beginPopupContextItem(str_id : String = null, flags : ImGuiPopupFlags = 0) : Bool {return false;}
+	public static function beginPopupContextWindow(str_id : String = null, flags : ImGuiPopupFlags = 0) : Bool {return false;}
+	public static function beginPopupContextVoid(str_id : String = null, flags : ImGuiPopupFlags = 0) : Bool {return false;}
 
 	// Popups: query functions
 	public static function isPopupOpen(str_id : String, flags: ImGuiPopupFlags = 0) : Bool {return false;}
@@ -2356,7 +2421,7 @@ class ImGui
 	// Pre-overload support methods.
 
 	@:deprecated("Use beginChild overload.") @:noCompletion
-	public static inline function beginChild2(id : Int, ?size : ImVec2, border : Bool = false, flags : ImGuiWindowFlags = 0) : Bool { return begin_child2(id, size, border, flags); }
+	public static inline function beginChild2(id : Int, ?size : ImVec2, childFlags : ImGuiChildFlags = 0, windowFlags : ImGuiWindowFlags = 0) : Bool { return begin_child2(id, size, childFlags, windowFlags); }
 
 	@:deprecated("Use setWindowPos overload.") @:noCompletion
 	public static inline function setWindowPos2(name : String, pos : ImVec2, cond : ImGuiCond = 0) { set_window_pos2(name, pos, cond); }

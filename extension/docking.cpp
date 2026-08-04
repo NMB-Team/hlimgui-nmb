@@ -49,7 +49,7 @@ HL_PRIM void HL_NAME(dock_builder_remove_node)( ImGuiID node_id )
 
 HL_PRIM void HL_NAME(dock_builder_remove_node_docked_windows)( ImGuiID node_id, bool clear_settings_refs )
 {
-	ImGui::DockBuilderRemoveNodeDockedWindows(node_id );
+	ImGui::DockBuilderRemoveNodeDockedWindows(node_id, clear_settings_refs);
 }
 
 HL_PRIM void HL_NAME(dock_builder_remove_node_child_nodes)( ImGuiID node_id )

@@ -61,7 +61,7 @@ option(MARKDOWN "Include markdown support (required to use Imgui.TextMarkdown)" 
 
 if( NODE_EDITOR )
     set(IMGUI_NODE_EDITOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/imgui-node-editor")
-    set(IMGUI_NODE_EDITOR_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/patches/imgui-node-editor-imgui-1.92.patch")
+    set(IMGUI_NODE_EDITOR_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/patches/imgui-node-editor-imgui-1.92.9b.patch")
     find_package(Git QUIET)
 
     if(NOT GIT_FOUND)

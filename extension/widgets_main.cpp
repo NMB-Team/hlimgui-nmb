@@ -10,9 +10,9 @@ HL_PRIM bool HL_NAME(small_button)(vstring* label)
 	return ImGui::SmallButton(convertString(label));
 }
 
-HL_PRIM bool HL_NAME(invisible_button)(vstring* str_id, vimvec2* size)
+HL_PRIM bool HL_NAME(invisible_button)(vstring* str_id, vimvec2* size, ImGuiButtonFlags* flags)
 {
-	return ImGui::InvisibleButton(convertString(str_id), getImVec2(size));
+	return ImGui::InvisibleButton(convertString(str_id), getImVec2(size), convertPtr(flags, 0));
 }
 
 HL_PRIM bool HL_NAME(arrow_button)(vstring* str_id, ImGuiDir dir)
@@ -83,7 +83,7 @@ HL_PRIM void HL_NAME(bullet)()
 
 DEFINE_PRIM(_BOOL, button, _STRING _IMVEC2);
 DEFINE_PRIM(_BOOL, small_button, _STRING);
-DEFINE_PRIM(_BOOL, invisible_button, _STRING _IMVEC2);
+DEFINE_PRIM(_BOOL, invisible_button, _STRING _IMVEC2 _REF(_I32));
 DEFINE_PRIM(_BOOL, arrow_button, _STRING _I32);
 DEFINE_PRIM(_VOID, image, _IMTEXID _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC4 _IMVEC4);
 DEFINE_PRIM(_BOOL, image_button, _IMTEXID _IMVEC2 _IMVEC2 _IMVEC2 _REF(_I32) _IMVEC4 _IMVEC4);

@@ -63,23 +63,24 @@ static vrenderlist* render_list = nullptr;
 void renderDrawLists(ImDrawData* draw_data)
 {
 	if (s_render_function == nullptr || render_list == nullptr) return;
+	const int cmd_lists_count = draw_data->CmdLists.Size;
 
 	// Reallocate varray in case there's more draw lists than before.
 
-	if (render_list->lists->size < draw_data->CmdListsCount)
+	if (render_list->lists->size < cmd_lists_count)
 	{
 		varray* old = render_list->lists;
-		render_list->lists = hl_alloc_array(hlt_renderdata, draw_data->CmdListsCount);
+		render_list->lists = hl_alloc_array(hlt_renderdata, cmd_lists_count);
 		// Copy over previously allocated data
 		int size = hl_type_size(hlt_renderdata);
 		memmove( (vbyte*)hl_aptr(render_list->lists,vbyte), (vbyte*)hl_aptr(old,vbyte), old->size * size);
 	}
 	
 	// Store the amount draw lists to render, as varray is grow type and can contain invalid data if amount of draw lists shrink.
-	render_list->size = draw_data->CmdListsCount;
+	render_list->size = cmd_lists_count;
 	vrenderdata** hl_cmd_list_ptr = hl_aptr(render_list->lists, vrenderdata*);
 	
-	for (int n = 0; n < draw_data->CmdListsCount; n++)
+	for (int n = 0; n < cmd_lists_count; n++)
 	{
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
 		

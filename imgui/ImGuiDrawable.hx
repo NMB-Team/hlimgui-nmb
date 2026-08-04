@@ -256,7 +256,7 @@ class ImGuiDrawable extends h2d.Drawable {
 			KeyCode.SPACE => ImGuiKey.Space,
 			KeyCode.ENTER => ImGuiKey.Enter,
 			KeyCode.ESCAPE => ImGuiKey.Escape,
-			KeyCode.NUMPAD_ENTER => ImGuiKey.KeyPadEnter,
+			KeyCode.NUMPAD_ENTER => ImGuiKey.KeypadEnter,
 			KeyCode.LSHIFT => ImGuiKey.LeftShift,
 			KeyCode.RSHIFT => ImGuiKey.RightShift,
 			KeyCode.LALT => ImGuiKey.LeftAlt,
