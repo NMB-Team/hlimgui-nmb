@@ -1,9 +1,24 @@
 #include "utils.h"
 #include "lib/imgui/imgui_internal.h"
 
-HL_PRIM void HL_NAME(dock_space)( ImGuiID id, vimvec2* size, ImGuiDockNodeFlags* flags )
+HL_PRIM ImGuiID HL_NAME(dock_space)( ImGuiID id, vimvec2* size, ImGuiDockNodeFlags* flags, ImGuiWindowClass* window_class )
 {
-	ImGui::DockSpace(id, getImVec2(size), convertPtr(flags, 0));
+	return ImGui::DockSpace(id, getImVec2(size), convertPtr(flags, 0), window_class);
+}
+
+HL_PRIM ImGuiID HL_NAME(dock_space_over_viewport)(ImGuiID* dockspace_id, ImGuiViewport* viewport, ImGuiDockNodeFlags* flags, ImGuiWindowClass* window_class)
+{
+	return ImGui::DockSpaceOverViewport(convertPtr(dockspace_id, 0), viewport, convertPtr(flags, 0), window_class);
+}
+
+HL_PRIM void HL_NAME(init_window_class)(ImGuiWindowClass* window_class)
+{
+	new (window_class) ImGuiWindowClass();
+}
+
+HL_PRIM void HL_NAME(set_next_window_class)(ImGuiWindowClass* window_class)
+{
+	ImGui::SetNextWindowClass(window_class);
 }
 
 HL_PRIM void HL_NAME(set_next_window_dock_id)( ImGuiID id, ImGuiCond* cond )
@@ -96,7 +111,10 @@ HL_PRIM void  HL_NAME(dock_builder_finish)( ImGuiID node_id )
 
 #define _TDOCKNODE _STRUCT //_ABSTRACT(imguidocknode)
 
-DEFINE_PRIM(_VOID, dock_space, _I32 _IMVEC2 _REF(_I32));
+DEFINE_PRIM(_I32, dock_space, _I32 _IMVEC2 _REF(_I32) _STRUCT);
+DEFINE_PRIM(_I32, dock_space_over_viewport, _REF(_I32) _STRUCT _REF(_I32) _STRUCT);
+DEFINE_PRIM(_VOID, init_window_class, _STRUCT);
+DEFINE_PRIM(_VOID, set_next_window_class, _STRUCT);
 DEFINE_PRIM(_VOID, set_next_window_dock_id, _I32 _REF(_I32));
 DEFINE_PRIM(_I32, get_window_dock_id, _NO_ARG );
 DEFINE_PRIM(_BOOL, is_window_docked, _NO_ARG );

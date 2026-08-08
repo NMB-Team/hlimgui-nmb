@@ -10,6 +10,11 @@ HL_PRIM void HL_NAME(show_metrics_window)(bool* p_open)
 	ImGui::ShowMetricsWindow(p_open);
 }
 
+HL_PRIM void HL_NAME(show_debug_log_window)(bool* p_open)
+{
+	ImGui::ShowDebugLogWindow(p_open);
+}
+
 HL_PRIM void HL_NAME(show_stack_tool_window)(bool* p_open)
 {
 	ImGui::ShowIDStackToolWindow(p_open);
@@ -53,6 +58,7 @@ HL_PRIM vbyte* HL_NAME(get_version)()
 
 DEFINE_PRIM(_VOID, show_demo_window, _REF(_BOOL));
 DEFINE_PRIM(_VOID, show_metrics_window, _REF(_BOOL));
+DEFINE_PRIM(_VOID, show_debug_log_window, _REF(_BOOL));
 DEFINE_PRIM(_VOID, show_stack_tool_window, _REF(_BOOL));
 DEFINE_PRIM(_VOID, show_about_window, _REF(_BOOL));
 DEFINE_PRIM(_VOID, show_style_editor, _STRUCT);

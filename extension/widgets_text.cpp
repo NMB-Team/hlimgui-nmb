@@ -30,9 +30,27 @@ HL_PRIM void HL_NAME(bullet_text)(vstring* text)
     ImGui::BulletText("%s", convertStringNullAsEmpty(text));
 }
 
+HL_PRIM void HL_NAME(separator_text)(vstring* label)
+{
+    ImGui::SeparatorText(convertStringNullAsEmpty(label));
+}
+
+HL_PRIM bool HL_NAME(text_link)(vstring* label)
+{
+    return ImGui::TextLink(convertStringNullAsEmpty(label));
+}
+
+HL_PRIM bool HL_NAME(text_link_open_url)(vstring* label, vstring* url)
+{
+    return ImGui::TextLinkOpenURL(convertStringNullAsEmpty(label), convertString(url));
+}
+
 DEFINE_PRIM(_VOID, text, _STRING);
 DEFINE_PRIM(_VOID, text_colored, _IMVEC4 _STRING);
 DEFINE_PRIM(_VOID, text_disabled, _STRING);
 DEFINE_PRIM(_VOID, text_wrapped, _STRING);
 DEFINE_PRIM(_VOID, label_text, _STRING _STRING);
 DEFINE_PRIM(_VOID, bullet_text, _STRING);
+DEFINE_PRIM(_VOID, separator_text, _STRING);
+DEFINE_PRIM(_BOOL, text_link, _STRING);
+DEFINE_PRIM(_BOOL, text_link_open_url, _STRING _STRING);

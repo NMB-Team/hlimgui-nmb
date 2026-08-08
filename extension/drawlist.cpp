@@ -33,11 +33,11 @@ HL_PRIM void F_NAME(pop_clip_rect)(ImDrawList* drawlist) {
 }
 
 HL_PRIM void F_NAME(push_texture_id)(ImDrawList* drawlist, ImTextureID texture_id) {
-	drawlist->PushTextureID(texture_id);
+	drawlist->PushTexture(ImTextureRef(texture_id));
 }
 
 HL_PRIM void F_NAME(pop_texture_id)(ImDrawList* drawlist) {
-	drawlist->PopTextureID();
+	drawlist->PopTexture();
 }
 
 HL_PRIM vimvec2* F_NAME(get_clip_rect_min)(ImDrawList* drawlist) {
@@ -150,11 +150,11 @@ HL_PRIM void F_NAME(add_bezier_quadratic)(ImDrawList* drawlist, vimvec2* p1, vim
 
 
 HL_PRIM void F_NAME(add_image)(ImDrawList* drawlist, ImTextureID user_texture_id, vimvec2* p_min, vimvec2* p_max, vimvec2* uv_min, vimvec2* uv_max, int* col) {
-	drawlist->AddImage(user_texture_id, p_min, p_max, convertVec(uv_min, ImVec2(0, 0)), convertVec(uv_max, ImVec2(1, 1)), convertPtr(col, IM_COL32_WHITE));
+	drawlist->AddImage(ImTextureRef(user_texture_id), p_min, p_max, convertVec(uv_min, ImVec2(0, 0)), convertVec(uv_max, ImVec2(1, 1)), convertPtr(col, IM_COL32_WHITE));
 }
 
 HL_PRIM void F_NAME(add_image_quad)(ImDrawList* drawlist, ImTextureID user_texture_id, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, vimvec2* uv1, vimvec2* uv2, vimvec2* uv3, vimvec2* uv4, int* col) {
-	drawlist->AddImageQuad(user_texture_id, 
+	drawlist->AddImageQuad(ImTextureRef(user_texture_id),
 		p1, p2, p3, p4,
 		convertVec(uv1, ImVec2(0, 0)), convertVec(uv2, ImVec2(1, 0)), convertVec(uv3, ImVec2(1, 1)), convertVec(uv4, ImVec2(0, 1)),
 		convertPtr(col, IM_COL32_WHITE)
@@ -162,7 +162,7 @@ HL_PRIM void F_NAME(add_image_quad)(ImDrawList* drawlist, ImTextureID user_textu
 }
 
 HL_PRIM void F_NAME(add_image_rounded)(ImDrawList *drawlist, ImTextureID user_texture_id, vimvec2* p_min, vimvec2* p_max, vimvec2* uv_min, vimvec2* uv_max, int col, float rounding, ImDrawFlags* flags) {
-	drawlist->AddImageRounded(user_texture_id, p_min, p_max, uv_min, uv_max, col, rounding, convertPtr(flags, 0));
+	drawlist->AddImageRounded(ImTextureRef(user_texture_id), p_min, p_max, uv_min, uv_max, col, rounding, convertPtr(flags, 0));
 }
 
 

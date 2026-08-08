@@ -26,6 +26,26 @@ HL_PRIM vbyte* HL_NAME(get_style_color_name)(ImGuiCol idx)
     return getVByteFromCStr(ImGui::GetStyleColorName(idx));
 }
 
+HL_PRIM ImDrawListSharedData* HL_NAME(get_draw_list_shared_data)()
+{
+    return ImGui::GetDrawListSharedData();
+}
+
+HL_PRIM void HL_NAME(debug_text_encoding)(vstring* text)
+{
+    ImGui::DebugTextEncoding(convertStringNullAsEmpty(text));
+}
+
+HL_PRIM void HL_NAME(debug_flash_style_color)(ImGuiCol idx)
+{
+    ImGui::DebugFlashStyleColor(idx);
+}
+
+HL_PRIM void HL_NAME(debug_start_item_picker)()
+{
+    ImGui::DebugStartItemPicker();
+}
+
 HL_PRIM void HL_NAME(calc_list_clipping)(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end)
 {
     ImGuiContext& g = *GImGui;
@@ -74,6 +94,10 @@ DEFINE_PRIM(_BOOL, is_rect_visible2, _IMVEC2 _IMVEC2);
 DEFINE_PRIM(_F64, get_time, _NO_ARG);
 DEFINE_PRIM(_I32, get_frame_count, _NO_ARG);
 DEFINE_PRIM(_BYTES, get_style_color_name, _I32);
+DEFINE_PRIM(_ABSTRACT(imdrawlistshareddata), get_draw_list_shared_data, _NO_ARG);
+DEFINE_PRIM(_VOID, debug_text_encoding, _STRING);
+DEFINE_PRIM(_VOID, debug_flash_style_color, _I32);
+DEFINE_PRIM(_VOID, debug_start_item_picker, _NO_ARG);
 DEFINE_PRIM(_VOID, calc_list_clipping, _I32 _F32 _REF(_I32) _REF(_I32));
 DEFINE_PRIM(_BOOL, begin_child_frame, _I32 _IMVEC2 _REF(_I32));
 DEFINE_PRIM(_VOID, end_child_frame, _NO_ARG);

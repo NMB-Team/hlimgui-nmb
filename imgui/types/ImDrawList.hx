@@ -17,7 +17,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr
 	public function pushClipRect(clipRectMin: ImVec2, clipRectMax: ImVec2, intersectWithCurrentClipRect: Bool = false) {}
 	public function pushClipRectFullScreen() {}
 	public function popClipRect() {}
-	public function pushTextureId(textureId: ImTextureID) {}
+	public function pushTextureId(textureId: ImTextureRef) {}
 	public function popTextureId() {}
 	public function getClipRectMin(): ImVec2 { return null; }
 	public function getClipRectMax(): ImVec2 { return null; }
@@ -43,9 +43,9 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr
 	public function addText( pos: ImVec2, col: ImU32, text: String ) {}
 	public function addText2( font: ImFont, fontSize: Single, pos: ImVec2, col: ImU32, text: String, wrapWidth: Single = 0.0, ?cpuFineClipRect: ImVec4 ) {}
 
-	public function addImage( userTextureId: ImTextureID, pMin: ImVec2, pMax: ImVec2, ?uvMin: ImVec2, ?uvMax: ImVec2, col: Int = 0xffffffff ) {}
-	public function addImageQuad( userTextureId: ImTextureID, p1: ImVec2, p2: ImVec2, p3: ImVec2, p4: ImVec2, ?uv1: ImVec2, ?uv2: ImVec2, ?uv3: ImVec2, ?uv4: ImVec2, col: Int = 0xffffffff ) {}
-	public function addImageRounded( userTextureId: ImTextureID, pMin: ImVec2, pMax: ImVec2, uvMin: ImVec2, uvMax: ImVec2, col: Int, rounding: Single, roundingCorners: ImDrawFlags = RoundCornersDefault_ ) {}
+	public function addImage( textureRef: ImTextureRef, pMin: ImVec2, pMax: ImVec2, ?uvMin: ImVec2, ?uvMax: ImVec2, col: Int = 0xffffffff ) {}
+	public function addImageQuad( textureRef: ImTextureRef, p1: ImVec2, p2: ImVec2, p3: ImVec2, p4: ImVec2, ?uv1: ImVec2, ?uv2: ImVec2, ?uv3: ImVec2, ?uv4: ImVec2, col: Int = 0xffffffff ) {}
+	public function addImageRounded( textureRef: ImTextureRef, pMin: ImVec2, pMax: ImVec2, uvMin: ImVec2, uvMax: ImVec2, col: Int, rounding: Single, roundingCorners: ImDrawFlags = RoundCornersDefault_ ) {}
 
 	@:deprecated("Use addBezuerrCubic")
 	public inline function addBezierCurve( p1: ImVec2, p2: ImVec2, p3: ImVec2, p4: ImVec2, col: ImU32, thickness: Single = 1.0, num_segments: Int = 0 ) { addBezierCubic(p1, p2, p3, p4, col, thickness, num_segments ); }

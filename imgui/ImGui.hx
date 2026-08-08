@@ -243,6 +243,34 @@ enum abstract ImGuiSelectableFlags(Int) from Int to Int {
 	var SelectOnNav : Int = 1 << 6;
 }
 
+enum abstract ImGuiMultiSelectFlags(Int) from Int to Int {
+	var None = 0;
+	var SingleSelect = 1 << 0;
+	var NoSelectAll = 1 << 1;
+	var NoRangeSelect = 1 << 2;
+	var NoAutoSelect = 1 << 3;
+	var NoAutoClear = 1 << 4;
+	var NoAutoClearOnReselect = 1 << 5;
+	var BoxSelect1d = 1 << 6;
+	var BoxSelect2d = 1 << 7;
+	var BoxSelectNoScroll = 1 << 8;
+	var ClearOnEscape = 1 << 9;
+	var ClearOnClickVoid = 1 << 10;
+	var ScopeWindow = 1 << 11;
+	var ScopeRect = 1 << 12;
+	var SelectOnAuto = 1 << 13;
+	var SelectOnClickAlways = 1 << 14;
+	var SelectOnClickRelease = 1 << 15;
+	var NavWrapX = 1 << 16;
+	var NoSelectOnRightClick = 1 << 17;
+}
+
+enum abstract ImGuiSelectionRequestType(Int) from Int to Int {
+	var None = 0;
+	var SetAll = 1;
+	var SetRange = 2;
+}
+
 enum abstract ImGuiButtonFlags(Int) from Int to Int {
 	var None : Int = 0;
 	var MouseButtonLeft : Int = 1 << 0;
@@ -274,6 +302,7 @@ enum abstract ImGuiMouseButton(Int) from Int to Int {
 }
 
 enum abstract ImGuiKey(Int) from Int to Int {
+	var None : Int = 0;
 	var Tab : Int = 512;
 	var LeftArrow : Int = 513;
 	var RightArrow : Int = 514;
@@ -297,37 +326,148 @@ enum abstract ImGuiKey(Int) from Int to Int {
 	var RightShift : Int = 532;
 	var RightAlt : Int = 533;
 	var RightSuper : Int = 534;
-	var F1 : Int = 572;
-	var F2 : Int = 573;
-	var F3 : Int = 574;
-	var F4 : Int = 575;
-	var F5 : Int = 576;
-	var F6 : Int = 577;
-	var F7 : Int = 578;
-	var F8 : Int = 579;
-	var F9 : Int = 580;
-	var F10 : Int = 581;
-	var F11 : Int = 582;
-	var F12 : Int = 583;
-	//
-	var A: Int = 546;
-	//
-	var KeypadEnter : Int = 627;
-	//
-	// Aliases: Mouse Buttons (auto-submitted from AddMouseButtonEvent() calls)
-    // - This is mirroring the data also written to io.MouseDown[], io.MouseWheel, in a format allowing them to be accessed via standard key API.
-	var MouseLeft: Int = 656;
+	var Menu : Int = 535;
+	var Key0 : Int = 536;
+	var Key1 : Int = 537;
+	var Key2 : Int = 538;
+	var Key3 : Int = 539;
+	var Key4 : Int = 540;
+	var Key5 : Int = 541;
+	var Key6 : Int = 542;
+	var Key7 : Int = 543;
+	var Key8 : Int = 544;
+	var Key9 : Int = 545;
+	var A : Int = 546;
+	var B;
+	var C;
+	var D;
+	var E;
+	var F;
+	var G;
+	var H;
+	var I;
+	var J;
+	var K;
+	var L;
+	var M;
+	var N;
+	var O;
+	var P;
+	var Q;
+	var R;
+	var S;
+	var T;
+	var U;
+	var V;
+	var W;
+	var X;
+	var Y;
+	var Z;
+	var F1;
+	var F2;
+	var F3;
+	var F4;
+	var F5;
+	var F6;
+	var F7;
+	var F8;
+	var F9;
+	var F10;
+	var F11;
+	var F12;
+	var F13;
+	var F14;
+	var F15;
+	var F16;
+	var F17;
+	var F18;
+	var F19;
+	var F20;
+	var F21;
+	var F22;
+	var F23;
+	var F24;
+	var Apostrophe;
+	var Comma;
+	var Minus;
+	var Period;
+	var Slash;
+	var Semicolon;
+	var Equal;
+	var LeftBracket;
+	var Backslash;
+	var RightBracket;
+	var GraveAccent;
+	var CapsLock;
+	var ScrollLock;
+	var NumLock;
+	var PrintScreen;
+	var Pause;
+	var Keypad0;
+	var Keypad1;
+	var Keypad2;
+	var Keypad3;
+	var Keypad4;
+	var Keypad5;
+	var Keypad6;
+	var Keypad7;
+	var Keypad8;
+	var Keypad9;
+	var KeypadDecimal;
+	var KeypadDivide;
+	var KeypadMultiply;
+	var KeypadSubtract;
+	var KeypadAdd;
+	var KeypadEnter;
+	var KeypadEqual;
+	var AppBack;
+	var AppForward;
+	var Oem102;
+	var GamepadStart;
+	var GamepadBack;
+	var GamepadFaceLeft;
+	var GamepadFaceRight;
+	var GamepadFaceUp;
+	var GamepadFaceDown;
+	var GamepadDpadLeft;
+	var GamepadDpadRight;
+	var GamepadDpadUp;
+	var GamepadDpadDown;
+	var GamepadL1;
+	var GamepadR1;
+	var GamepadL2;
+	var GamepadR2;
+	var GamepadL3;
+	var GamepadR3;
+	var GamepadLStickLeft;
+	var GamepadLStickRight;
+	var GamepadLStickUp;
+	var GamepadLStickDown;
+	var GamepadRStickLeft;
+	var GamepadRStickRight;
+	var GamepadRStickUp;
+	var GamepadRStickDown;
+	var MouseLeft;
 	var MouseRight;
 	var MouseMiddle;
 	var MouseX1;
 	var MouseX2;
 	var MouseWheelX;
 	var MouseWheelY;
-	//
+
+	// Compatibility aliases. Prefer ImGuiMod for shortcut chords.
 	var ModCtrl : Int = 1 << 12;
 	var ModShift : Int = 1 << 13;
 	var ModAlt : Int = 1 << 14;
 	var ModSuper : Int = 1 << 15;
+}
+
+enum abstract ImGuiMod(Int) from Int to Int {
+	var None = 0;
+	var Ctrl = 1 << 12;
+	var Shift = 1 << 13;
+	var Alt = 1 << 14;
+	var Super = 1 << 15;
 }
 
 class ImGuiKeyStringExtender {
@@ -425,6 +565,12 @@ enum abstract ImGuiDir(Int) from Int to Int {
 	var Up : Int = 2;
 	var Down : Int = 3;
 	var COUNT : Int = 4;
+}
+
+enum abstract ImGuiSortDirection(Int) from Int to Int {
+	var None = 0;
+	var Ascending = 1;
+	var Descending = 2;
 }
 
 enum abstract ImGuiDataType(Int) from Int to Int {
@@ -729,6 +875,20 @@ enum abstract ImGuiInputFlags(Int) from Int to Int {
 	var Tooltip = 1 << 18;
 }
 
+enum abstract ImGuiItemFlags(Int) from Int to Int {
+	var None = 0;
+	var NoTabStop = 1 << 0;
+	var NoNav = 1 << 1;
+	var NoNavDefaultFocus = 1 << 2;
+	var ButtonRepeat = 1 << 3;
+	var AutoClosePopups = 1 << 4;
+	var AllowDuplicateId = 1 << 5;
+	@:noCompletion var Disabled = 1 << 6;
+	var LiveEditOnInputText = 1 << 7;
+	var LiveEditOnInputScalar = 1 << 8;
+	var LiveEditOnInput = LiveEditOnInputText | LiveEditOnInputScalar;
+}
+
 // Flags for ImDrawList functions
 // (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 enum abstract ImDrawFlags(Int) from Int to Int {
@@ -786,8 +946,18 @@ abstract ImTextureID(Dynamic) from h3d.mat.Texture to h3d.mat.Texture {}
 #else
 typedef ImTextureID = Dynamic;
 #end
+
+abstract ImTextureRef(ImTextureID) from ImTextureID to ImTextureID {
+	#if heaps
+	@:from public static inline function fromTexture(texture: h3d.mat.Texture): ImTextureRef {
+		return cast texture;
+	}
+	#end
+}
+
 typedef ImU32 = Int;
 typedef ImGuiID = Int;
+typedef ImGuiSelectionUserData = hl.I64;
 
 /** The raw memory ImVec2 **/
 @:keep
@@ -1555,6 +1725,128 @@ typedef ImGuiDockNode = imgui.types.ImGuiDockNode;
 
 }
 
+@:keep
+@:build(imgui._ImGuiInternalMacro.buildFlatStruct())
+@:hlNative("hlimgui")
+@:struct class ImGuiWindowClass {
+	public var ClassId: ImGuiID;
+	public var ParentViewportId: ImGuiID;
+	public var FocusRouteParentWindowId: ImGuiID;
+	public var ViewportFlagsOverrideSet: ImGuiViewportFlags;
+	public var ViewportFlagsOverrideClear: ImGuiViewportFlags;
+	public var TabItemFlagsOverrideSet: ImGuiTabItemFlags;
+	public var DockNodeFlagsOverrideSet: ImGuiDockNodeFlags;
+	public var DockingAlwaysTabBar: Bool;
+	public var DockingAllowUnclassed: Bool;
+	@:noCompletion var PlatformIconData: hl.Bytes;
+
+	public function new() {
+		init_window_class(this);
+	}
+
+	static function init_window_class(window_class: ImGuiWindowClass): Void {}
+}
+
+@:hlNative("hlimgui")
+abstract ImGuiSelectionRequest(ImGuiSelectionRequestPtr) from ImGuiSelectionRequestPtr to ImGuiSelectionRequestPtr {
+	public var type(get, never): ImGuiSelectionRequestType;
+	public var selected(get, never): Bool;
+	public var rangeDirection(get, never): Int;
+	public var rangeFirstItem(get, never): ImGuiSelectionUserData;
+	public var rangeLastItem(get, never): ImGuiSelectionUserData;
+
+	inline function get_type(): ImGuiSelectionRequestType return selection_request_get_type(this);
+	inline function get_selected(): Bool return selection_request_get_selected(this);
+	inline function get_rangeDirection(): Int return selection_request_get_range_direction(this);
+	inline function get_rangeFirstItem(): ImGuiSelectionUserData return selection_request_get_range_first_item(this);
+	inline function get_rangeLastItem(): ImGuiSelectionUserData return selection_request_get_range_last_item(this);
+
+	static function selection_request_get_type(request: ImGuiSelectionRequestPtr): ImGuiSelectionRequestType return 0;
+	static function selection_request_get_selected(request: ImGuiSelectionRequestPtr): Bool return false;
+	static function selection_request_get_range_direction(request: ImGuiSelectionRequestPtr): Int return 0;
+	static function selection_request_get_range_first_item(request: ImGuiSelectionRequestPtr): ImGuiSelectionUserData return 0;
+	static function selection_request_get_range_last_item(request: ImGuiSelectionRequestPtr): ImGuiSelectionUserData return 0;
+}
+
+/** Valid only for the current multi-select block and frame. */
+@:hlNative("hlimgui")
+abstract ImGuiMultiSelectIO(ImGuiMultiSelectIOPtr) from ImGuiMultiSelectIOPtr to ImGuiMultiSelectIOPtr {
+	public var requestsCount(get, never): Int;
+	public var rangeSrcItem(get, never): ImGuiSelectionUserData;
+	public var navIdItem(get, never): ImGuiSelectionUserData;
+	public var navIdSelected(get, never): Bool;
+	public var rangeSrcReset(get, set): Bool;
+	public var itemsCount(get, never): Int;
+
+	public inline function getRequest(index: Int): ImGuiSelectionRequest {
+		return multi_select_io_get_request(this, index);
+	}
+
+	inline function get_requestsCount(): Int return multi_select_io_get_requests_count(this);
+	inline function get_rangeSrcItem(): ImGuiSelectionUserData return multi_select_io_get_range_src_item(this);
+	inline function get_navIdItem(): ImGuiSelectionUserData return multi_select_io_get_nav_id_item(this);
+	inline function get_navIdSelected(): Bool return multi_select_io_get_nav_id_selected(this);
+	inline function get_rangeSrcReset(): Bool return multi_select_io_get_range_src_reset(this);
+	inline function set_rangeSrcReset(value: Bool): Bool {
+		multi_select_io_set_range_src_reset(this, value);
+		return value;
+	}
+	inline function get_itemsCount(): Int return multi_select_io_get_items_count(this);
+
+	static function multi_select_io_get_requests_count(io: ImGuiMultiSelectIOPtr): Int return 0;
+	static function multi_select_io_get_request(io: ImGuiMultiSelectIOPtr, index: Int): ImGuiSelectionRequestPtr return null;
+	static function multi_select_io_get_range_src_item(io: ImGuiMultiSelectIOPtr): ImGuiSelectionUserData return 0;
+	static function multi_select_io_get_nav_id_item(io: ImGuiMultiSelectIOPtr): ImGuiSelectionUserData return 0;
+	static function multi_select_io_get_nav_id_selected(io: ImGuiMultiSelectIOPtr): Bool return false;
+	static function multi_select_io_get_range_src_reset(io: ImGuiMultiSelectIOPtr): Bool return false;
+	static function multi_select_io_set_range_src_reset(io: ImGuiMultiSelectIOPtr, value: Bool): Void {}
+	static function multi_select_io_get_items_count(io: ImGuiMultiSelectIOPtr): Int return 0;
+}
+
+@:hlNative("hlimgui")
+abstract ImGuiTableColumnSortSpecs(ImGuiTableColumnSortSpecsPtr) from ImGuiTableColumnSortSpecsPtr to ImGuiTableColumnSortSpecsPtr {
+	public var columnUserID(get, never): ImGuiID;
+	public var columnIndex(get, never): Int;
+	public var sortOrder(get, never): Int;
+	public var sortDirection(get, never): ImGuiSortDirection;
+
+	inline function get_columnUserID(): ImGuiID return table_column_sort_specs_get_column_user_id(this);
+	inline function get_columnIndex(): Int return table_column_sort_specs_get_column_index(this);
+	inline function get_sortOrder(): Int return table_column_sort_specs_get_sort_order(this);
+	inline function get_sortDirection(): ImGuiSortDirection return table_column_sort_specs_get_sort_direction(this);
+
+	static function table_column_sort_specs_get_column_user_id(specs: ImGuiTableColumnSortSpecsPtr): ImGuiID return 0;
+	static function table_column_sort_specs_get_column_index(specs: ImGuiTableColumnSortSpecsPtr): Int return 0;
+	static function table_column_sort_specs_get_sort_order(specs: ImGuiTableColumnSortSpecsPtr): Int return 0;
+	static function table_column_sort_specs_get_sort_direction(specs: ImGuiTableColumnSortSpecsPtr): ImGuiSortDirection return 0;
+}
+
+/** Valid until the next BeginTable() call or the end of the current frame. */
+@:hlNative("hlimgui")
+abstract ImGuiTableSortSpecs(ImGuiTableSortSpecsPtr) from ImGuiTableSortSpecsPtr to ImGuiTableSortSpecsPtr {
+	public var specsCount(get, never): Int;
+	public var specsDirty(get, set): Bool;
+
+	public inline function getSpec(index: Int): ImGuiTableColumnSortSpecs {
+		return table_sort_specs_get_spec(this, index);
+	}
+
+	inline function get_specsCount(): Int return table_sort_specs_get_specs_count(this);
+	inline function get_specsDirty(): Bool return table_sort_specs_get_specs_dirty(this);
+	inline function set_specsDirty(value: Bool): Bool {
+		table_sort_specs_set_specs_dirty(this, value);
+		return value;
+	}
+
+	static function table_sort_specs_get_specs_count(specs: ImGuiTableSortSpecsPtr): Int return 0;
+	static function table_sort_specs_get_specs_dirty(specs: ImGuiTableSortSpecsPtr): Bool return false;
+	static function table_sort_specs_set_specs_dirty(specs: ImGuiTableSortSpecsPtr, value: Bool): Void {}
+	static function table_sort_specs_get_spec(specs: ImGuiTableSortSpecsPtr, index: Int): ImGuiTableColumnSortSpecsPtr return null;
+}
+
+/** Opaque context-owned draw-list state. Do not retain it after destroying the ImGui context. */
+abstract ImDrawListSharedData(ImDrawListSharedDataPtr) from ImDrawListSharedDataPtr to ImDrawListSharedDataPtr {}
+
 @:hlNative("hlimgui")
 abstract ImStateStorage(ImStateStoragePtr) from ImStateStoragePtr to ImStateStoragePtr
 {
@@ -1638,6 +1930,7 @@ class ImGui
 	// Demo, Debug, Information
 	public static function showDemoWindow(open : Ref<Bool> = null) {}
 	public static function showMetricsWindow(open : Ref<Bool> = null) {}
+	public static function showDebugLogWindow(open : Ref<Bool> = null) {}
 	public static function showStackToolWindow(open : Ref<Bool> = null) {}
 	public static function showAboutWindow(open : Ref<Bool> = null) {}
 	public static function showStyleEditor(style : ImGuiStyle = null) {}
@@ -1679,6 +1972,7 @@ class ImGui
 	public static function getWindowSize() : ImVec2 {return null;}
 	public static function getWindowWidth() : Single {return 0;}
 	public static function getWindowHeight(): Single {return 0;}
+	public static function getWindowViewport(): ImGuiViewport {return null;}
 
 	// Window manipulation
 	public static function setNextWindowPos(pos: ImVec2, cond: ImGuiCond = 0, ?pivot: ImVec2) {}
@@ -1809,6 +2103,7 @@ class ImGui
 	public static function textWrapped(text : String) {}
 	public static function labelText(label : String, text : String) {}
 	public static function bulletText(text : String) {}
+	public static function separatorText(label : String) {}
 //	public static function textMarkdown(text : String) {}
 
 	// Widgets: Main
@@ -1816,15 +2111,42 @@ class ImGui
 	public static function smallButton(label : String) : Bool {return false;}
 	public static function invisibleButton(str_id : String, ?size : ImVec2, flags : ImGuiButtonFlags = 0) : Bool {return false;}
 	public static function arrowButton(str_id : String, dir : ImGuiDir) : Bool {return false;}
-	public static function image(user_texture_id: ImTextureID, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, ?tint_col: ImVec4, ?border_col: ImVec4) {}
-	public static function imageButton(user_texture_id: ImTextureID, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, frame_padding: Int = -1, ?bg_col: ImVec4, ?tint_col: ImVec4) : Bool {return false;}
+	public static function textLink(label: String): Bool {return false;}
+	public static function textLinkOpenURL(label: String, url: String = null): Bool {return false;}
+
+	public static extern inline overload function image(tex_ref: ImTextureRef, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2): Void {
+		image_ref(tex_ref, size, uv0, uv1);
+	}
+	@:deprecated("Use image() or imageWithBg() and configure ImGuiCol.Border/ImageBorderSize for borders")
+	public static extern inline overload function image(user_texture_id: ImTextureID, size: ImVec2, uv0: ImVec2, uv1: ImVec2, tint_col: ImVec4, ?border_col: ImVec4): Void {
+		image_compat(user_texture_id, size, uv0, uv1, tint_col, border_col);
+	}
+	public static function imageWithBg(tex_ref: ImTextureRef, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, ?bg_col: ImVec4, ?tint_col: ImVec4): Void {}
+	public static extern inline overload function imageButton(str_id: String, tex_ref: ImTextureRef, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, ?bg_col: ImVec4, ?tint_col: ImVec4): Bool {
+		return image_button(str_id, tex_ref, size, uv0, uv1, bg_col, tint_col);
+	}
+	@:deprecated("Use imageButton(strId, texture, size, ...) with an explicit ID")
+	public static extern inline overload function imageButton(user_texture_id: ImTextureID, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2, frame_padding: Int = -1, ?bg_col: ImVec4, ?tint_col: ImVec4): Bool {
+		return image_button_compat(user_texture_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
+	}
 	#if heaps
 	public static inline function imageTile( tile: h2d.Tile, ?size: ImVec2, ?tint_col: ImVec4, ?border_col: ImVec4) @:privateAccess {
-		image(tile.getTexture(), size == null ? ImTypeCache.vec2(tile.width, tile.height) : size, ImTypeCache.vec2(tile.u, tile.v), ImTypeCache.vec2(tile.u2, tile.v2), tint_col, border_col);
+		var imageSize = size == null ? ImTypeCache.vec2(tile.width, tile.height) : size;
+		var uv0 = ImTypeCache.vec2(tile.u, tile.v);
+		var uv1 = ImTypeCache.vec2(tile.u2, tile.v2);
+		if (tint_col == null && border_col == null)
+			image_ref(tile.getTexture(), imageSize, uv0, uv1);
+		else
+			image_compat(tile.getTexture(), imageSize, uv0, uv1, tint_col, border_col);
 	}
 
-	public static inline function imageTileButton( tile: h2d.Tile, ?size: ImVec2, frame_padding: Int = -1, ?bg_col: ImVec4, ?tint_col: ImVec4): Bool @:privateAccess {
-		return imageButton(tile.getTexture(), size == null ? ImTypeCache.vec2(tile.width, tile.height) : size, ImTypeCache.vec2(tile.u, tile.v), ImTypeCache.vec2(tile.u2, tile.v2), frame_padding, bg_col, tint_col);
+	public static extern inline overload function imageTileButton(str_id: String, tile: h2d.Tile, ?size: ImVec2, ?bg_col: ImVec4, ?tint_col: ImVec4): Bool @:privateAccess {
+		return image_button(str_id, tile.getTexture(), size == null ? ImTypeCache.vec2(tile.width, tile.height) : size, ImTypeCache.vec2(tile.u, tile.v), ImTypeCache.vec2(tile.u2, tile.v2), bg_col, tint_col);
+	}
+
+	@:deprecated("Use imageTileButton(strId, tile, ...) with an explicit ID")
+	public static extern inline overload function imageTileButton(tile: h2d.Tile, ?size: ImVec2, frame_padding: Int = -1, ?bg_col: ImVec4, ?tint_col: ImVec4): Bool @:privateAccess {
+		return image_button_compat(tile.getTexture(), size == null ? ImTypeCache.vec2(tile.width, tile.height) : size, ImTypeCache.vec2(tile.u, tile.v), ImTypeCache.vec2(tile.u2, tile.v2), frame_padding, bg_col, tint_col);
 	}
 	#end
 	public static function checkbox(label : String, v : Ref<Bool>) : Bool {return false;}
@@ -1836,6 +2158,10 @@ class ImGui
 
 	static function radio_button(label : String, active : Bool) : Bool {return false;}
 	static function radio_button2(label : String, v : Ref<Int>, v_button : Int) : Bool {return false;}
+	static function image_ref(tex_ref: ImTextureRef, size: ImVec2, ?uv0: ImVec2, ?uv1: ImVec2): Void {}
+	static function image_compat(user_texture_id: ImTextureID, size: ImVec2, uv0: ImVec2, uv1: ImVec2, tint_col: ImVec4, border_col: ImVec4): Void {}
+	static function image_button(str_id: String, tex_ref: ImTextureRef, size: ImVec2, uv0: ImVec2, uv1: ImVec2, bg_col: ImVec4, tint_col: ImVec4): Bool return false;
+	static function image_button_compat(user_texture_id: ImTextureID, size: ImVec2, uv0: ImVec2, uv1: ImVec2, frame_padding: Int, bg_col: ImVec4, tint_col: ImVec4): Bool return false;
 
 	// Widgets: Combo Box
 	/** You MUST call `endCombo()` if this method returns `true`! **/
@@ -1956,6 +2282,12 @@ class ImGui
 	@:native("selectable") static function _selectable(label : String, selected : Bool = false, flags : ImGuiSelectableFlags = 0, ?size: ImVec2) : Bool {return false;}
 	@:native("selectable_2") static function _selectable2(label : String, p_selected : Ref<Bool>, flags : ImGuiSelectableFlags = 0, ?size: ImVec2) : Bool {return false;}
 
+	// Widgets: Multi-Select
+	public static function beginMultiSelect(flags: ImGuiMultiSelectFlags, selection_size: Int = -1, items_count: Int = -1): ImGuiMultiSelectIO return null;
+	public static function endMultiSelect(): ImGuiMultiSelectIO return null;
+	public static function setNextItemSelectionUserData(selection_user_data: ImGuiSelectionUserData): Void {}
+	public static function isItemToggledSelection(): Bool return false;
+
 	// Widgets: List Boxes
 	/**
 		You MUST call `endListBox()` if this method returns `true`!
@@ -1996,9 +2328,11 @@ class ImGui
 	static function menu_item2(label : String, shortcut : String, p_selected : Ref<Bool>, enabled : Bool = true) : Bool {return false;}
 
 	// ToolTips
-	public static function beginTooltip() {}
+	public static function beginTooltip(): Bool {return false;}
 	public static function endTooltip() {}
-	public static function setTooltip(fmt : String) {} // TODO: Allow format args
+	public static function setTooltip(text : String) {}
+	public static function beginItemTooltip(): Bool {return false;}
+	public static function setItemTooltip(text: String): Void {}
 
 	// Popups, Modals
 
@@ -2023,28 +2357,33 @@ class ImGui
 	public static function isPopupOpen(str_id : String, flags: ImGuiPopupFlags = 0) : Bool {return false;}
 
 	// Tables
-	public static function beginTable( id: String, column: Int, flags: ImGuiTableFlags = ImGuiTableFlags.None, ?outer_size: ImVec2, inner_width = 0 ): Bool { return false; }
+	public static function beginTable( id: String, column: Int, flags: ImGuiTableFlags = ImGuiTableFlags.None, ?outer_size: ImVec2, inner_width: Single = 0 ): Bool { return false; }
 	/** Only call `endTable()` if `beginTable()` returns `true`! **/
 	public static function endTable() {}
 	public static function tableNextRow( rowFlags: ImGuiTableRowFlags = ImGuiTableRowFlags.None, minRowHeight: Single = 0 ) {}
-	public static function tableNextColumn() {}
-	public static function tableSetColumnIndex( columnIndex: Int ) {}
+	public static function tableNextColumn(): Bool {return false;}
+	public static function tableSetColumnIndex( columnIndex: Int ): Bool {return false;}
 
 	// Tables: Headers & Columns declaration
 	public static function tableSetupColumn( id: String, flags: ImGuiTableColumnFlags = ImGuiTableColumnFlags.None, initWidthOrHeight: Single = 0, userId: ImGuiID = 0) {}
 	public static function tableSetupScrollFreeze( cols: Int, rows: Int ) {}
 	public static function tableHeadersRow() {}
+	public static function tableAngledHeadersRow() {}
 	public static function tableHeader( id: String ) {}
 
 	// Tables: Sorting
-	//public static function tableGetSortSpecs( id: String ): ImGUiTableSortSpecs { return null } // @todo
+	public static function tableGetSortSpecs(): ImGuiTableSortSpecs {return null;}
 
 	// Tables: Miscellaneous functions
 	public static function tableGetColumnCount(): Int { return 0; }
 	public static function tableGetColumnIndex(): Int { return 0; }
 	public static function tableGetRowIndex(): Int { return 0; }
-	public static function tableGetColumnName(): String { return null; }
-	public static function tableGetColumnFlags(): ImGuiTableColumnFlags { return 0; }
+	static function table_get_column_name(column_n: Int = -1): hl.Bytes {return null;}
+	public static function tableGetColumnName(column_n: Int = -1): String {
+		return @:privateAccess String.fromUTF8(table_get_column_name(column_n));
+	}
+	public static function tableGetColumnFlags(column_n: Int = -1): ImGuiTableColumnFlags { return 0; }
+	public static function tableGetHoveredColumn(): Int {return -1;}
 	public static function tableSetColumnEnabled( column_n: Int, enabled: Bool ): Void {}
 	public static function tableSetBGColor( target: ImGuiTableBgTarget, color: Int, column_n: Int = -1 ): Void { }
 
@@ -2069,10 +2408,10 @@ class ImGui
 	public static function setTabItemClosed(tab_or_docked_window_label : String) {}
 
 	// Docking
-	public static function dockSpace(id : ImGuiID, ?size : ImVec2, flags : ImGuiDockNodeFlags = 0) {}
-	// dockSpaceOverViewport // Viewport API
+	public static function dockSpace(id : ImGuiID, ?size : ImVec2, flags : ImGuiDockNodeFlags = 0, window_class: ImGuiWindowClass = null): ImGuiID {return 0;}
+	public static function dockSpaceOverViewport(dockspace_id: ImGuiID = 0, viewport: ImGuiViewport = null, flags: ImGuiDockNodeFlags = 0, window_class: ImGuiWindowClass = null): ImGuiID {return 0;}
 	public static function setNextWindowDockId(id : ImGuiID, cond : ImGuiCond = 0) {}
-	// setNextWindowClass // Viewport API
+	public static function setNextWindowClass(window_class: ImGuiWindowClass): Void {}
 	public static function getWindowDockId() : ImGuiID { return 0; }
 	public static function isWindowDocked() : Bool { return false; }
 
@@ -2172,6 +2511,7 @@ class ImGui
 	// Focus, Activation
 	public static function setItemDefaultFocus() {}
 	public static function setKeyboardFocusHere(offset : Int = 0) {}
+	public static function setNavCursorVisible(visible: Bool): Void {}
 
 	// Item/Widgets Utilities
 	public static function isItemHovered(flags : ImGuiHoveredFlags = 0) : Bool {return false;}
@@ -2187,14 +2527,19 @@ class ImGui
 	public static function isAnyItemHovered() : Bool {return false;}
 	public static function isAnyItemActive() : Bool {return false;}
 	public static function isAnyItemFocused() : Bool {return false;}
+	public static function getItemID(): ImGuiID {return 0;}
 	public static function getItemRectMin() : ImVec2 {return null;}
 	public static function getItemRectMax() : ImVec2 {return null;}
 	public static function getItemRectSize() : ImVec2 {return null;}
+	public static function getItemFlags(): ImGuiItemFlags {return 0;}
+	public static function getItemClickedCountWithSingleClickDelay(mouse_button: ImGuiMouseButton = ImGuiMouseButton.Left, delay: Single = -1.0): Int {return 0;}
+	public static function setNextItemAllowOverlap(): Void {}
+	@:deprecated("Use setNextItemAllowOverlap() before submitting the item")
 	public static function setItemAllowOverlap() {}
 
 	// Key owner [EXPERIMENTAL API]
 	public static function setKeyOwner( key: ImGuiKey, owner_id: ImGuiID, flags: ImGuiInputFlags = ImGuiInputFlags.None ) : Void {}
-	public static function setItemKeyOwner( key: ImGuiKey, flags: ImGuiInputFlags = ImGuiInputFlags.None ) : Void {}
+	public static function setItemKeyOwner( key: ImGuiKey, flags: ImGuiInputFlags = ImGuiInputFlags.None ) : Bool {return false;}
 
 	// Context accessors
 	public static function contextGetCurrentViewport(): ImGuiViewport { return  null; };
@@ -2211,13 +2556,13 @@ class ImGui
 	//getForegroundDrawList(viewport) // Viewport API
 	public static function getBackgroundDrawList() : ImDrawList {return null;}
 	//getBackgroundDrawList(viewport) // Viewport API
-	//getDrawListSharedData()
+	public static function getDrawListSharedData(): ImDrawListSharedData {return null;}
 	static function get_style_color_name(idx : ImGuiCol) : hl.Bytes {return null;}
 	public static function getStyleColorName(idx : ImGuiCol) : String {
 		return @:privateAccess String.fromUTF8(get_style_color_name(idx));
 	}
 	public static function getStateStorage() : ImStateStorage {return null;}
-	//setStateStorage
+	public static function setStateStorage(storage: ImStateStorage): Void {}
 	public static function beginChildFrame(id : ImGuiID, size : ImVec2, flags : ImGuiWindowFlags = 0) : Bool {return false;}
 	/** Always call `endChildFrame()` regardless of `beginChildFrame()` return value! **/
 	public static function endChildFrame() {}
@@ -2238,11 +2583,17 @@ class ImGui
 	public static function colorConvertHSVtoRGBVec(input: ImVec4): ImVec4 {return null;}
 
 	// Inputs Utilities: Keyboard
-	public static function isKeyDown(user_key_index : Int) : Bool {return false;}
-	public static function isKeyPressed(user_key_index : Int, repeat : Bool = true) : Bool {return false;}
-	public static function isKeyReleased(user_key_index : Int) : Bool {return false;}
-	public static function getKeyPressedAmount(key_index : Int, repeat_delay : Single, rate : Single) : Int {return 0;}
-	//TODO: getKeyName
+	public static function isKeyDown(key : ImGuiKey) : Bool {return false;}
+	public static function isKeyPressed(key : ImGuiKey, repeat : Bool = true) : Bool {return false;}
+	public static function isKeyReleased(key : ImGuiKey) : Bool {return false;}
+	public static function isKeyChordPressed(key_chord: ImGuiKeyChord): Bool {return false;}
+	public static function getKeyPressedAmount(key : ImGuiKey, repeat_delay : Single, rate : Single) : Int {return 0;}
+	static function get_key_name(key: ImGuiKey): hl.Bytes {return null;}
+	public static function getKeyName(key: ImGuiKey): String {
+		return @:privateAccess String.fromUTF8(get_key_name(key));
+	}
+	public static function shortcut(key_chord: ImGuiKeyChord, flags: ImGuiInputFlags = ImGuiInputFlags.None): Bool {return false;}
+	public static function setNextItemShortcut(key_chord: ImGuiKeyChord, flags: ImGuiInputFlags = ImGuiInputFlags.None): Void {}
 	public static function captureKeyboardFromApp(want_capture_keyboard_value : Bool = true) {}
 	@:deprecated("Obsolete")
 	public static function getKeyIndex(imgui_key : ImGuiKey) : Int {return 0;}
@@ -2284,13 +2635,23 @@ class ImGui
 
 
 	// Viewport
+	public static function getMainViewport(): ImGuiViewport {return null;}
 	public static function updatePlatformWindows() {};
 	public static function renderPlatformWindowsDefault( platform_arg: Dynamic = null, render_arg: Dynamic = null) {};
+	public static function destroyPlatformWindows(): Void {};
+	public static function findViewportByID(viewport_id: ImGuiID): ImGuiViewport {return null;}
+	/** The handle must be the same opaque object stored in ImGuiViewport.PlatformHandle. */
+	public static function findViewportByPlatformHandle(platform_handle: Dynamic): ImGuiViewport {return null;}
 
 
 
 	// Debug Utilities
+	public static function debugTextEncoding(text: String): Void {}
+	public static function debugFlashStyleColor(idx: ImGuiCol): Void {}
+	public static function debugStartItemPicker(): Void {}
 	//debugCheckVersionAndDataLayout
+
+	// GetDrawData remains internal: render() immediately converts it into RenderList for the HashLink renderer callback.
 
 	// Memory Allocators - Should not be exposed!
 	//setAllocatorFunctions(ImGuiMemAllocFunc alloc_func, ImGuiMemFreeFunc free_func, void* user_data = NULL);

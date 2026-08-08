@@ -221,6 +221,31 @@ HL_PRIM void HL_NAME(render_platform_windows_default)(void* platform_render_arg,
 	ImGui::RenderPlatformWindowsDefault(platform_render_arg, renderer_render_arg);
 }
 
+HL_PRIM ImGuiViewport* HL_NAME(get_main_viewport)()
+{
+	return ImGui::GetMainViewport();
+}
+
+HL_PRIM ImGuiViewport* HL_NAME(get_window_viewport)()
+{
+	return ImGui::GetWindowViewport();
+}
+
+HL_PRIM void HL_NAME(destroy_platform_windows)()
+{
+	ImGui::DestroyPlatformWindows();
+}
+
+HL_PRIM ImGuiViewport* HL_NAME(find_viewport_by_id)(ImGuiID viewport_id)
+{
+	return ImGui::FindViewportByID(viewport_id);
+}
+
+HL_PRIM ImGuiViewport* HL_NAME(find_viewport_by_platform_handle)(vdynamic* platform_handle)
+{
+	return ImGui::FindViewportByPlatformHandle(platform_handle);
+}
+
 // Context accessors
 HL_PRIM ImGuiViewport* HL_NAME(context_get_current_viewport)()
 {
@@ -252,4 +277,9 @@ DEFINE_PRIM(_STRUCT, context_get_current_viewport, _NO_ARG );
 
 DEFINE_PRIM(_VOID, update_platform_windows, _NO_ARG );
 DEFINE_PRIM(_VOID, render_platform_windows_default, _DYN _DYN );
+DEFINE_PRIM(_STRUCT, get_main_viewport, _NO_ARG );
+DEFINE_PRIM(_STRUCT, get_window_viewport, _NO_ARG );
+DEFINE_PRIM(_VOID, destroy_platform_windows, _NO_ARG );
+DEFINE_PRIM(_STRUCT, find_viewport_by_id, _I32 );
+DEFINE_PRIM(_STRUCT, find_viewport_by_platform_handle, _DYN );
 
