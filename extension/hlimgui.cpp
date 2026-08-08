@@ -17,10 +17,12 @@ typedef struct
 } HeapVertex;
 
 static vclosure* s_render_function = nullptr;
+static vclosure* s_texture_function = nullptr;
 hl_type* hlt_imvec2;
 hl_type* hlt_imvec4;
 hl_type* hlt_rendercommand;
 hl_type* hlt_renderdata;
+hl_type* hlt_rendertexturedata;
 
 typedef struct
 {
@@ -28,12 +30,12 @@ typedef struct
 	vdynamic* texture_id;
 	int index_offset;
 	int elem_count;
-	
+
 	int clip_left;
 	int clip_top;
 	int clip_width;
 	int clip_height;
-	
+
 	vclosure* callback;
 	vdynamic* callback_data;
 } vrendercommand;
@@ -58,11 +60,84 @@ typedef struct
 
 static vrenderlist* render_list = nullptr;
 
+typedef struct
+{
+	hl_type* t;
+	ImTextureData* texture_data;
+	int unique_id;
+	int status;
+	vdynamic* texture_id;
+	vbyte* pixels;
+	int width;
+	int height;
+	int bytes_per_pixel;
+} vrendertexturedata;
+
+typedef struct
+{
+	hl_type* t;
+	varray* updates;
+	int size;
+} vrendertexturelist;
+
+static vrendertexturelist* render_texture_list = nullptr;
+
+static void updateTextures(ImDrawData* draw_data)
+{
+	if (s_texture_function == nullptr || render_texture_list == nullptr || draw_data->Textures == nullptr)
+		return;
+
+	int update_count = 0;
+	for (ImTextureData* texture : *draw_data->Textures)
+		if (texture->Status != ImTextureStatus_OK)
+			update_count++;
+
+	if (update_count == 0)
+		return;
+
+	if (render_texture_list->updates->size < update_count)
+		render_texture_list->updates = hl_alloc_array(hlt_rendertexturedata, update_count);
+	render_texture_list->size = update_count;
+
+	vrendertexturedata** updates = hl_aptr(render_texture_list->updates, vrendertexturedata*);
+	int update_index = 0;
+	for (ImTextureData* texture : *draw_data->Textures)
+	{
+		if (texture->Status == ImTextureStatus_OK)
+			continue;
+
+		vrendertexturedata* update = updates[update_index];
+		if (update == nullptr)
+			update = updates[update_index] = (vrendertexturedata*)hl_alloc_obj(hlt_rendertexturedata);
+
+		update->texture_data = texture;
+		update->unique_id = texture->UniqueID;
+		update->status = texture->Status;
+		update->texture_id = (vdynamic*)(intptr_t)texture->TexID;
+		update->width = texture->Width;
+		update->height = texture->Height;
+		update->bytes_per_pixel = texture->BytesPerPixel;
+		if (texture->Status == ImTextureStatus_WantCreate || texture->Status == ImTextureStatus_WantUpdates)
+		{
+			const int data_size = texture->GetSizeInBytes();
+			update->pixels = hl_copy_bytes((vbyte*)texture->GetPixels(), data_size);
+		}
+		else
+		{
+			update->pixels = nullptr;
+		}
+		update_index++;
+	}
+
+	hl_call1fixed(void, s_texture_function, vrendertexturelist*, render_texture_list);
+}
+
 // TODO: Also let data be provided as is.
 
 void renderDrawLists(ImDrawData* draw_data)
 {
 	if (s_render_function == nullptr || render_list == nullptr) return;
+	updateTextures(draw_data);
 	const int cmd_lists_count = draw_data->CmdLists.Size;
 
 	// Reallocate varray in case there's more draw lists than before.
@@ -75,15 +150,15 @@ void renderDrawLists(ImDrawData* draw_data)
 		int size = hl_type_size(hlt_renderdata);
 		memmove( (vbyte*)hl_aptr(render_list->lists,vbyte), (vbyte*)hl_aptr(old,vbyte), old->size * size);
 	}
-	
+
 	// Store the amount draw lists to render, as varray is grow type and can contain invalid data if amount of draw lists shrink.
 	render_list->size = cmd_lists_count;
 	vrenderdata** hl_cmd_list_ptr = hl_aptr(render_list->lists, vrenderdata*);
-	
+
 	for (int n = 0; n < cmd_lists_count; n++)
 	{
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
-		
+
 		// Allocate render data storage and command list if not allocated before.
 		if (hl_cmd_list_ptr[n] == nullptr) {
 			hl_cmd_list_ptr[n] = (vrenderdata*)hl_alloc_obj(hlt_renderdata);
@@ -119,7 +194,7 @@ void renderDrawLists(ImDrawData* draw_data)
 		else
 			memmove((vbyte*)hl_cmd_list->index_buffer, (vbyte*)cmd_list->IdxBuffer.begin(), index_buffer_size);
 		hl_cmd_list->index_buffer_size = index_buffer_size;
-		
+
 		// create the array for command buffer
 		int command_count = cmd_list->CmdBuffer.size();
 
@@ -138,18 +213,18 @@ void renderDrawLists(ImDrawData* draw_data)
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
 		{
 			const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-			
+
 			vrendercommand* hl_cmd_buffer = hl_commands[cmd_i] == nullptr ? (hl_commands[cmd_i] = (vrendercommand*)hl_alloc_obj(hlt_rendercommand)) : hl_commands[cmd_i];
-			
-			hl_cmd_buffer->texture_id = (vdynamic*)pcmd->GetTexID();
+
+			hl_cmd_buffer->texture_id = (vdynamic*)(intptr_t)pcmd->GetTexID();
 			hl_cmd_buffer->index_offset = pcmd->IdxOffset;
 			hl_cmd_buffer->elem_count = pcmd->ElemCount;
-			
+
 			hl_cmd_buffer->clip_left   = int(pcmd->ClipRect.x - draw_data->DisplayPos.x);
 			hl_cmd_buffer->clip_top    = int(pcmd->ClipRect.y - draw_data->DisplayPos.y);
 			hl_cmd_buffer->clip_width  = int(pcmd->ClipRect.z - pcmd->ClipRect.x);
 			hl_cmd_buffer->clip_height = int(pcmd->ClipRect.w - pcmd->ClipRect.y);
-			
+
 			// TODO: Handle ResetRenderState?
 			if (pcmd->UserCallback != nullptr && pcmd->UserCallback != ImDrawCallback_ResetRenderState)
 			{
@@ -162,9 +237,9 @@ void renderDrawLists(ImDrawData* draw_data)
 				hl_cmd_buffer->callback_data = NULL;
 			}
 		}
-		
+
 	}
-	
+
 	hl_call1fixed(void,s_render_function,vrenderlist*,render_list);
 }
 
@@ -173,6 +248,43 @@ HL_PRIM void HL_NAME(set_render_callback)(vclosure* render_fn)
 	if (s_render_function != nullptr) hl_remove_root(&s_render_function);
 	s_render_function = render_fn;
 	if (render_fn != nullptr) hl_add_root(&s_render_function);
+}
+
+HL_PRIM void HL_NAME(set_texture_callback)(vclosure* texture_fn)
+{
+	if (s_texture_function != nullptr) hl_remove_root(&s_texture_function);
+	s_texture_function = texture_fn;
+	if (texture_fn != nullptr) hl_add_root(&s_texture_function);
+}
+
+HL_PRIM void HL_NAME(imtexturedata_set_texture)(ImTextureData* texture_data, vdynamic* texture)
+{
+	texture_data->SetTexID((ImTextureID)(intptr_t)texture);
+	texture_data->SetStatus(ImTextureStatus_OK);
+}
+
+HL_PRIM void HL_NAME(imtexturedata_set_updated)(ImTextureData* texture_data)
+{
+	texture_data->SetStatus(ImTextureStatus_OK);
+}
+
+HL_PRIM void HL_NAME(imtexturedata_set_destroyed)(ImTextureData* texture_data)
+{
+	texture_data->BackendUserData = nullptr;
+	texture_data->SetTexID(ImTextureID_Invalid);
+	texture_data->SetStatus(ImTextureStatus_Destroyed);
+}
+
+HL_PRIM void HL_NAME(invalidate_renderer_textures)()
+{
+	if (ImGui::GetCurrentContext() == nullptr)
+		return;
+	for (ImTextureData* texture : ImGui::GetPlatformIO().Textures)
+	{
+		texture->BackendUserData = nullptr;
+		texture->SetTexID(ImTextureID_Invalid);
+		texture->SetStatus(ImTextureStatus_Destroyed);
+	}
 }
 
 HL_PRIM void HL_NAME(add_key_char)(int c)
@@ -228,17 +340,27 @@ HL_PRIM void HL_NAME(render)()
 	Hack: Because we want to allocate ImVec2/4 classes on HL side, we need to hijack the hl_type of those classes somehow.
 	And there's no API to obtain said classes. So we steal them from live instances.
 **/
-HL_PRIM void HL_NAME(initialize)(vimvec2* hl_vec2, vimvec4* hl_vec4, vrenderlist* renderlist, vrenderdata* renderdata, vrendercommand* rendercommand) {
+HL_PRIM void HL_NAME(initialize)(vimvec2* hl_vec2, vimvec4* hl_vec4, vrenderlist* renderlist, vrenderdata* renderdata, vrendercommand* rendercommand, vrendertexturelist* texturelist, vrendertexturedata* texturedata) {
 	hlt_imvec2 = hl_vec2->t;
 	hlt_imvec4 = hl_vec4->t;
+	if (render_list == nullptr)
+		hl_add_root(&render_list);
 	render_list = renderlist;
-	hl_add_root(&render_list);
 	hlt_renderdata = renderdata->t;
 	hlt_rendercommand = rendercommand->t;
+	if (render_texture_list == nullptr)
+		hl_add_root(&render_texture_list);
+	render_texture_list = texturelist;
+	hlt_rendertexturedata = texturedata->t;
 }
 
-DEFINE_PRIM(_VOID, initialize, _IMVEC2 _IMVEC4 _TRENDERLIST _TRENDERDATA _TRENDERCOMMAND);
+DEFINE_PRIM(_VOID, initialize, _IMVEC2 _IMVEC4 _TRENDERLIST _TRENDERDATA _TRENDERCOMMAND _TRENDERTEXTURELIST _TRENDERTEXTUREDATA);
 DEFINE_PRIM(_VOID, set_render_callback, _FUN(_VOID, _TRENDERLIST));
+DEFINE_PRIM(_VOID, set_texture_callback, _RENDERTEXTURECALLBACK);
+DEFINE_PRIM(_VOID, imtexturedata_set_texture, _TIMTEXTUREDATA _IMTEXID);
+DEFINE_PRIM(_VOID, imtexturedata_set_updated, _TIMTEXTUREDATA);
+DEFINE_PRIM(_VOID, imtexturedata_set_destroyed, _TIMTEXTUREDATA);
+DEFINE_PRIM(_VOID, invalidate_renderer_textures, _NO_ARG);
 DEFINE_PRIM(_VOID, add_key_char, _I32);
 DEFINE_PRIM(_VOID, add_key_event, _I32 _BOOL);
 DEFINE_PRIM(_VOID, set_events, _F32 _F32 _F32 _F32 _BOOL _BOOL);

@@ -21,6 +21,16 @@ HL_PRIM ImFont* F_NAME(add_font_default)(ImFontAtlas* fonts, ImFontConfig* font_
 	return fonts->AddFontDefault(font_cfg);
 }
 
+HL_PRIM ImFont* F_NAME(add_font_default_vector)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
+{
+	return fonts->AddFontDefaultVector(font_cfg);
+}
+
+HL_PRIM ImFont* F_NAME(add_font_default_bitmap)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
+{
+	return fonts->AddFontDefaultBitmap(font_cfg);
+}
+
 HL_PRIM ImFont* F_NAME(add_font_from_file_ttf)(ImFontAtlas* fonts, vstring* filename, float size_pixels, ImFontConfig* font_cfg, varray* glyph_ranges)
 {
 	return fonts->AddFontFromFileTTF(convertString(filename), size_pixels, font_cfg, convertArray(glyph_ranges, ImWchar));
@@ -62,6 +72,16 @@ HL_PRIM void F_NAME(clear)(ImFontAtlas* fonts)
 	fonts->Clear();
 }
 
+HL_PRIM void F_NAME(remove_font)(ImFontAtlas* fonts, ImFont* font)
+{
+	fonts->RemoveFont(font);
+}
+
+HL_PRIM void F_NAME(compact_cache)(ImFontAtlas* fonts)
+{
+	fonts->CompactCache();
+}
+
 HL_PRIM bool F_NAME(build)(ImFontAtlas* fonts)
 {
 	return fonts->Build();
@@ -79,7 +99,7 @@ typedef struct {
 HL_PRIM void F_NAME(get_tex_data_as_alpha8)(ImFontAtlas* fonts, vtexdata* output)
 {
 	unsigned char* pixels;
-	
+
 	fonts->GetTexDataAsAlpha8(&pixels, &output->width, &output->height, &output->bytesPerPixel);
 	output->buffer = hl_copy_bytes(pixels, output->width * output->height * output->bytesPerPixel);
 }
@@ -87,7 +107,7 @@ HL_PRIM void F_NAME(get_tex_data_as_alpha8)(ImFontAtlas* fonts, vtexdata* output
 HL_PRIM void F_NAME(get_tex_data_as_rgba32)(ImFontAtlas* fonts, vtexdata* output)
 {
 	unsigned char* pixels;
-	
+
 	fonts->GetTexDataAsRGBA32(&pixels, &output->width, &output->height, &output->bytesPerPixel);
 	output->buffer = hl_copy_bytes(pixels, output->width * output->height * output->bytesPerPixel);
 }
@@ -161,9 +181,9 @@ HL_PRIM bool F_NAME(get_mouse_cursor_tex_data)(ImFontAtlas* fonts, ImGuiMouseCur
 	return result;
 }
 
-HL_PRIM void HL_NAME(push_font)(ImFont *font)
+HL_PRIM void HL_NAME(push_font)(ImFont* font, float* font_size_base_unscaled)
 {
-	ImGui::PushFont( font );
+	ImGui::PushFont(font, font_size_base_unscaled != nullptr ? *font_size_base_unscaled : 0.0f);
 }
 
 HL_PRIM void HL_NAME(pop_font)()
@@ -184,6 +204,8 @@ HL_PRIM void HL_NAME(imfontconfig_init)(ImFontConfig* cfg)
 DEFINE_PRIM(_TFONTATLAS, get_font_atlas, _NO_ARG);
 DEFINE_FPRIM(_TFONT, add_font, _STRUCT);
 DEFINE_FPRIM(_TFONT, add_font_default, _STRUCT);
+DEFINE_FPRIM(_TFONT, add_font_default_vector, _STRUCT);
+DEFINE_FPRIM(_TFONT, add_font_default_bitmap, _STRUCT);
 DEFINE_FPRIM(_TFONT, add_font_from_file_ttf, _STRING _F32 _STRUCT _ARR);
 DEFINE_FPRIM(_TFONT, add_font_from_memory_ttf, _BYTES _I32 _F32 _STRUCT _ARR);
 // DEFINE_FPRIM(_TFONT, add_font_from_memory_compressed_ttf, _BYTES _I32 _F32 _STRUCT _ARR);
@@ -192,6 +214,8 @@ DEFINE_FPRIM(_VOID, clear_input_data, _NO_ARG);
 DEFINE_FPRIM(_VOID, clear_tex_data, _NO_ARG);
 DEFINE_FPRIM(_VOID, clear_fonts, _NO_ARG);
 DEFINE_FPRIM(_VOID, clear, _NO_ARG);
+DEFINE_FPRIM(_VOID, remove_font, _TFONT);
+DEFINE_FPRIM(_VOID, compact_cache, _NO_ARG);
 DEFINE_FPRIM(_BOOL, build, _NO_ARG);
 DEFINE_FPRIM(_VOID, get_tex_data_as_alpha8, _TEXDATA);
 DEFINE_FPRIM(_VOID, get_tex_data_as_rgba32, _TEXDATA);
@@ -204,7 +228,7 @@ DEFINE_FPRIM(_STRUCT, get_custom_rect_by_index, _I32);
 DEFINE_FPRIM(_VOID, calc_custom_rect_uv, _STRUCT _IMVEC2 _IMVEC2);
 DEFINE_FPRIM(_BOOL, get_mouse_cursor_tex_data, _I32 _CURSORDATA);
 
-DEFINE_PRIM(_VOID, push_font, _TFONT);
+DEFINE_PRIM(_VOID, push_font, _TFONT _REF(_F32));
 DEFINE_PRIM(_VOID, pop_font, _NO_ARG );
 DEFINE_PRIM(_TFONT, get_font, _NO_ARG);
 DEFINE_PRIM(_VOID, imfontconfig_init, _STRUCT);

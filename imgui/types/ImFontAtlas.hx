@@ -29,7 +29,7 @@ import imgui.types.Pointers;
 	var GlyphMaxAdvanceX: Single;           // Maximum AdvanceX for glyphs
 	var GlyphExtraAdvanceX: Single;         // Extra spacing (in pixels) between glyphs.
 	var FontNo: Int;                        // Index of font within TTF/OTF file
-	var FontBuilderFlags: Int;              // Renamed FontLoaderFlags in Dear ImGui 1.92.
+	var FontLoaderFlags: Int;               // Settings for the active font loader.
 	var RasterizerMultiply: Single;         // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
 	var RasterizerDensity: Single;          // DPI scale multiplier for rasterization.
 	var ExtraSizeScale: Single;             // Extra rasterizer scale over SizePixels.
@@ -44,7 +44,7 @@ import imgui.types.Pointers;
 	public function new() {
 		init(this);
 	}
-	
+
 	// Helper methods for some quick configs
 	public inline function setOversample(h: Int = 3, v: Int = 1) {
 		this.OversampleH = h;
@@ -59,7 +59,11 @@ import imgui.types.Pointers;
 		this.MergeMode = v;
 		return this;
 	}
-	
+	public inline function setFontNo(v: Int) {
+		this.FontNo = v;
+		return this;
+	}
+
 	@:hlNative("hlimgui", "imfontconfig_init")
 	static function init(cfg: ImFontConfig) {}
 
@@ -71,30 +75,30 @@ class ImFontTexData {
 	public var width: Int;
 	public var height: Int;
 	public var bytesPerPixel: Int;
-	
+
 	public function new() {}
 }
 
 /**
 	An output storage for ImFontAtlas.getMouseCursorTexData method.
-	
+
 	ImGui bundled cursor consist of cursor outline and fill, both are monochrome same color.
-	
+
 	In order to properly render the cursor, do the following:
-	
+
 	NOTE: This is how ImGui renders it, for some rerason `uvFill` and `uvBorder` are flipped!
-	
+
 	* Shadow color is black with 18.82% (0x30) alpha.
 	* Border color is black.
 	* Fill color is white.
 	* Full size of the cursor is `size + [2,0]` to account for shadow.
-	
+
 	0. If you render on-screen, offset the drawing position by `-offset` to properly position the cursor pivot.
 	1. Draw `uvFill` offset by [1,0] with shadow color
 	2. Draw `uvFill` offset by [2,0] with shadow color
 	3. Draw `uvFill` with border color
 	4. Draw `uvBorder` with fill color
-	
+
 **/
 @:keep
 class ImCursorData {
@@ -102,7 +106,7 @@ class ImCursorData {
 	public var size: ImVec2;
 	public var uvBorder: ImVec4; // xy = min, zw = max
 	public var uvFill: ImVec4; // xy = min, zw = max
-	
+
 	public function new() {
 		offset = ImVec2.get();
 		size = ImVec2.get();
@@ -113,14 +117,14 @@ class ImCursorData {
 
 @:keep
 @:struct class ImFontAtlasCustomRect {
-	
+
 	public var x: hl.UI16;
 	public var y: hl.UI16;
 	public var w: hl.UI16;
 	public var h: hl.UI16;
 	@:flatten public var uv0: ImVec2S;
 	@:flatten public var uv1: ImVec2S;
-	
+
 	public inline function isPacked(): Bool { return x != 0 || y != 0 || w != 0 || h != 0; }
 }
 
@@ -128,30 +132,34 @@ class ImCursorData {
 abstract ImFontAtlas(ImFontAtlasPtr) from ImFontAtlasPtr to ImFontAtlasPtr
 {
 	inline function new(ptr: ImFontAtlasPtr) { this = ptr; }
-	
+
 	public function addFont(config: ImFontConfig): ImFont { return null; }
 	public function addFontDefault(?config: ImFontConfig): ImFont { return null; }
+	public function addFontDefaultVector(?config: ImFontConfig): ImFont { return null; }
+	public function addFontDefaultBitmap(?config: ImFontConfig): ImFont { return null; }
 	public function addFontFromFileTTF(filename: String, size_pixels: Single, ?font_cfg: ImFontConfig, ?glyph_ranges: hl.NativeArray<hl.UI16>): ImFont { return null; }
 	public function addFontFromMemoryTTF(font_data: Bytes, font_size: Int, size_pixels: Single, ?font_cfg: ImFontConfig, ?glyph_ranges: hl.NativeArray<hl.UI16>): ImFont { return null; }
-	
+
 	public function clearInputData() {}
 	public function clearTexData() {}
 	public function clearFonts() {}
 	public function clear() {}
+	public function removeFont(font: ImFont) {}
+	public function compactCache() {}
 	public function build(): Bool { return false; }
-	
+
 	public function getTexDataAsAlpha8(output: ImFontTexData) {}
 	public function getTexDataAsRGBA32(output: ImFontTexData) {}
 	public function isBuilt(): Bool { return false; }
 	public function setTexId(id: ImTextureID) {}
-	
+
 	// GetGlyphRangesX
-	
+
 	public function addCustomRectRegular(width: Int, height: Int): Int { return 0; }
 	public function addCustomRectFontGlyph(font: ImFontPtr, id: hl.UI16, width: Int, height: Int, advance_x: Single, offset: ImVec2 = null): Int { return 0; }
 	public function getCustomRectByIndex(index: Int): ImFontAtlasCustomRect { return null; }
-	
+
 	public function calcCustomRectUV(rect: ImFontAtlasCustomRect, uv_min: ImVec2, uv_max: ImVec2) {}
 	public function getMouseCursorTexData(cursor: ImGuiMouseCursor, output: ImCursorData): Bool { return false; }
-	
+
 }

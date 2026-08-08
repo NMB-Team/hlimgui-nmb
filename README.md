@@ -121,6 +121,46 @@ This library comes with a built-in Heaps support with the following features:
 
 Mulit-window viewport support can be added with `-D multidriver`
 
+### Fonts
+
+Load the default font directly from a typed Heaps resource:
+
+```haxe
+ImGui.fonts.setDefault(hxd.Res.fonts.inter, 18);
+```
+
+The same API works with packed resources because it reads through the Heaps virtual resource filesystem:
+
+```haxe
+hxd.Res.initPak();
+ImGui.fonts.setDefault(hxd.Res.fonts.inter, 18);
+```
+
+Additional fonts can be scoped to a block:
+
+```haxe
+final mono = ImGui.fonts.add(hxd.Res.fonts.jetbrainsMono);
+
+ImGui.fonts.with(mono, 14, () -> {
+	ImGui.text("Hello");
+});
+```
+
+Raw font bytes are also supported and retained for the lifetime of the font:
+
+```haxe
+ImGui.fonts.setDefaultBytes(bytes, 18);
+```
+
+The Heaps renderer handles Dear ImGui font texture creation, incremental updates, and destruction. Normal Heaps applications should not manually call `getTexDataAsRGBA32()`, `Texture.fromPixels()`, or `setTexId()` for fonts. Those low-level APIs remain available for custom renderers.
+
+The font runtime example covers resource loading, raw bytes, replacement, removal, scaling, garbage collection, and late loading. Add `-D font_api_pak` to compile the same test against a temporary `.pak`:
+
+```sh
+haxe tests/font-api.hxml
+hl extension/build/font-api-test.hl
+```
+
 ## Bugs
 If you find bugs, please report them on the GitHub project page. Most of the bound functions have been tested, but as it's a new library some bugs might remain.
 

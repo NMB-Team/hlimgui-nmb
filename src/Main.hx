@@ -71,6 +71,30 @@ class Main extends imgui.ImGuiApp {
         ImGui.imageTileButton("tile", tile, size);
     }
 
+    // Compile-time coverage for resource, memory, sizing, scoped use, and removal font APIs.
+    static function fontApiCoverage(resource: hxd.res.Resource, bytes: haxe.io.Bytes): Void {
+        final mono = ImGui.fonts.add(resource, 16, {pixelSnap: true, oversampleH: 2, oversampleV: 1});
+        ImGui.fonts.setDefault(resource, 18);
+        ImGui.fonts.addResource("fonts/mono.ttf", 16);
+        ImGui.fonts.setDefaultResource("fonts/main.ttf", 18);
+        ImGui.fonts.addBytes(bytes, 16);
+        ImGui.fonts.setDefaultBytes(bytes, 18);
+        ImGui.fonts.size = 18;
+        ImGui.fonts.scale = 1.25;
+        ImGui.pushFont(mono);
+        ImGui.popFont();
+        ImGui.pushFont(mono, 18);
+        ImGui.popFont();
+        ImGui.fonts.with(mono, 14, () -> ImGui.text("Additional font"));
+        ImGui.fonts.withSize(22, () -> ImGui.text("Larger text"));
+        ImGui.fonts.remove(mono);
+        ImGui.fonts.clearAdditional();
+        ImGui.fonts.resetDefault();
+        ImGui.getFontAtlas().addFontDefaultVector();
+        ImGui.getFontAtlas().addFontDefaultBitmap();
+        ImGui.getFontAtlas().compactCache();
+    }
+
     static function main() {
         new Main();
     }

@@ -1911,12 +1911,24 @@ class ImGui
 {
 	public static inline var FLT_MAX = 3.402823466e+38;
 	public static inline var FLT_MIN = 1.175494e-38;
+	public static final fonts = new ImGuiFonts();
 
 	// Context
 	public static function createContext() : ImContextPtr {return null;}
-	public static function destroyContext(ctx : ImContextPtr = null) {}
+	public static function destroyContext(ctx : ImContextPtr = null) {
+		final destroyedContext = ctx == null ? getCurrentContext() : ctx;
+		destroy_context(ctx);
+		fonts.contextDestroyed(destroyedContext);
+	}
+	@:hlNative("hlimgui", "destroy_context")
+	static function destroy_context(ctx : ImContextPtr) {}
 	public static function getCurrentContext() : ImContextPtr {return null;}
 	public static function setCurrentContext(ctx : ImContextPtr) {}
+	@:noCompletion public static function ensureContext(): ImContextPtr {
+		var context = getCurrentContext();
+		if (context == null) context = createContext();
+		return context;
+	}
 
 	// Main
 	public static function getIO() : ImGuiIO {return null;}
@@ -2020,7 +2032,7 @@ class ImGui
 	public static function setScrollFromPosY(local_y : Single, center_y_ratio : Single = 0.5) {}
 
 	// Parameters stacks (shared)
-	public static function pushFont( font: ImFont ) {}
+	public static function pushFont(font: ImFont, fontSizeBaseUnscaled: Single = 0) {}
 	public static function popFont() {}
 	public static extern inline overload function pushStyleColor(idx : ImGuiCol, col : ImU32) { push_style_color(idx, col); }
 	public static extern inline overload function pushStyleColor(idx : ImGuiCol, col : ImVec4) { push_style_color2(idx, col); }
@@ -2686,23 +2698,25 @@ class ImGui
 
 	// internal functions
 	public static function setRenderCallback(render_fn:RenderList->Void) {}
+	public static function setTextureCallback(texture_fn:RenderTextureList->Void) {}
+	public static function invalidateRendererTextures() {}
 
 	/**
 		Mandatory to call before anything else!
 		Provides C side the necessary hl_type references for data constructed on C side such as ImVec2 and ImVec4.
 	**/
 	public static inline function provideTypes() @:privateAccess {
-		_init(ImVec2.get(), ImVec4.get(), new RenderList(), new RenderData(), new RenderCommand());
+		_init(ImVec2.get(), ImVec4.get(), new RenderList(), new RenderData(), new RenderCommand(), new RenderTextureList(), new RenderTextureData());
 	}
 	@:hlNative("hlimgui", "initialize")
-	static function _init(vec2: ImVec2, vec4: ImVec4, renderlist: RenderList, renderdata: RenderData, rendercommand: RenderCommand) {};
+	static function _init(vec2: ImVec2, vec4: ImVec4, renderlist: RenderList, renderdata: RenderData, rendercommand: RenderCommand, texturelist: RenderTextureList, texturedata: RenderTextureData) {};
 
 	/**
 		Bootstrap helper to initialize Imgui.
 	**/
 	public static inline function initialize(render_fn:RenderList->Void) : ImFontTexData {
 		provideTypes();
-		createContext();
+		ensureContext();
 		setRenderCallback(render_fn);
 		var fonts = getFontAtlas();
 		fonts.addFontDefault();

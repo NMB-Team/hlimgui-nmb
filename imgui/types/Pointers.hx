@@ -3,6 +3,7 @@ package imgui.types;
 // General Ptr storage
 typedef ImFontPtr = hl.Abstract<"imfont">;
 typedef ImFontAtlasPtr = hl.Abstract<"imfontatlas">;
+typedef ImTextureDataPtr = hl.Abstract<"imtexturedata">;
 typedef ImDrawListPtr = hl.Abstract<"imdrawlist">;
 typedef ImStateStoragePtr = hl.Abstract<"imstatestorage">;
 typedef ImDrawListSharedDataPtr = hl.Abstract<"imdrawlistshareddata">;

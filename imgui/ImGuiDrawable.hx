@@ -19,6 +19,11 @@ import limen.platform.Platform as SdlPlatform;
 import sdl.Sdl as SdlPlatform;
 #end
 
+private typedef ManagedImGuiTexture = {
+	var texture: Texture;
+	var pixels: hxd.Pixels;
+}
+
 class ImGuiDrawableBuffers {
 
 	public static final instance = new ImGuiDrawableBuffers();
@@ -29,6 +34,7 @@ class ImGuiDrawableBuffers {
 	public var bufferCount: Int;
 
 	var noTexture: Texture;
+	final textures: Array<ManagedImGuiTexture> = [];
 
 	var commandData: RenderCommandCallbackData = @:privateAccess new RenderCommandCallbackData();
 
@@ -38,67 +44,18 @@ class ImGuiDrawableBuffers {
 	public var cursor_map: Map<ImGuiMouseCursor, hxd.Cursor> = [];
 	#end
 
-	public function initialize( addDefaultFont: Bool = true) {
+	public function initialize(addDefaultFont: Bool = true) {
 		if (this.initialized) {
 			return;
 		}
 
 		ImGui.provideTypes();
-		ImGui.createContext();
+		ImGui.ensureContext();
 		ImGui.setRenderCallback(renderDrawList);
+		ImGui.setTextureCallback(updateTextures);
 
 		var io = ImGui.getIO();
-		var fonts = ImGui.getFontAtlas();
-
-		if( addDefaultFont )
-		{
-			var font_info = new ImFontTexData();
-			fonts.addFontDefault();
-			fonts.getTexDataAsRGBA32(font_info);
-			fonts.clearTexData();
-
-			// create font texture
-			var texture_size = font_info.width * font_info.height * 4;
-			var font_pixels = new hxd.Pixels(font_info.width,
-				font_info.height,
-				font_info.buffer.toBytes(texture_size),
-				hxd.PixelFormat.RGBA
-			);
-			font_texture = Texture.fromPixels(font_pixels);
-			fonts.setTexId(font_texture);
-		}
-
-		#if hlimgui_cursor
-		var cur = new ImCursorData();
-		for (i in 0...ImGuiMouseCursor.COUNT) {
-			if (fonts.getMouseCursorTexData(i, cur)) {
-				var width = Std.int(cur.size.x);
-				var height = Std.int(cur.size.y);
-				var fillX = Std.int(cur.uvFill.x * font_pixels.width);
-				var fillY = Std.int(cur.uvFill.y * font_pixels.height);
-				var borderX = Std.int(cur.uvBorder.x * font_pixels.width);
-				var borderY = Std.int(cur.uvBorder.y * font_pixels.height);
-				var cursorBitmap = new hxd.BitmapData(width+2, height);
-				for (y in 0...height) for (x in 0...width) {
-					// 4. Draw `uvBorder` with fill color
-					if ((font_pixels.getPixel(x + borderX, y + borderY) & 0xff000000) != 0) {
-						cursorBitmap.setPixel(x, y, 0xffffffff);
-					} else if ((font_pixels.getPixel(x + fillX, y + fillY) & 0xff000000) != 0) {
-						// 3. Draw `uvFill` with border color
-						cursorBitmap.setPixel(x,y, 0xff000000);
-						// 1. Draw `uvFill` offset by [1,0] with shadow color
-						if (cursorBitmap.getPixel(x + 1, y) == 0x30000000)
-							cursorBitmap.setPixel(x + 1, y, 0x57000000); // In case previous pixel was casting shadow - do rough shadow blending.
-						else
-							cursorBitmap.setPixel(x + 1, y, 0x30000000);
-						// 2. Draw `uvFill` offset by [2,0] with shadow color
-						cursorBitmap.setPixel(x + 2, y, 0x30000000);
-					}
-				}
-				cursor_map[i] = hxd.Cursor.Custom(new hxd.Cursor.CustomCursor([cursorBitmap], 0, Std.int(cur.offset.x), Std.int(cur.offset.y)));
-			}
-		}
-		#end
+		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
 
 		noTexture = Tile.fromColor(0xffffff).getTexture();
 		this.initialized = true;
@@ -116,12 +73,110 @@ class ImGuiDrawableBuffers {
 		this.vertex_buffers = [];
 		this.commands = [];
 
+		ImGui.setRenderCallback(null);
+		ImGui.setTextureCallback(null);
+		ImGui.invalidateRendererTextures();
+		for (managed in textures) managed.texture.dispose();
+		textures.resize(0);
+		font_texture = null;
+		#if hlimgui_cursor
+		cursor_map.clear();
+		#end
+
 		this.initialized = false;
 	}
 
 	private function new() {
 		this.initialized = false;
 	}
+
+	private function updateTextures(textureList: RenderTextureList) {
+		for (i in 0...textureList.size) {
+			final update = textureList.updates[i];
+			switch (update.status) {
+				case WantCreate:
+					final pixels = texturePixels(update);
+					final texture = Texture.fromPixels(pixels);
+					texture.preventAutoDispose();
+					textures.push({texture: texture, pixels: pixels});
+					if (font_texture == null) font_texture = texture;
+					#if hlimgui_cursor
+					buildCursors(pixels);
+					#end
+					update.textureData.setTexture(texture);
+				case WantUpdates:
+					final managed = findTexture(update.textureId);
+					if (managed == null) throw 'Missing managed ImGui texture ${update.uniqueId}';
+					managed.pixels = texturePixels(update);
+					managed.texture.uploadPixels(managed.pixels);
+					update.textureData.setUpdated();
+				case WantDestroy:
+					final managed = findTexture(update.textureId);
+					if (managed != null) {
+						managed.texture.dispose();
+						textures.remove(managed);
+						if (font_texture == managed.texture) font_texture = null;
+					}
+					update.textureData.setDestroyed();
+				case Ok | Destroyed:
+			}
+		}
+	}
+
+	private function findTexture(textureId: ImTextureID): Null<ManagedImGuiTexture> {
+		final texture: Texture = cast textureId;
+		for (managed in textures)
+			if (managed.texture == texture) return managed;
+		return null;
+	}
+
+	private function texturePixels(update: RenderTextureData): hxd.Pixels {
+		final pixelCount = update.width * update.height;
+		if (update.bytesPerPixel == 4)
+			return new hxd.Pixels(update.width, update.height, update.pixels.toBytes(pixelCount * 4), hxd.PixelFormat.RGBA);
+		if (update.bytesPerPixel != 1) throw 'Unsupported ImGui texture format with ${update.bytesPerPixel} bytes per pixel';
+
+		final rgba = haxe.io.Bytes.alloc(pixelCount * 4);
+		for (i in 0...pixelCount) {
+			final offset = i * 4;
+			rgba.set(offset, 0xff);
+			rgba.set(offset + 1, 0xff);
+			rgba.set(offset + 2, 0xff);
+			rgba.set(offset + 3, update.pixels[i]);
+		}
+		return new hxd.Pixels(update.width, update.height, rgba, hxd.PixelFormat.RGBA);
+	}
+
+	#if hlimgui_cursor
+	private function buildCursors(pixels: hxd.Pixels) {
+		final cursorPixels: hxd.Pixels.PixelsARGB = pixels.clone();
+		final fonts = ImGui.getFontAtlas();
+		final cursor = new ImCursorData();
+		for (i in 0...ImGuiMouseCursor.COUNT) {
+			if (!fonts.getMouseCursorTexData(i, cursor)) continue;
+			final width = Std.int(cursor.size.x);
+			final height = Std.int(cursor.size.y);
+			final fillX = Std.int(cursor.uvFill.x * cursorPixels.width);
+			final fillY = Std.int(cursor.uvFill.y * cursorPixels.height);
+			final borderX = Std.int(cursor.uvBorder.x * cursorPixels.width);
+			final borderY = Std.int(cursor.uvBorder.y * cursorPixels.height);
+			final cursorBitmap = new hxd.BitmapData(width + 2, height);
+			for (y in 0...height) for (x in 0...width) {
+				if ((cursorPixels.getPixel(x + borderX, y + borderY) & 0xff000000) != 0) {
+					cursorBitmap.setPixel(x, y, 0xffffffff);
+				} else if ((cursorPixels.getPixel(x + fillX, y + fillY) & 0xff000000) != 0) {
+					cursorBitmap.setPixel(x, y, 0xff000000);
+					if (cursorBitmap.getPixel(x + 1, y) == 0x30000000)
+						cursorBitmap.setPixel(x + 1, y, 0x57000000);
+					else
+						cursorBitmap.setPixel(x + 1, y, 0x30000000);
+					cursorBitmap.setPixel(x + 2, y, 0x30000000);
+				}
+			}
+			cursor_map[i] = hxd.Cursor.Custom(new hxd.Cursor.CustomCursor([cursorBitmap], 0, Std.int(cursor.offset.x), Std.int(cursor.offset.y)));
+		}
+	}
+	#end
 
 	private function renderDrawList(renderList: RenderList) {
 		bufferCount = 0;

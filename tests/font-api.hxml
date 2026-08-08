@@ -1,0 +1,7 @@
+-cp tests
+-lib heaps
+-lib limen
+-main FontApiTest
+-hl extension/build/font-api-test.hl
+-D hlimgui
+-D resourcesPath=extension/lib/imgui/misc/fonts
