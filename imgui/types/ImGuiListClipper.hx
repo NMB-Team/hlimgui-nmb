@@ -1,14 +1,22 @@
 package imgui.types;
 
-@:keep @:struct class ImGuiListClipperStruct
-{
-	@:noCompletion var finalizer: hl.Bytes; // [HL] GC callback for calling finalizer on the struct when it's freed.
-	public var displayStart: Int;           // First item to display, updated by each call to Step()
-	public var displayEnd: Int;             // End of items to display (exclusive)
-	var itemsCount: Int;                    // [Internal] Number of items
-	var itemsHeight: Single;                // [Internal] Height of item after a first step and item submission can calculate it
-	var startPosY: Single;                  // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
-	var tempData: hl.Bytes;                 // [Internal] Internal data
+@:keep @:struct class ImGuiListClipperStruct {
+	@:noCompletion var finalizer:hl.Bytes; // [HL] GC callback for calling finalizer on the struct when it's freed.
+
+	/**
+		First item to display, updated by each call to Step()
+	**/
+	public var displayStart:Int; // First item to display, updated by each call to Step()
+
+	/**
+		End of items to display (exclusive)
+	**/
+	public var displayEnd:Int; // End of items to display (exclusive)
+
+	var itemsCount:Int; // [Internal] Number of items
+	var itemsHeight:Single; // [Internal] Height of item after a first step and item submission can calculate it
+	var startPosY:Single; // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
+	var tempData:hl.Bytes; // [Internal] Internal data
 }
 
 /**
@@ -37,29 +45,42 @@ package imgui.types;
 **/
 @:forward
 @:hlNative("hlimgui", "imlistclipper_")
-abstract ImGuiListClipper(ImGuiListClipperStruct) from ImGuiListClipperStruct to ImGuiListClipperStruct
-{
-	static function init(): ImGuiListClipperStruct { return null; }
-	
-	public inline function new() this = @:privateAccess init();
-	
+abstract ImGuiListClipper(ImGuiListClipperStruct) from ImGuiListClipperStruct to ImGuiListClipperStruct {
+	static function init():ImGuiListClipperStruct {
+		return null;
+	}
+
+	/**
+		Creates a new `ImGuiListClipper` instance.
+	**/
+	public inline function new()
+		this = @:privateAccess init();
+
 	/**
 		@param itemCount: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
 		@param itemsHeight: Use -1.0f to be calculated automatically on first step.
 		Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
 	**/
-	public inline extern function begin(itemCount: Int, itemsHeight: Single = -1.0) _begin(itemCount, itemsHeight);
-	@:hlNative("hlimgui", "imlistclipper_begin") function _begin(itemCount: Int, itemsHeight: Single) {}
-	
-	/** Automatically called on the last call of Step() that returns false. **/
+	public inline extern function begin(itemCount:Int, itemsHeight:Single = -1.0)
+		_begin(itemCount, itemsHeight);
+
+	@:hlNative("hlimgui", "imlistclipper_begin") function _begin(itemCount:Int, itemsHeight:Single) {}
+
+	/**
+		Automatically called on the last call of Step() that returns false.
+	**/
 	public function end() {}
-	
-	/** Call until it returns false. The `displayStart`/`displayEnd` fields will be set and you can process/draw those items. **/
-	public function step(): Bool { return false; }
-	
+
+	/**
+		Call until it returns false. The `displayStart`/`displayEnd` fields will be set and you can process/draw those items.
+	**/
+	public function step():Bool {
+		return false;
+	}
+
 	/**
 		Call ForceDisplayRangeByIndices() before first call to Step() if you need a range of items to be displayed regardless of visibility.
 		itemMax is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.
 	**/
-	public function forceDisplayRangeByIndices(itemMin: Int, itemMax: Int) {}
+	public function forceDisplayRangeByIndices(itemMin:Int, itemMax:Int) {}
 }

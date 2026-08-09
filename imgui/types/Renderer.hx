@@ -2,99 +2,269 @@ package imgui.types;
 
 import imgui.ImGui;
 import imgui.types.Pointers.ImTextureDataPtr;
+
 import hl.Bytes;
 
+/**
+	Values representing texture status.
+**/
 enum abstract ImTextureStatus(Int) from Int to Int {
+	/**
+		The `Ok` value of `ImTextureStatus`.
+	**/
 	var Ok = 0;
+
+	/**
+		The `Destroyed` value of `ImTextureStatus`.
+	**/
 	var Destroyed;
+
+	/**
+		The `WantCreate` value of `ImTextureStatus`.
+	**/
 	var WantCreate;
+
+	/**
+		The `WantUpdates` value of `ImTextureStatus`.
+	**/
 	var WantUpdates;
+
+	/**
+		The `WantDestroy` value of `ImTextureStatus`.
+	**/
 	var WantDestroy;
 }
 
+/**
+	Mutable renderer texture state supplied by Dear ImGui.
+**/
 @:hlNative("hlimgui", "imtexturedata_")
 abstract ImTextureData(ImTextureDataPtr) from ImTextureDataPtr to ImTextureDataPtr {
-	public function setTexture(texture: ImTextureID) {}
+	/**
+		Sets texture.
+	**/
+	public function setTexture(texture:ImTextureID) {}
+
+	/**
+		Sets updated.
+	**/
 	public function setUpdated() {}
+
+	/**
+		Sets destroyed.
+	**/
 	public function setDestroyed() {}
 }
 
+/**
+	Batch of texture updates requested by Dear ImGui.
+**/
 @:keep
 class RenderTextureList {
-	public var updates: hl.NativeArray<RenderTextureData>;
-	public var size: Int;
+	/**
+		Gets or sets updates.
+	**/
+	public var updates:hl.NativeArray<RenderTextureData>;
+
+	/**
+		Number of texture updates in `updates`.
+	**/
+	public var size:Int;
 
 	function new() {
 		updates = new hl.NativeArray(0);
 	}
 }
 
+/**
+	Texture creation, update, or destruction data for the renderer.
+**/
 @:keep
 class RenderTextureData {
-	public var textureData: ImTextureData;
-	public var uniqueId: Int;
-	public var status: ImTextureStatus;
-	public var textureId: ImTextureID;
-	public var pixels: Bytes;
-	public var width: Int;
-	public var height: Int;
-	public var bytesPerPixel: Int;
+	/**
+		Gets or sets texture data.
+	**/
+	public var textureData:ImTextureData;
+
+	/**
+		Gets or sets unique id.
+	**/
+	public var uniqueId:Int;
+
+	/**
+		Gets or sets status.
+	**/
+	public var status:ImTextureStatus;
+
+	/**
+		Gets or sets texture id.
+	**/
+	public var textureId:ImTextureID;
+
+	/**
+		Gets or sets pixels.
+	**/
+	public var pixels:Bytes;
+
+	/**
+		Texture width in pixels.
+	**/
+	public var width:Int;
+
+	/**
+		Gets or sets height.
+	**/
+	public var height:Int;
+
+	/**
+		Gets or sets bytes per pixel.
+	**/
+	public var bytesPerPixel:Int;
 
 	function new() {}
 }
 
+/**
+	Collection of draw lists produced for the current frame.
+**/
 @:keep
 class RenderList {
+	/**
+		Gets or sets lists.
+	**/
+	public var lists:hl.NativeArray<RenderData>;
 
-	public var lists: hl.NativeArray<RenderData>;
-	public var size: Int;
+	/**
+		Number of draw lists in `lists`.
+	**/
+	public var size:Int;
 
 	function new() {
 		lists = new hl.NativeArray(0);
 	}
 }
 
+/**
+	Vertices, indices, and commands for one Dear ImGui draw list.
+**/
 @:keep
 class RenderData {
-	public var vertexBuffer: Bytes;
-	public var vertexBufferSize: Int;
-	public var indexBuffer: Bytes;
-	public var indexBufferSize: Int;
-	public var commands: hl.NativeArray<RenderCommand>;
-	public var commandCount: Int;
+	/**
+		Gets or sets vertex buffer.
+	**/
+	public var vertexBuffer:Bytes;
+
+	/**
+		The vertex buffer size.
+	**/
+	public var vertexBufferSize:Int;
+
+	/**
+		Gets or sets index buffer.
+	**/
+	public var indexBuffer:Bytes;
+
+	/**
+		The index buffer size.
+	**/
+	public var indexBufferSize:Int;
+
+	/**
+		Gets or sets commands.
+	**/
+	public var commands:hl.NativeArray<RenderCommand>;
+
+	/**
+		The command count.
+	**/
+	public var commandCount:Int;
 
 	function new() {}
 }
 
+/**
+	One clipped texture draw or user callback command.
+**/
 @:keep
 class RenderCommand {
-	public var textureID: ImTextureID;
-	public var indexOffset: Int;
-	public var elemCount: Int;
+	/**
+		Gets or sets texture id.
+	**/
+	public var textureID:ImTextureID;
 
-	public var clipLeft: Int;
-	public var clipTop: Int;
-	public var clipWidth: Int;
-	public var clipHeight: Int;
+	/**
+		Gets or sets index offset.
+	**/
+	public var indexOffset:Int;
 
-	/** If present - instead of regular draw call invoke the callback. **/
-	public var callback: RenderCommandCallback;
-	public var callbackData: Dynamic;
+	/**
+		The elem count.
+	**/
+	public var elemCount:Int;
+
+	/**
+		Gets or sets clip left.
+	**/
+	public var clipLeft:Int;
+
+	/**
+		Gets or sets clip top.
+	**/
+	public var clipTop:Int;
+
+	/**
+		Gets or sets clip width.
+	**/
+	public var clipWidth:Int;
+
+	/**
+		Gets or sets clip height.
+	**/
+	public var clipHeight:Int;
+
+	/**
+		If present - instead of regular draw call invoke the callback.
+	**/
+	public var callback:RenderCommandCallback;
+
+	/**
+		Callback invoked for callback data.
+	**/
+	public var callbackData:Dynamic;
 
 	function new() {}
 }
 
 #if heaps
+/**
+	Renderer-specific context passed to a draw command callback.
+**/
 class RenderCommandCallbackData {
-	public var ctx: h2d.RenderContext;
-	public var obj: h2d.Drawable;
+	/**
+		Heaps render context for the callback.
+	**/
+	public var ctx:h2d.RenderContext;
+
+	/**
+		Gets or sets obj.
+	**/
+	public var obj:h2d.Drawable;
 
 	function new() {}
 }
 #else
+
+/**
+	Renderer-specific context passed to a draw command callback.
+**/
 typedef RenderCommandCallbackData = Dynamic;
 #end
-// TODO: Make RenderData == ImDrawList
+
+// todo: Make RenderData == ImDrawList
 // parentList: RenderData, command: RenderCommand, data: RenderCommandCallbackData
 // Avoid recursion by using Dynamic
-typedef RenderCommandCallback = (parentList: Dynamic, command: Dynamic, data: Dynamic)->Void;
+
+/**
+	Callback invoked for render command.
+**/
+typedef RenderCommandCallback = (parentList:Dynamic, command:Dynamic, data:Dynamic) -> Void;

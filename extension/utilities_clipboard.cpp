@@ -1,13 +1,11 @@
 #include "utils.h"
 
-HL_PRIM vbyte* HL_NAME(get_clipboard_text)()
-{
-    return getVByteFromCStr(ImGui::GetClipboardText());
+HL_PRIM vbyte* HL_NAME(get_clipboard_text)() {
+	return getVByteFromCStr(ImGui::GetClipboardText());
 }
 
-HL_PRIM void HL_NAME(set_clipboard_text)(vstring* text)
-{
-    return ImGui::SetClipboardText(convertString(text));
+HL_PRIM void HL_NAME(set_clipboard_text)(vstring* text) {
+	return ImGui::SetClipboardText(convertString(text));
 }
 
 DEFINE_PRIM(_BYTES, get_clipboard_text, _NO_ARG);

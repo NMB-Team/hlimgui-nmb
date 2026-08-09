@@ -1,52 +1,42 @@
 #include "utils.h"
 
-HL_PRIM float HL_NAME(get_scroll_x)()
-{
+HL_PRIM float HL_NAME(get_scroll_x)() {
 	return ImGui::GetScrollX();
 }
 
-HL_PRIM float HL_NAME(get_scroll_y)()
-{
+HL_PRIM float HL_NAME(get_scroll_y)() {
 	return ImGui::GetScrollY();
 }
 
-HL_PRIM float HL_NAME(get_scroll_max_x)()
-{
+HL_PRIM float HL_NAME(get_scroll_max_x)() {
 	return ImGui::GetScrollMaxX();
 }
 
-HL_PRIM float HL_NAME(get_scroll_max_y)()
-{
+HL_PRIM float HL_NAME(get_scroll_max_y)() {
 	return ImGui::GetScrollMaxY();
 }
 
-HL_PRIM void HL_NAME(set_scroll_x)(float scroll_x)
-{
+HL_PRIM void HL_NAME(set_scroll_x)(float scroll_x) {
 	ImGui::SetScrollX(scroll_x);
 }
 
-HL_PRIM void HL_NAME(set_scroll_y)(float scroll_y)
-{
+HL_PRIM void HL_NAME(set_scroll_y)(float scroll_y) {
 	ImGui::SetScrollY(scroll_y);
 }
 
-HL_PRIM void HL_NAME(set_scroll_here_x)(float* center_x_ratio)
-{
+HL_PRIM void HL_NAME(set_scroll_here_x)(float* center_x_ratio) {
 	ImGui::SetScrollHereX(center_x_ratio != nullptr ? *center_x_ratio : 0.5f);
 }
 
-HL_PRIM void HL_NAME(set_scroll_here_y)(float* center_y_ratio)
-{
+HL_PRIM void HL_NAME(set_scroll_here_y)(float* center_y_ratio) {
 	ImGui::SetScrollHereY(center_y_ratio != nullptr ? *center_y_ratio : 0.5f);
 }
 
-HL_PRIM void HL_NAME(set_scroll_from_pos_x)(float local_x, float* center_x_ratio)
-{
+HL_PRIM void HL_NAME(set_scroll_from_pos_x)(float local_x, float* center_x_ratio) {
 	ImGui::SetScrollFromPosX(local_x, center_x_ratio != nullptr ? *center_x_ratio : 0.5f);
 }
 
-HL_PRIM void HL_NAME(set_scroll_from_pos_y)(float local_y, float* center_y_ratio)
-{
+HL_PRIM void HL_NAME(set_scroll_from_pos_y)(float local_y, float* center_y_ratio) {
 	ImGui::SetScrollFromPosY(local_y, center_y_ratio != nullptr ? *center_y_ratio : 0.5f);
 }
 

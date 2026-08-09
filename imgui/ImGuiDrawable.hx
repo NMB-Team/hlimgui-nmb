@@ -2,17 +2,21 @@ package imgui;
 
 import imgui.types.Renderer;
 import imgui.types.ImFontAtlas;
-#if heaps
 
+#if heaps
 import h2d.Tile;
+
 import h3d.mat.Texture;
+
 import imgui.ImGui;
+
 import hxd.Key;
 #if heaps_nmb
 import hxd.Key.KeyCode;
 #else
 import hxd.Key in KeyCode;
 #end
+
 #if limen
 import limen.platform.Platform as SdlPlatform;
 #elseif hlsdl
@@ -20,31 +24,62 @@ import sdl.Sdl as SdlPlatform;
 #end
 
 private typedef ManagedImGuiTexture = {
-	var texture: Texture;
-	var pixels: hxd.Pixels;
+	var texture:Texture;
+	var pixels:hxd.Pixels;
 }
 
+/**
+	Owns reusable Heaps buffers and textures used by the Dear ImGui renderer.
+**/
 class ImGuiDrawableBuffers {
-
+	/**
+		The instance.
+	**/
 	public static final instance = new ImGuiDrawableBuffers();
 
-	public var vertex_buffers(default, null) : Array<h3d.Buffer> = [];
-	public var index_buffers(default, null) : Array<h3d.Indexes> = [];
-	public var commands: Array<RenderData> = []; // hl.NativeArray<RenderCommand> See https://github.com/HaxeFoundation/hashlink/issues/461
-	public var bufferCount: Int;
+	/**
+		Gets or sets vertex buffers.
+	**/
+	public var vertex_buffers(default, null):Array<h3d.Buffer> = [];
 
-	var noTexture: Texture;
-	final textures: Array<ManagedImGuiTexture> = [];
+	/**
+		Gets or sets index buffers.
+	**/
+	public var index_buffers(default, null):Array<h3d.Indexes> = [];
 
-	var commandData: RenderCommandCallbackData = @:privateAccess new RenderCommandCallbackData();
+	/**
+		Hl.NativeArray<RenderCommand> See https://github.com/HaxeFoundation/hashlink/issues/461.
+	**/
+	public var commands:Array<RenderData> = []; // hl.NativeArray<RenderCommand> See https://github.com/HaxeFoundation/hashlink/issues/461
 
-	private var initialized : Bool;
-	public var font_texture : Texture;
+	/**
+		The buffer count.
+	**/
+	public var bufferCount:Int;
+
+	var noTexture:Texture;
+	final textures:Array<ManagedImGuiTexture> = [];
+
+	var commandData:RenderCommandCallbackData = @:privateAccess new RenderCommandCallbackData();
+
+	private var initialized:Bool;
+
+	/**
+		Gets or sets font texture.
+	**/
+	public var font_texture:Texture;
+
 	#if hlimgui_cursor
-	public var cursor_map: Map<ImGuiMouseCursor, hxd.Cursor> = [];
+	/**
+		Gets or sets cursor map.
+	**/
+	public var cursor_map:Map<ImGuiMouseCursor, hxd.Cursor> = [];
 	#end
 
-	public function initialize(addDefaultFont: Bool = true) {
+	/**
+		Initializes this instance and its native resources.
+	**/
+	public function initialize(addDefaultFont:Bool = true) {
 		if (this.initialized) {
 			return;
 		}
@@ -61,6 +96,9 @@ class ImGuiDrawableBuffers {
 		this.initialized = true;
 	}
 
+	/**
+		Releases resources owned by this instance.
+	**/
 	public function dispose() {
 		for (index_buffer in this.index_buffers) {
 			index_buffer.dispose();
@@ -76,7 +114,8 @@ class ImGuiDrawableBuffers {
 		ImGui.setRenderCallback(null);
 		ImGui.setTextureCallback(null);
 		ImGui.invalidateRendererTextures();
-		for (managed in textures) managed.texture.dispose();
+		for (managed in textures)
+			managed.texture.dispose();
 		textures.resize(0);
 		font_texture = null;
 		#if hlimgui_cursor
@@ -90,7 +129,7 @@ class ImGuiDrawableBuffers {
 		this.initialized = false;
 	}
 
-	private function updateTextures(textureList: RenderTextureList) {
+	private function updateTextures(textureList:RenderTextureList) {
 		for (i in 0...textureList.size) {
 			final update = textureList.updates[i];
 			switch (update.status) {
@@ -99,14 +138,16 @@ class ImGuiDrawableBuffers {
 					final texture = Texture.fromPixels(pixels);
 					texture.preventAutoDispose();
 					textures.push({texture: texture, pixels: pixels});
-					if (font_texture == null) font_texture = texture;
+					if (font_texture == null)
+						font_texture = texture;
 					#if hlimgui_cursor
 					buildCursors(pixels);
 					#end
 					update.textureData.setTexture(texture);
 				case WantUpdates:
 					final managed = findTexture(update.textureId);
-					if (managed == null) throw 'Missing managed ImGui texture ${update.uniqueId}';
+					if (managed == null)
+						throw 'Missing managed ImGui texture ${update.uniqueId}';
 					managed.pixels = texturePixels(update);
 					managed.texture.uploadPixels(managed.pixels);
 					update.textureData.setUpdated();
@@ -115,7 +156,8 @@ class ImGuiDrawableBuffers {
 					if (managed != null) {
 						managed.texture.dispose();
 						textures.remove(managed);
-						if (font_texture == managed.texture) font_texture = null;
+						if (font_texture == managed.texture)
+							font_texture = null;
 					}
 					update.textureData.setDestroyed();
 				case Ok | Destroyed:
@@ -123,18 +165,20 @@ class ImGuiDrawableBuffers {
 		}
 	}
 
-	private function findTexture(textureId: ImTextureID): Null<ManagedImGuiTexture> {
-		final texture: Texture = cast textureId;
+	private function findTexture(textureId:ImTextureID):Null<ManagedImGuiTexture> {
+		final texture:Texture = cast textureId;
 		for (managed in textures)
-			if (managed.texture == texture) return managed;
+			if (managed.texture == texture)
+				return managed;
 		return null;
 	}
 
-	private function texturePixels(update: RenderTextureData): hxd.Pixels {
+	private function texturePixels(update:RenderTextureData):hxd.Pixels {
 		final pixelCount = update.width * update.height;
 		if (update.bytesPerPixel == 4)
 			return new hxd.Pixels(update.width, update.height, update.pixels.toBytes(pixelCount * 4), hxd.PixelFormat.RGBA);
-		if (update.bytesPerPixel != 1) throw 'Unsupported ImGui texture format with ${update.bytesPerPixel} bytes per pixel';
+		if (update.bytesPerPixel != 1)
+			throw 'Unsupported ImGui texture format with ${update.bytesPerPixel} bytes per pixel';
 
 		final rgba = haxe.io.Bytes.alloc(pixelCount * 4);
 		for (i in 0...pixelCount) {
@@ -148,12 +192,13 @@ class ImGuiDrawableBuffers {
 	}
 
 	#if hlimgui_cursor
-	private function buildCursors(pixels: hxd.Pixels) {
-		final cursorPixels: hxd.Pixels.PixelsARGB = pixels.clone();
+	private function buildCursors(pixels:hxd.Pixels) {
+		final cursorPixels:hxd.Pixels.PixelsARGB = pixels.clone();
 		final fonts = ImGui.getFontAtlas();
 		final cursor = new ImCursorData();
 		for (i in 0...ImGuiMouseCursor.COUNT) {
-			if (!fonts.getMouseCursorTexData(i, cursor)) continue;
+			if (!fonts.getMouseCursorTexData(i, cursor))
+				continue;
 			final width = Std.int(cursor.size.x);
 			final height = Std.int(cursor.size.y);
 			final fillX = Std.int(cursor.uvFill.x * cursorPixels.width);
@@ -161,24 +206,25 @@ class ImGuiDrawableBuffers {
 			final borderX = Std.int(cursor.uvBorder.x * cursorPixels.width);
 			final borderY = Std.int(cursor.uvBorder.y * cursorPixels.height);
 			final cursorBitmap = new hxd.BitmapData(width + 2, height);
-			for (y in 0...height) for (x in 0...width) {
-				if ((cursorPixels.getPixel(x + borderX, y + borderY) & 0xff000000) != 0) {
-					cursorBitmap.setPixel(x, y, 0xffffffff);
-				} else if ((cursorPixels.getPixel(x + fillX, y + fillY) & 0xff000000) != 0) {
-					cursorBitmap.setPixel(x, y, 0xff000000);
-					if (cursorBitmap.getPixel(x + 1, y) == 0x30000000)
-						cursorBitmap.setPixel(x + 1, y, 0x57000000);
-					else
-						cursorBitmap.setPixel(x + 1, y, 0x30000000);
-					cursorBitmap.setPixel(x + 2, y, 0x30000000);
+			for (y in 0...height)
+				for (x in 0...width) {
+					if ((cursorPixels.getPixel(x + borderX, y + borderY) & 0xff000000) != 0) {
+						cursorBitmap.setPixel(x, y, 0xffffffff);
+					} else if ((cursorPixels.getPixel(x + fillX, y + fillY) & 0xff000000) != 0) {
+						cursorBitmap.setPixel(x, y, 0xff000000);
+						if (cursorBitmap.getPixel(x + 1, y) == 0x30000000)
+							cursorBitmap.setPixel(x + 1, y, 0x57000000);
+						else
+							cursorBitmap.setPixel(x + 1, y, 0x30000000);
+						cursorBitmap.setPixel(x + 2, y, 0x30000000);
+					}
 				}
-			}
 			cursor_map[i] = hxd.Cursor.Custom(new hxd.Cursor.CustomCursor([cursorBitmap], 0, Std.int(cursor.offset.x), Std.int(cursor.offset.y)));
 		}
 	}
 	#end
 
-	private function renderDrawList(renderList: RenderList) {
+	private function renderDrawList(renderList:RenderList) {
 		bufferCount = 0;
 
 		for (i in 0...renderList.size) {
@@ -186,7 +232,7 @@ class ImGuiDrawableBuffers {
 
 			final vertexStride = 8;
 			var vertexCount = Std.int(data.vertexBufferSize / (vertexStride * 4)); // data.vertexBufferSize>>5;
-			var indexCount = data.indexBufferSize>>2;
+			var indexCount = data.indexBufferSize >> 2;
 			// if (vertexCount == 0) continue;
 
 			// create or reuse vertex buffer
@@ -213,12 +259,15 @@ class ImGuiDrawableBuffers {
 			}
 			this.vertex_buffers[i].uploadBytes(data.vertexBuffer.toBytes(data.vertexBufferSize), 0, vertexCount);
 			this.index_buffers[i].uploadBytes(data.indexBuffer.toBytes(data.indexBufferSize), 0, indexCount);
-			this.commands[i] = data;//data.commands.sub(0, data.commandCount);
+			this.commands[i] = data; // data.commands.sub(0, data.commandCount);
 			bufferCount++;
 		}
 	}
 
-	public function draw(ctx: h2d.RenderContext, obj: h2d.Drawable) {
+	/**
+		Helper calling InputText+Build.
+	**/
+	public function draw(ctx:h2d.RenderContext, obj:h2d.Drawable) {
 		var e = ctx.engine;
 		commandData.ctx = ctx;
 		commandData.obj = obj;
@@ -248,7 +297,7 @@ class ImGuiDrawableBuffers {
 		imDrawList.addCallback(ImGuiDrawableBuffers.setSmoothCommand);
 		```
 	**/
-	public static function setSmoothCommand(data: RenderData, command: RenderCommand, cbData: RenderCommandCallbackData) {
+	public static function setSmoothCommand(data:RenderData, command:RenderCommand, cbData:RenderCommandCallbackData) {
 		cbData.obj.smooth = true;
 	}
 
@@ -260,7 +309,7 @@ class ImGuiDrawableBuffers {
 		imDrawList.addCallback(ImGuiDrawableBuffers.setSmoothCommand);
 		```
 	**/
-	public static function resetSmoothCommand(data: RenderData, command: RenderCommand, cbData: RenderCommandCallbackData) {
+	public static function resetSmoothCommand(data:RenderData, command:RenderCommand, cbData:RenderCommandCallbackData) {
 		cbData.obj.smooth = null;
 	}
 
@@ -272,28 +321,34 @@ class ImGuiDrawableBuffers {
 		imDrawList.addCallback(ImGuiDrawableBuffers.setSmoothCommand);
 		```
 	**/
-	public static function setNearestCommand(data: RenderData, command: RenderCommand, cbData: RenderCommandCallbackData) {
+	public static function setNearestCommand(data:RenderData, command:RenderCommand, cbData:RenderCommandCallbackData) {
 		cbData.obj.smooth = false;
 	}
 }
 
+/**
+	Heaps drawable that renders Dear ImGui draw data.
+**/
 class ImGuiDrawable extends h2d.Drawable {
-	var keycode_map : Map<Int,Int>;
-	var wheel_inverted : Bool;
+	var keycode_map:Map<Int, Int>;
+	var wheel_inverted:Bool;
 	#if hlimgui_cursor
 	var cursorMap:Map<ImGuiMouseCursor, hxd.Cursor> = [];
 	#end
-	private var scene_size : {width: Int, height:Int};
+	private var scene_size:{width:Int, height:Int};
 
+	/**
+		Creates a new `ImGuiDrawable` instance.
+	**/
 	public function new(?parent, ?addDefaultFont = true) {
 		super(parent);
-		ImGuiDrawableBuffers.instance.initialize( addDefaultFont );
+		ImGuiDrawableBuffers.instance.initialize(addDefaultFont);
 
 		var scene = getScene();
 		var io = ImGui.getIO();
 		io.DisplaySize.x = scene.width;
 		io.DisplaySize.y = scene.height;
-		this.scene_size = {width: scene.width, height:scene.height};
+		this.scene_size = {width: scene.width, height: scene.height};
 
 		this.keycode_map = [
 			KeyCode.TAB => ImGuiKey.Tab,
@@ -333,7 +388,7 @@ class ImGuiDrawable extends h2d.Drawable {
 		];
 
 		// Add letters
-		for( ko in 0...26)
+		for (ko in 0...26)
 			keycode_map[KeyCode.A + ko] = ImGuiKey.A + ko;
 
 		#if !multidriver
@@ -347,10 +402,16 @@ class ImGuiDrawable extends h2d.Drawable {
 		this.wheel_inverted = false;
 	}
 
+	/**
+		Releases resources owned by this instance.
+	**/
 	public function dispose() {
 		ImGuiDrawableBuffers.instance.dispose();
 	}
 
+	/**
+		Updates this instance for the current frame.
+	**/
 	public function update(dt:Float) {
 		var io = ImGui.getIO();
 
@@ -361,40 +422,44 @@ class ImGuiDrawable extends h2d.Drawable {
 			io.DisplaySize.x = scene.width;
 			io.DisplaySize.y = scene.height;
 
-			this.scene_size = {width: scene.width, height:scene.height};
+			this.scene_size = {width: scene.width, height: scene.height};
 		}
 		#if hlimgui_cursor
 		// Somewhat hacky solution to enforce a cursor: But that's what we can do.
 		var cursor = ImGuiDrawableBuffers.instance.cursor_map[ImGui.getMouseCursor()];
-		if (cursor != null) @:privateAccess scene.events.defaultCursor = cursor;
+		if (cursor != null)
+			@:privateAccess scene.events.defaultCursor = cursor;
 		#end
 
 		// Update modifier states
 		#if !multidriver
-		io.addKeyEvent( ImGuiKey.ModShift, Key.isDown( KeyCode.SHIFT ) );
-		io.addKeyEvent( ImGuiKey.ModAlt, Key.isDown( KeyCode.ALT ) );
-		io.addKeyEvent( ImGuiKey.ModCtrl, Key.isDown( KeyCode.CTRL ) );
-		//ImGui.addKeyEvent( ImGuiKey.ModSuper, Key.isDown( KeyCode.SUPER ) ); // Unsupported currently.
+		io.addKeyEvent(ImGuiKey.ModShift, Key.isDown(KeyCode.SHIFT));
+		io.addKeyEvent(ImGuiKey.ModAlt, Key.isDown(KeyCode.ALT));
+		io.addKeyEvent(ImGuiKey.ModCtrl, Key.isDown(KeyCode.CTRL));
+		// ImGui.addKeyEvent( ImGuiKey.ModSuper, Key.isDown( KeyCode.SUPER ) ); // Unsupported currently.
 		#end
-
 
 		#if multidriver
 		var x = 0;
 		var y = 0;
 		SdlPlatform.getGlobalMouseState(x, y);
-		io.addMousePosEvent( x, y );
+		io.addMousePosEvent(x, y);
 		#end
-
 	}
 
 	#if hlimgui_cursor
 	function updateCursor(cursor:hxd.Cursor) {
 		switch (ImGui.getMouseCursor()) {
-			case None: hxd.System.setNativeCursor(Hide);
-			case Arrow: hxd.System.setNativeCursor(cursor);
-			case TextInput: hxd.System.setNativeCursor(TextInput);
-			case ResizeAll: hxd.System.setNativeCursor(Move);
-			case Hand: hxd.System.setNativeCursor(Button);
+			case None:
+				hxd.System.setNativeCursor(Hide);
+			case Arrow:
+				hxd.System.setNativeCursor(cursor);
+			case TextInput:
+				hxd.System.setNativeCursor(TextInput);
+			case ResizeAll:
+				hxd.System.setNativeCursor(Move);
+			case Hand:
+				hxd.System.setNativeCursor(Button);
 			// case ResizeNS:
 			// case ResizeEW:
 			// case ResizeNESW:
@@ -402,7 +467,8 @@ class ImGuiDrawable extends h2d.Drawable {
 			// case NotAllowed:
 			case expected:
 				var cur = ImGuiDrawableBuffers.instance.cursor_map[expected];
-				if (cur != null) cursor = cur;
+				if (cur != null)
+					cursor = cur;
 				hxd.System.setNativeCursor(cursor);
 		}
 	}
@@ -411,9 +477,12 @@ class ImGuiDrawable extends h2d.Drawable {
 	#if multidriver
 	// When in multidriver mode, mouse cooridnates operate in absoluate space instead of relative.
 	// Adjust the event accordingly
-	public function onMultiWindowEvent( window: hxd.Window, originalEvent: hxd.Event, viewport: ImGuiViewport )
-	{
-		var event = new hxd.Event( originalEvent.kind, originalEvent.relX, originalEvent.relY );
+
+	/**
+		Forwards a platform event to the matching Dear ImGui viewport.
+	**/
+	public function onMultiWindowEvent(window:hxd.Window, originalEvent:hxd.Event, viewport:ImGuiViewport) {
+		var event = new hxd.Event(originalEvent.kind, originalEvent.relX, originalEvent.relY);
 		event.button = originalEvent.button;
 		event.wheelDelta = originalEvent.wheelDelta;
 		event.keyCode = originalEvent.keyCode;
@@ -424,28 +493,26 @@ class ImGuiDrawable extends h2d.Drawable {
 			event.relX += window.window.x;
 			event.relY += window.window.y;
 		}
-		onEvent( event );
+		onEvent(event);
 
-		if( viewport != null )
-		{
-			switch( event.kind )
-			{
+		if (viewport != null) {
+			switch (event.kind) {
 				case EMove:
 					var io = ImGui.getIO();
-					if ( ( io.BackendFlags & ImGuiBackendFlags.HasMouseHoveredViewport ) != 0 )
-						io.addMouseViewportEvent( viewport.ID );
+					if ((io.BackendFlags & ImGuiBackendFlags.HasMouseHoveredViewport) != 0)
+						io.addMouseViewportEvent(viewport.ID);
 				default:
 			}
 		}
 	}
 	#end
 
-	private function onEvent(event: hxd.Event) {
+	private function onEvent(event:hxd.Event) {
 		var io = ImGui.getIO();
 		switch (event.kind) {
 			#if !multidriver
 			case EMove:
-				io.addMousePosEvent( event.relX, event.relY );
+				io.addMousePosEvent(event.relX, event.relY);
 			#end
 
 			case EPush:
@@ -462,7 +529,7 @@ class ImGuiDrawable extends h2d.Drawable {
 				}
 
 			case EWheel:
-				io.addMouseWheelEvent( 0, this.wheel_inverted ? event.wheelDelta : -event.wheelDelta );
+				io.addMouseWheelEvent(0, this.wheel_inverted ? event.wheelDelta : -event.wheelDelta);
 
 				if (io.WantCaptureMouse) {
 					event.propagate = false;
@@ -496,37 +563,33 @@ class ImGuiDrawable extends h2d.Drawable {
 				if (io.WantCaptureKeyboard) {
 					event.propagate = false;
 				}
-			#if multidriver
-			// It looks goofy to hide these behind multidriver, but the normal model listens for heaps
-			// stack events, not window events. Focus events mean something completely different in
-			// that context. That said, I don't know if it actually does anything.
-			case EFocus:
-				io.addFocusEvent( true );
-			case EFocusLost:
-				io.addFocusEvent( false );
-			#end
+				#if multidriver
+				// It looks goofy to hide these behind multidriver, but the normal model listens for heaps
+				// stack events, not window events. Focus events mean something completely different in
+				// that context. That said, I don't know if it actually does anything.
+				case EFocus:
+					io.addFocusEvent(true);
+				case EFocusLost:
+					io.addFocusEvent(false);
+				#end
 			default:
 		}
 	}
 
-	function updateModifiers( code: Int, down: Bool )
-	{
+	function updateModifiers(code:Int, down:Bool) {
 		var io = ImGui.getIO();
-		switch( code )
-		{
+		switch (code) {
 			case KeyCode.LCTRL | KeyCode.RCTRL:
-				io.addKeyEvent( ImGuiKey.ModCtrl, down );
+				io.addKeyEvent(ImGuiKey.ModCtrl, down);
 			case KeyCode.LALT | KeyCode.RALT:
-				io.addKeyEvent( ImGuiKey.ModAlt, down );
+				io.addKeyEvent(ImGuiKey.ModAlt, down);
 			case KeyCode.LSHIFT | KeyCode.RSHIFT:
-				io.addKeyEvent( ImGuiKey.ModShift, down );
+				io.addKeyEvent(ImGuiKey.ModShift, down);
 		}
-
 	}
 
 	override function draw(ctx:h2d.RenderContext) {
 		ImGuiDrawableBuffers.instance.draw(ctx, this);
 	}
 }
-
 #end

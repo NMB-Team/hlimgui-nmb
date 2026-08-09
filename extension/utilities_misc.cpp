@@ -1,92 +1,78 @@
 #include "utils.h"
 #include "lib/imgui/imgui_internal.h"
 
-HL_PRIM bool HL_NAME(is_rect_visible)(vimvec2* size)
-{
-    return ImGui::IsRectVisible(size);
+HL_PRIM bool HL_NAME(is_rect_visible)(vimvec2* size) {
+	return ImGui::IsRectVisible(size);
 }
 
-HL_PRIM bool HL_NAME(is_rect_visible2)(vimvec2* rect_min, vimvec2* rect_max)
-{
-    return ImGui::IsRectVisible(rect_min, rect_max);
+HL_PRIM bool HL_NAME(is_rect_visible2)(vimvec2* rect_min, vimvec2* rect_max) {
+	return ImGui::IsRectVisible(rect_min, rect_max);
 }
 
-HL_PRIM double HL_NAME(get_time)()
-{
-    return ImGui::GetTime();
+HL_PRIM double HL_NAME(get_time)() {
+	return ImGui::GetTime();
 }
 
-HL_PRIM int HL_NAME(get_frame_count)()
-{
-    return ImGui::GetFrameCount();
+HL_PRIM int HL_NAME(get_frame_count)() {
+	return ImGui::GetFrameCount();
 }
 
-HL_PRIM vbyte* HL_NAME(get_style_color_name)(ImGuiCol idx)
-{
-    return getVByteFromCStr(ImGui::GetStyleColorName(idx));
+HL_PRIM vbyte* HL_NAME(get_style_color_name)(ImGuiCol idx) {
+	return getVByteFromCStr(ImGui::GetStyleColorName(idx));
 }
 
-HL_PRIM ImDrawListSharedData* HL_NAME(get_draw_list_shared_data)()
-{
-    return ImGui::GetDrawListSharedData();
+HL_PRIM ImDrawListSharedData* HL_NAME(get_draw_list_shared_data)() {
+	return ImGui::GetDrawListSharedData();
 }
 
-HL_PRIM void HL_NAME(debug_text_encoding)(vstring* text)
-{
-    ImGui::DebugTextEncoding(convertStringNullAsEmpty(text));
+HL_PRIM void HL_NAME(debug_text_encoding)(vstring* text) {
+	ImGui::DebugTextEncoding(convertStringNullAsEmpty(text));
 }
 
-HL_PRIM void HL_NAME(debug_flash_style_color)(ImGuiCol idx)
-{
-    ImGui::DebugFlashStyleColor(idx);
+HL_PRIM void HL_NAME(debug_flash_style_color)(ImGuiCol idx) {
+	ImGui::DebugFlashStyleColor(idx);
 }
 
-HL_PRIM void HL_NAME(debug_start_item_picker)()
-{
-    ImGui::DebugStartItemPicker();
+HL_PRIM void HL_NAME(debug_start_item_picker)() {
+	ImGui::DebugStartItemPicker();
 }
 
-HL_PRIM void HL_NAME(calc_list_clipping)(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end)
-{
-    ImGuiContext& g = *GImGui;
-    ImGuiWindow* window = g.CurrentWindow;
-    if (g.LogEnabled)
-    {
-        *out_items_display_start = 0;
-        *out_items_display_end = items_count;
-        return;
-    }
-    if (window->SkipItems)
-    {
-        *out_items_display_start = *out_items_display_end = 0;
-        return;
-    }
+HL_PRIM void HL_NAME(calc_list_clipping)(int items_count, float items_height, int* out_items_display_start, int* out_items_display_end) {
+	ImGuiContext& g = *GImGui;
+	ImGuiWindow* window = g.CurrentWindow;
+	if (g.LogEnabled) {
+		*out_items_display_start = 0;
+		*out_items_display_end = items_count;
+		return;
+	}
+	if (window->SkipItems) {
+		*out_items_display_start = *out_items_display_end = 0;
+		return;
+	}
 
-    ImRect rect = window->ClipRect;
-    const ImVec2 pos = window->DC.CursorPos;
-    int start = (int)((rect.Min.y - pos.y) / items_height);
-    int end = (int)((rect.Max.y - pos.y) / items_height);
-    start = ImClamp(start, 0, items_count);
-    end = ImClamp(end + 1, start, items_count);
-    *out_items_display_start = start;
-    *out_items_display_end = end;
+	ImRect rect = window->ClipRect;
+	const ImVec2 pos = window->DC.CursorPos;
+	int start = (int)((rect.Min.y - pos.y) / items_height);
+	int end = (int)((rect.Max.y - pos.y) / items_height);
+	start = ImClamp(start, 0, items_count);
+	end = ImClamp(end + 1, start, items_count);
+	*out_items_display_start = start;
+	*out_items_display_end = end;
 }
 
-HL_PRIM bool HL_NAME(begin_child_frame)(ImGuiID id, vimvec2* size, ImGuiWindowFlags* flags)
-{
-    return ImGui::BeginChild(id, getImVec2(size), ImGuiChildFlags_FrameStyle, convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_child_frame)(ImGuiID id, vimvec2* size, ImGuiWindowFlags* flags) {
+	return ImGui::BeginChild(id, getImVec2(size), ImGuiChildFlags_FrameStyle, convertPtr(flags, 0));
 }
 
-HL_PRIM void HL_NAME(end_child_frame)()
-{
-    ImGui::EndChild();
+HL_PRIM void HL_NAME(end_child_frame)() {
+	ImGui::EndChild();
 }
 
 HL_PRIM void HL_NAME(begin_disabled)(bool disabled) {
-    ImGui::BeginDisabled(disabled);
+	ImGui::BeginDisabled(disabled);
 }
 HL_PRIM void HL_NAME(end_disabled)() {
-    ImGui::EndDisabled();
+	ImGui::EndDisabled();
 }
 
 DEFINE_PRIM(_BOOL, is_rect_visible, _IMVEC2);
@@ -107,32 +93,32 @@ DEFINE_PRIM(_VOID, end_disabled, _NO_ARG);
 // State storage
 
 HL_PRIM ImGuiStorage* HL_NAME(get_state_storage)() {
-    return ImGui::GetStateStorage();
+	return ImGui::GetStateStorage();
 }
 
 HL_PRIM void HL_NAME(set_state_storage)(ImGuiStorage* storage) {
-    ImGui::SetStateStorage(storage);
+	ImGui::SetStateStorage(storage);
 }
 
 HL_PRIM int HL_NAME(state_storage_get_int)(ImGuiStorage* storage, ImGuiID id, int default_val) {
-    return storage->GetInt(id, default_val);
+	return storage->GetInt(id, default_val);
 }
 HL_PRIM void HL_NAME(state_storage_set_int)(ImGuiStorage* storage, ImGuiID id, int val) {
-    storage->SetInt(id, val);
+	storage->SetInt(id, val);
 }
 
 HL_PRIM bool HL_NAME(state_storage_get_bool)(ImGuiStorage* storage, ImGuiID id, bool default_val) {
-    return storage->GetBool(id, default_val);
+	return storage->GetBool(id, default_val);
 }
 HL_PRIM void HL_NAME(state_storage_set_bool)(ImGuiStorage* storage, ImGuiID id, bool val) {
-    storage->SetBool(id, val);
+	storage->SetBool(id, val);
 }
 
 HL_PRIM float HL_NAME(state_storage_get_float)(ImGuiStorage* storage, ImGuiID id, float default_val) {
-    return storage->GetFloat(id, default_val);
+	return storage->GetFloat(id, default_val);
 }
 HL_PRIM void HL_NAME(state_storage_set_float)(ImGuiStorage* storage, ImGuiID id, float val) {
-    storage->SetFloat(id, val);
+	storage->SetFloat(id, val);
 }
 
 #define _TSTATESTORAGE _ABSTRACT(imstatestorage)
@@ -147,45 +133,39 @@ DEFINE_PRIM(_VOID, state_storage_set_float, _TSTATESTORAGE _I32 _F32);
 // ImGuiListClipper
 
 #define CL_NAME(n) HL_NAME(imlistclipper_##n)
-#define DEFINE_CPRIM(ret,name,args) DEFINE_PRIM(ret,imlistclipper_##name,_STRUCT args)
+#define DEFINE_CPRIM(ret, name, args) DEFINE_PRIM(ret, imlistclipper_##name, _STRUCT args)
 
 typedef struct _hl_list_clipper hl_list_clipper;
 struct _hl_list_clipper {
-    void(*finalize)(hl_list_clipper*);
-    ImGuiListClipper clipper;
+	void (*finalize)(hl_list_clipper*);
+	ImGuiListClipper clipper;
 };
 
-static void imlistclipper_finalize(hl_list_clipper *c)
-{
-    c->clipper.~ImGuiListClipper();
+static void imlistclipper_finalize(hl_list_clipper* c) {
+	c->clipper.~ImGuiListClipper();
 }
 
-HL_PRIM hl_list_clipper* CL_NAME(init)()
-{
-    hl_list_clipper* hl_mem = (hl_list_clipper*)hl_gc_alloc_finalizer(sizeof(hl_list_clipper));
-    hl_mem->finalize = imlistclipper_finalize;
-    new (&hl_mem->clipper)ImGuiListClipper();
-    return hl_mem;
+HL_PRIM hl_list_clipper* CL_NAME(init)() {
+	hl_list_clipper* hl_mem = (hl_list_clipper*)hl_gc_alloc_finalizer(sizeof(hl_list_clipper));
+	hl_mem->finalize = imlistclipper_finalize;
+	new (&hl_mem->clipper) ImGuiListClipper();
+	return hl_mem;
 }
 
-HL_PRIM void CL_NAME(begin)(hl_list_clipper* c, int items_count, float items_height)
-{
-    c->clipper.Begin(items_count, items_height);
+HL_PRIM void CL_NAME(begin)(hl_list_clipper* c, int items_count, float items_height) {
+	c->clipper.Begin(items_count, items_height);
 }
 
-HL_PRIM void CL_NAME(end)(hl_list_clipper* c)
-{
-    c->clipper.End();
+HL_PRIM void CL_NAME(end)(hl_list_clipper* c) {
+	c->clipper.End();
 }
 
-HL_PRIM bool CL_NAME(step)(hl_list_clipper* c)
-{
-    return c->clipper.Step();
+HL_PRIM bool CL_NAME(step)(hl_list_clipper* c) {
+	return c->clipper.Step();
 }
 
-HL_PRIM void CL_NAME(force_display_range_by_indices)(hl_list_clipper* c, int item_min, int item_max)
-{
-    c->clipper.IncludeItemsByIndex(item_min, item_max);
+HL_PRIM void CL_NAME(force_display_range_by_indices)(hl_list_clipper* c, int item_min, int item_max) {
+	c->clipper.IncludeItemsByIndex(item_min, item_max);
 }
 
 DEFINE_PRIM(_STRUCT, imlistclipper_init, _NO_ARG);

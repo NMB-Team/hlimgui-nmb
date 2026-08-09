@@ -1,11 +1,9 @@
 #include "utils.h"
 
 // Fix for casting void* -> vdynamic*
-#define hl_call1fixed(ret,cl,t,v)\
-	(cl->hasValue ? ((ret(*)(vdynamic*,t))cl->fun)((vdynamic*)cl->value,v) : ((ret(*)(t))cl->fun)(v))
+#define hl_call1fixed(ret, cl, t, v) (cl->hasValue ? ((ret (*)(vdynamic*, t))cl->fun)((vdynamic*)cl->value, v) : ((ret (*)(t))cl->fun)(v))
 
-typedef struct
-{
+typedef struct {
 	float x;
 	float y;
 	float u;
@@ -24,8 +22,7 @@ hl_type* hlt_rendercommand;
 hl_type* hlt_renderdata;
 hl_type* hlt_rendertexturedata;
 
-typedef struct
-{
+typedef struct {
 	hl_type* t;
 	vdynamic* texture_id;
 	int index_offset;
@@ -40,8 +37,7 @@ typedef struct
 	vdynamic* callback_data;
 } vrendercommand;
 
-typedef struct
-{
+typedef struct {
 	hl_type* t;
 	HeapVertex* vertex_buffer;
 	int vertex_buffer_size;
@@ -51,8 +47,7 @@ typedef struct
 	int command_count;
 } vrenderdata;
 
-typedef struct
-{
+typedef struct {
 	hl_type* t;
 	varray* lists;
 	int size;
@@ -60,8 +55,7 @@ typedef struct
 
 static vrenderlist* render_list = nullptr;
 
-typedef struct
-{
+typedef struct {
 	hl_type* t;
 	ImTextureData* texture_data;
 	int unique_id;
@@ -73,8 +67,7 @@ typedef struct
 	int bytes_per_pixel;
 } vrendertexturedata;
 
-typedef struct
-{
+typedef struct {
 	hl_type* t;
 	varray* updates;
 	int size;
@@ -82,8 +75,7 @@ typedef struct
 
 static vrendertexturelist* render_texture_list = nullptr;
 
-static void updateTextures(ImDrawData* draw_data)
-{
+static void updateTextures(ImDrawData* draw_data) {
 	if (s_texture_function == nullptr || render_texture_list == nullptr || draw_data->Textures == nullptr)
 		return;
 
@@ -101,8 +93,7 @@ static void updateTextures(ImDrawData* draw_data)
 
 	vrendertexturedata** updates = hl_aptr(render_texture_list->updates, vrendertexturedata*);
 	int update_index = 0;
-	for (ImTextureData* texture : *draw_data->Textures)
-	{
+	for (ImTextureData* texture : *draw_data->Textures) {
 		if (texture->Status == ImTextureStatus_OK)
 			continue;
 
@@ -117,13 +108,10 @@ static void updateTextures(ImDrawData* draw_data)
 		update->width = texture->Width;
 		update->height = texture->Height;
 		update->bytes_per_pixel = texture->BytesPerPixel;
-		if (texture->Status == ImTextureStatus_WantCreate || texture->Status == ImTextureStatus_WantUpdates)
-		{
+		if (texture->Status == ImTextureStatus_WantCreate || texture->Status == ImTextureStatus_WantUpdates) {
 			const int data_size = texture->GetSizeInBytes();
 			update->pixels = hl_copy_bytes((vbyte*)texture->GetPixels(), data_size);
-		}
-		else
-		{
+		} else {
 			update->pixels = nullptr;
 		}
 		update_index++;
@@ -134,29 +122,27 @@ static void updateTextures(ImDrawData* draw_data)
 
 // TODO: Also let data be provided as is.
 
-void renderDrawLists(ImDrawData* draw_data)
-{
-	if (s_render_function == nullptr || render_list == nullptr) return;
+void renderDrawLists(ImDrawData* draw_data) {
+	if (s_render_function == nullptr || render_list == nullptr)
+		return;
 	updateTextures(draw_data);
 	const int cmd_lists_count = draw_data->CmdLists.Size;
 
 	// Reallocate varray in case there's more draw lists than before.
 
-	if (render_list->lists->size < cmd_lists_count)
-	{
+	if (render_list->lists->size < cmd_lists_count) {
 		varray* old = render_list->lists;
 		render_list->lists = hl_alloc_array(hlt_renderdata, cmd_lists_count);
 		// Copy over previously allocated data
 		int size = hl_type_size(hlt_renderdata);
-		memmove( (vbyte*)hl_aptr(render_list->lists,vbyte), (vbyte*)hl_aptr(old,vbyte), old->size * size);
+		memmove((vbyte*)hl_aptr(render_list->lists, vbyte), (vbyte*)hl_aptr(old, vbyte), old->size * size);
 	}
 
 	// Store the amount draw lists to render, as varray is grow type and can contain invalid data if amount of draw lists shrink.
 	render_list->size = cmd_lists_count;
 	vrenderdata** hl_cmd_list_ptr = hl_aptr(render_list->lists, vrenderdata*);
 
-	for (int n = 0; n < cmd_lists_count; n++)
-	{
+	for (int n = 0; n < cmd_lists_count; n++) {
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
 
 		// Allocate render data storage and command list if not allocated before.
@@ -175,8 +161,7 @@ void renderDrawLists(ImDrawData* draw_data)
 		hl_cmd_list->vertex_buffer_size = vertex_buffer_size;
 		HeapVertex* vertex_buffer = hl_cmd_list->vertex_buffer;
 
-		for (int v = 0; v < nb_vertex; v++)
-		{
+		for (int v = 0; v < nb_vertex; v++) {
 			auto& hl_vertex = vertex_buffer[v];
 			const auto& imgui_vertex = cmd_list->VtxBuffer[v];
 			hl_vertex.x = imgui_vertex.pos.x - draw_data->DisplayPos.x;
@@ -198,20 +183,18 @@ void renderDrawLists(ImDrawData* draw_data)
 		// create the array for command buffer
 		int command_count = cmd_list->CmdBuffer.size();
 
-		if (hl_cmd_list->commands->size < command_count)
-		{
+		if (hl_cmd_list->commands->size < command_count) {
 			varray* old = hl_cmd_list->commands;
 			hl_cmd_list->commands = hl_alloc_array(hlt_rendercommand, command_count);
 			// Copy over previously allocated data
 			int size = hl_type_size(hlt_rendercommand);
-			memmove( hl_aptr(hl_cmd_list->commands,vbyte), hl_aptr(old,vbyte), old->size * size);
+			memmove(hl_aptr(hl_cmd_list->commands, vbyte), hl_aptr(old, vbyte), old->size * size);
 		}
 		hl_cmd_list->command_count = command_count;
 
 		vrendercommand** hl_commands = hl_aptr(hl_cmd_list->commands, vrendercommand*);
 
-		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
-		{
+		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++) {
 			const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
 
 			vrendercommand* hl_cmd_buffer = hl_commands[cmd_i] == nullptr ? (hl_commands[cmd_i] = (vrendercommand*)hl_alloc_obj(hlt_rendercommand)) : hl_commands[cmd_i];
@@ -220,116 +203,102 @@ void renderDrawLists(ImDrawData* draw_data)
 			hl_cmd_buffer->index_offset = pcmd->IdxOffset;
 			hl_cmd_buffer->elem_count = pcmd->ElemCount;
 
-			hl_cmd_buffer->clip_left   = int(pcmd->ClipRect.x - draw_data->DisplayPos.x);
-			hl_cmd_buffer->clip_top    = int(pcmd->ClipRect.y - draw_data->DisplayPos.y);
-			hl_cmd_buffer->clip_width  = int(pcmd->ClipRect.z - pcmd->ClipRect.x);
+			hl_cmd_buffer->clip_left = int(pcmd->ClipRect.x - draw_data->DisplayPos.x);
+			hl_cmd_buffer->clip_top = int(pcmd->ClipRect.y - draw_data->DisplayPos.y);
+			hl_cmd_buffer->clip_width = int(pcmd->ClipRect.z - pcmd->ClipRect.x);
 			hl_cmd_buffer->clip_height = int(pcmd->ClipRect.w - pcmd->ClipRect.y);
 
 			// TODO: Handle ResetRenderState?
-			if (pcmd->UserCallback != nullptr && pcmd->UserCallback != ImDrawCallback_ResetRenderState)
-			{
+			if (pcmd->UserCallback != nullptr && pcmd->UserCallback != ImDrawCallback_ResetRenderState) {
 				hl_cmd_buffer->callback = pcmd->UserCallback;
 				hl_cmd_buffer->callback_data = (vdynamic*)pcmd->UserCallbackData;
-			}
-			else
-			{
+			} else {
 				hl_cmd_buffer->callback = NULL;
 				hl_cmd_buffer->callback_data = NULL;
 			}
 		}
-
 	}
 
-	hl_call1fixed(void,s_render_function,vrenderlist*,render_list);
+	hl_call1fixed(void, s_render_function, vrenderlist*, render_list);
 }
 
-HL_PRIM void HL_NAME(set_render_callback)(vclosure* render_fn)
-{
-	if (s_render_function != nullptr) hl_remove_root(&s_render_function);
+HL_PRIM void HL_NAME(set_render_callback)(vclosure* render_fn) {
+	if (s_render_function != nullptr)
+		hl_remove_root(&s_render_function);
 	s_render_function = render_fn;
-	if (render_fn != nullptr) hl_add_root(&s_render_function);
+	if (render_fn != nullptr)
+		hl_add_root(&s_render_function);
 }
 
-HL_PRIM void HL_NAME(set_texture_callback)(vclosure* texture_fn)
-{
-	if (s_texture_function != nullptr) hl_remove_root(&s_texture_function);
+HL_PRIM void HL_NAME(set_texture_callback)(vclosure* texture_fn) {
+	if (s_texture_function != nullptr)
+		hl_remove_root(&s_texture_function);
 	s_texture_function = texture_fn;
-	if (texture_fn != nullptr) hl_add_root(&s_texture_function);
+	if (texture_fn != nullptr)
+		hl_add_root(&s_texture_function);
 }
 
-HL_PRIM void HL_NAME(imtexturedata_set_texture)(ImTextureData* texture_data, vdynamic* texture)
-{
+HL_PRIM void HL_NAME(imtexturedata_set_texture)(ImTextureData* texture_data, vdynamic* texture) {
 	texture_data->SetTexID((ImTextureID)(intptr_t)texture);
 	texture_data->SetStatus(ImTextureStatus_OK);
 }
 
-HL_PRIM void HL_NAME(imtexturedata_set_updated)(ImTextureData* texture_data)
-{
+HL_PRIM void HL_NAME(imtexturedata_set_updated)(ImTextureData* texture_data) {
 	texture_data->SetStatus(ImTextureStatus_OK);
 }
 
-HL_PRIM void HL_NAME(imtexturedata_set_destroyed)(ImTextureData* texture_data)
-{
+HL_PRIM void HL_NAME(imtexturedata_set_destroyed)(ImTextureData* texture_data) {
 	texture_data->BackendUserData = nullptr;
 	texture_data->SetTexID(ImTextureID_Invalid);
 	texture_data->SetStatus(ImTextureStatus_Destroyed);
 }
 
-HL_PRIM void HL_NAME(invalidate_renderer_textures)()
-{
+HL_PRIM void HL_NAME(invalidate_renderer_textures)() {
 	if (ImGui::GetCurrentContext() == nullptr)
 		return;
-	for (ImTextureData* texture : ImGui::GetPlatformIO().Textures)
-	{
+	for (ImTextureData* texture : ImGui::GetPlatformIO().Textures) {
 		texture->BackendUserData = nullptr;
 		texture->SetTexID(ImTextureID_Invalid);
 		texture->SetStatus(ImTextureStatus_Destroyed);
 	}
 }
 
-HL_PRIM void HL_NAME(add_key_char)(int c)
-{
+HL_PRIM void HL_NAME(add_key_char)(int c) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddInputCharacter(c);
 }
 
-HL_PRIM void HL_NAME(add_key_event)(ImGuiKey c, bool down)
-{
+HL_PRIM void HL_NAME(add_key_event)(ImGuiKey c, bool down) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddKeyEvent(c, down);
 }
 
-HL_PRIM void HL_NAME(set_events)(float dt, float mouse_x, float mouse_y, float wheel, bool left_click, bool right_click)
-{
+HL_PRIM void HL_NAME(set_events)(float dt, float mouse_x, float mouse_y, float wheel, bool left_click, bool right_click) {
 	ImGuiIO& io = ImGui::GetIO();
-	io.MousePos = ImVec2(mouse_x,mouse_y);
+	io.MousePos = ImVec2(mouse_x, mouse_y);
 	io.MouseWheel = wheel;
 	io.MouseDown[0] = left_click;
 	io.MouseDown[1] = right_click;
 }
 
-HL_PRIM void HL_NAME(set_display_size)(int display_width, int display_height)
-{
+HL_PRIM void HL_NAME(set_display_size)(int display_width, int display_height) {
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.DisplaySize = ImVec2(float(display_width), float(display_height));
 }
 
-HL_PRIM void HL_NAME(new_frame)()
-{
+HL_PRIM void HL_NAME(new_frame)() {
 	ImGuiIO& io = ImGui::GetIO();
 	if (io.DeltaTime <= 0.0f)
 		io.DeltaTime = 1.0f / 60.0f;
 	ImGui::NewFrame();
 }
 
-HL_PRIM void HL_NAME(end_frame)()
-{
+HL_PRIM void HL_NAME(end_frame)() {
 	ImGui::EndFrame();
 }
 
-HL_PRIM void HL_NAME(render)()
-{
+HL_PRIM void HL_NAME(render)() {
 	ImGui::Render();
 
 	ImDrawData* draw_data = ImGui::GetDrawData();
@@ -337,8 +306,8 @@ HL_PRIM void HL_NAME(render)()
 }
 
 /**
-	Hack: Because we want to allocate ImVec2/4 classes on HL side, we need to hijack the hl_type of those classes somehow.
-	And there's no API to obtain said classes. So we steal them from live instances.
+    Hack: Because we want to allocate ImVec2/4 classes on HL side, we need to hijack the hl_type of those classes somehow.
+    And there's no API to obtain said classes. So we steal them from live instances.
 **/
 HL_PRIM void HL_NAME(initialize)(vimvec2* hl_vec2, vimvec4* hl_vec4, vrenderlist* renderlist, vrenderdata* renderdata, vrendercommand* rendercommand, vrendertexturelist* texturelist, vrendertexturedata* texturedata) {
 	hlt_imvec2 = hl_vec2->t;

@@ -221,9 +221,9 @@ namespace ImGui
 		}
 
 		return hovered ?
-			   ColorConvertFloat4ToU32(
-					   GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_KeyframeHovered)) :
-			   ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_Keyframe));
+			ColorConvertFloat4ToU32(
+					GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_KeyframeHovered)) :
+			ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_Keyframe));
 	}
 
 	static void addKeyframeToDeleteData(int32_t value, ImGuiNeoSequencerInternalData& context, const ImGuiID timelineId)
@@ -359,7 +359,7 @@ namespace ImGui
 		}
 
 		const auto pos = ImVec2{context.StartValuesCursor.x + imStyle.FramePadding.x, context.ValuesCursor.y} +
-						 ImVec2{timelineOffset + context.ValuesWidth + offset, 0};
+						ImVec2{timelineOffset + context.ValuesWidth + offset, 0};
 
 		const auto bbPos = pos - ImVec2{currentTimelineHeight / 2, 0};
 
@@ -416,7 +416,7 @@ namespace ImGui
 			ImColor color = getKeyframeColor(context, hovered, inSelection);
 
 			drawList->AddCircleFilled(pos + ImVec2{0, currentTimelineHeight / 2.f}, currentTimelineHeight / 3.0f,
-									  color, 4);
+									color, 4);
 		}
 
 		context.IsLastKeyframeHovered = hovered;
@@ -472,8 +472,8 @@ namespace ImGui
 
 	static void
 	processAndRenderZoom(ImGuiNeoSequencerInternalData& context, const ImVec2& cursor, bool allowEditingLength,
-						 FrameIndexType* start,
-						 FrameIndexType* end)
+						FrameIndexType* start,
+						FrameIndexType* end)
 	{
 		const auto& imStyle = GetStyle();
 		ImGuiWindow* window = GetCurrentWindow();
@@ -491,8 +491,8 @@ namespace ImGui
 												: cursor;
 
 		const auto size = allowEditingLength ?
-						  context.Size.x - 2 * inputWidthWithPadding :
-						  context.Size.x;
+						context.Size.x - 2 * inputWidthWithPadding :
+						context.Size.x;
 
 		const ImRect bb{cursorV, cursorV + ImVec2{size, zoomHeight}};
 
@@ -545,7 +545,7 @@ namespace ImGui
 								10.0f);
 
 		const auto baseWidth = bb.GetSize().x -
-							   imStyle.ItemInnerSpacing.x; //There is just half spacing applied, doing it normally makes big gap on sides
+							imStyle.ItemInnerSpacing.x; //There is just half spacing applied, doing it normally makes big gap on sides
 
 		const auto sliderHeight = bb.GetSize().y - imStyle.ItemInnerSpacing.y;
 
@@ -570,7 +570,7 @@ namespace ImGui
 		const ImRect finalSliderBB{sliderStart, sliderStart + ImVec2{sliderWidth, sliderHeight}};
 
 		const ImRect finalSliderInteractBB = {finalSliderBB.Min + ImVec2{sideSize, 0},
-											  finalSliderBB.Max - ImVec2{sideSize, 0}};
+											finalSliderBB.Max - ImVec2{sideSize, 0}};
 
 
 		const auto viewWidth = (uint32_t) ((float) totalFrames / context.Zoom);
@@ -604,7 +604,7 @@ namespace ImGui
 				const auto singleFrameWidthOffsetNormalized = singleFrameWidthOffset / bb.GetWidth();
 
 				FrameIndexType finalFrame = (FrameIndexType) ((float) (normalized - sliderWidthNormalized / 2.0f) /
-															  singleFrameWidthOffsetNormalized);
+															singleFrameWidthOffsetNormalized);
 
 				if (normalized - sliderWidthNormalized / 2.0f < 0.0f)
 				{
@@ -744,7 +744,7 @@ namespace ImGui
 		auto* drawList = GetWindowDrawList();
 
 		ImRect sel{context.SelectionMouseStart,
-				   currentMousePosition};
+				currentMousePosition};
 
 		if (sel.Min.y > sel.Max.y)
 		{
@@ -863,8 +863,8 @@ namespace ImGui
 
 	bool
 	BeginNeoSequencer(const char* idin, FrameIndexType* frame, FrameIndexType* startFrame, FrameIndexType* endFrame,
-					  const ImVec2& size,
-					  ImGuiNeoSequencerFlags flags)
+					const ImVec2& size,
+					ImGuiNeoSequencerFlags flags)
 	{
 		IM_ASSERT(!inSequencer && "Called when while in other NeoSequencer, that won't work, call End!");
 		IM_ASSERT(*startFrame < *endFrame && "Start frame must be smaller than end frame");
@@ -921,8 +921,8 @@ namespace ImGui
 
 		// If Zoom is shown, we offset it by height of Zoom bar + padding
 		context.TopBarStartCursor = showZoom ? context.TopLeftCursor +
-											   ImVec2{0, calculateZoomBarHeight()}
-											 : context.TopLeftCursor;
+											ImVec2{0, calculateZoomBarHeight()}
+											: context.TopLeftCursor;
 		context.StartFrame = *startFrame;
 		context.EndFrame = *endFrame;
 		context.Size = realSize;
@@ -939,13 +939,13 @@ namespace ImGui
 		backgroundSize.y = backgroundSize.y - (topCut);
 
 		RenderNeoSequencerBackground(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_Bg), context.TopLeftCursor,
-									 backgroundSize,
-									 drawList, style.SequencerRounding);
+									backgroundSize,
+									drawList, style.SequencerRounding);
 
 
 		RenderNeoSequencerTopBarBackground(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_TopBarBg),
-										   context.TopBarStartCursor, context.TopBarSize,
-										   drawList, style.SequencerRounding);
+										context.TopBarStartCursor, context.TopBarSize,
+										drawList, style.SequencerRounding);
 
 
 		RenderNeoSequencerTopBarOverlay(context.Zoom, context.ValuesWidth, context.StartFrame, context.EndFrame,
@@ -955,13 +955,13 @@ namespace ImGui
 
 		if (showZoom)
 			processAndRenderZoom(context, context.TopLeftCursor, flags & ImGuiNeoSequencerFlags_AllowLengthChanging,
-								 startFrame, endFrame);
+								startFrame, endFrame);
 
 		if (context.Size.y < context.FilledHeight)
 			context.Size.y = context.FilledHeight;
 
 		context.FilledHeight = context.TopBarSize.y + style.TopBarSpacing +
-							   (showZoom ? calculateZoomBarHeight() : 0.0f);
+							(showZoom ? calculateZoomBarHeight() : 0.0f);
 
 		context.StartValuesCursor = cursor + ImVec2{0, context.TopBarSize.y + style.TopBarSpacing};
 		if (showZoom)
@@ -976,8 +976,8 @@ namespace ImGui
 		const auto clipMin = context.TopBarStartCursor + ImVec2(0, context.TopBarSize.y);
 
 		drawList->PushClipRect(clipMin,
-							   clipMin + backgroundSize - ImVec2(0, context.TopBarSize.y) -
-							   ImVec2{0, GetFontSize() * style.ZoomHeightScale}, true);
+							clipMin + backgroundSize - ImVec2(0, context.TopBarSize.y) -
+							ImVec2{0, GetFontSize() * style.ZoomHeightScale}, true);
 
 		return true;
 	}
@@ -1102,7 +1102,7 @@ namespace ImGui
 		}
 
 		return (context.SelectedTimeline != context.LastSelectedTimeline) &&
-			   context.SelectedTimeline == openTimeline;
+			context.SelectedTimeline == openTimeline;
 	}
 
 	bool BeginNeoTimelineEx(const char* label, bool* open, ImGuiNeoTimelineFlags flags)
@@ -1119,7 +1119,7 @@ namespace ImGui
 
 		labelSize.y += imStyle.FramePadding.y * 2 + style.ItemSpacing.y * 2;
 		labelSize.x += imStyle.FramePadding.x * 2 + style.ItemSpacing.x * 2 +
-					   (float) currentTimelineDepth * style.DepthItemSpacing;
+					(float) currentTimelineDepth * style.DepthItemSpacing;
 
 
 		bool isGroup = flags & ImGuiNeoTimelineFlags_Group && closable;
@@ -1147,20 +1147,20 @@ namespace ImGui
 		{
 			bool selected = id == context.SelectedTimeline;
 			RenderNeoTimelane(selected,
-							  context.ValuesCursor + ImVec2{context.ValuesWidth, 0},
-							  ImVec2{context.Size.x - context.ValuesWidth, currentTimelineHeight},
-							  selected?GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_SelectedTimeline):GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_TimelinesBg));
+							context.ValuesCursor + ImVec2{context.ValuesWidth, 0},
+							ImVec2{context.Size.x - context.ValuesWidth, currentTimelineHeight},
+							selected?GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_SelectedTimeline):GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_TimelinesBg));
 
 			ImVec4 color = GetStyleColorVec4(ImGuiCol_Text);
 			if (IsItemHovered()) color.w *= 0.7f;
 
 			RenderNeoTimelineLabel(label,
-								   context.ValuesCursor + imStyle.FramePadding +
-								   ImVec2{(float) currentTimelineDepth * style.DepthItemSpacing, 0},
-								   labelSize,
-								   color,
-								   isGroup,
-								   isGroup && (*open));
+								context.ValuesCursor + imStyle.FramePadding +
+								ImVec2{(float) currentTimelineDepth * style.DepthItemSpacing, 0},
+								labelSize,
+								color,
+								isGroup,
+								isGroup && (*open));
 
 		}
 
@@ -1183,7 +1183,7 @@ namespace ImGui
 	}
 
 	bool BeginNeoTimeline(const char* label, FrameIndexType** keyframes, uint32_t keyframeCount, bool* open,
-						  ImGuiNeoTimelineFlags flags)
+						ImGuiNeoTimelineFlags flags)
 	{
 		if (!BeginNeoTimelineEx(label, open, flags))
 			return false;

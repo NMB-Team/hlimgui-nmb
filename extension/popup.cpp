@@ -1,57 +1,47 @@
 #include "utils.h"
 
-HL_PRIM bool HL_NAME(open_popup)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::OpenPopup(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(open_popup)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::OpenPopup(convertString(str_id), convertPtr(flags, 0));
 }
 
 HL_PRIM bool HL_NAME(open_popup_id)(ImGuiID id, ImGuiPopupFlags* flags) {
-    return ImGui::OpenPopup(id, convertPtr(flags, 0));
+	return ImGui::OpenPopup(id, convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(open_popup_on_item_click)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::OpenPopupOnItemClick(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(open_popup_on_item_click)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::OpenPopupOnItemClick(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(begin_popup)(vstring* str_id, ImGuiWindowFlags* flags)
-{
-    return ImGui::BeginPopup(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_popup)(vstring* str_id, ImGuiWindowFlags* flags) {
+	return ImGui::BeginPopup(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(begin_popup_context_item)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::BeginPopupContextItem(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_popup_context_item)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::BeginPopupContextItem(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(begin_popup_context_window)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::BeginPopupContextWindow(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_popup_context_window)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::BeginPopupContextWindow(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(begin_popup_context_void)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::BeginPopupContextVoid(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_popup_context_void)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::BeginPopupContextVoid(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM bool HL_NAME(begin_popup_modal)(vstring* name, bool* p_open, ImGuiWindowFlags* flags)
-{
-    return ImGui::BeginPopupModal(convertString(name), p_open, convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(begin_popup_modal)(vstring* name, bool* p_open, ImGuiWindowFlags* flags) {
+	return ImGui::BeginPopupModal(convertString(name), p_open, convertPtr(flags, 0));
 }
 
-HL_PRIM void HL_NAME(end_popup)()
-{
-    ImGui::EndPopup();
+HL_PRIM void HL_NAME(end_popup)() {
+	ImGui::EndPopup();
 }
 
-HL_PRIM bool HL_NAME(is_popup_open)(vstring* str_id, ImGuiPopupFlags* flags)
-{
-    return ImGui::IsPopupOpen(convertString(str_id), convertPtr(flags, 0));
+HL_PRIM bool HL_NAME(is_popup_open)(vstring* str_id, ImGuiPopupFlags* flags) {
+	return ImGui::IsPopupOpen(convertString(str_id), convertPtr(flags, 0));
 }
 
-HL_PRIM void HL_NAME(close_current_popup)()
-{
-    ImGui::CloseCurrentPopup();
+HL_PRIM void HL_NAME(close_current_popup)() {
+	ImGui::CloseCurrentPopup();
 }
 
 DEFINE_PRIM(_BOOL, open_popup, _STRING _REF(_I32));

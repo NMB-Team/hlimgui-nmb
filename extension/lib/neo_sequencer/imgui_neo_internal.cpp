@@ -105,7 +105,7 @@ namespace ImGui {
 	}
 
 	void RenderNeoTimelinesBorder(const ImVec4 &color, const ImVec2 &cursor, const ImVec2 &size, ImDrawList *drawList,
-								  float rounding, float borderSize)
+								float rounding, float borderSize)
 	{
 		if(!drawList) drawList = ImGui::GetWindowDrawList();
 
@@ -147,7 +147,7 @@ namespace ImGui {
 	}
 
 	void RenderNeoSequencerCurrentFrame(const ImVec4 &color, const ImVec4 &topColor, const ImRect &pointerBB,
-											   float timelineHeight, float lineWidth, ImDrawList *drawList) {
+											float timelineHeight, float lineWidth, ImDrawList *drawList) {
 		if(!drawList) drawList = ImGui::GetWindowDrawList();
 
 		const auto pair = getCurrentFrameLine(pointerBB, timelineHeight);

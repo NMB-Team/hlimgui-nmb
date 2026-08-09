@@ -40,14 +40,14 @@ A permissively licensed markdown single-header library for https://github.com/oc
 Currently requires C++11 or above
 
 imgui_markdown currently supports the following markdown functionality:
- - Wrapped text
- - Headers H1, H2, H3
- - Emphasis
- - Indented text, multi levels
- - Unordered lists and sub-lists
- - Link
- - Image
- - Horizontal rule
+- Wrapped text
+- Headers H1, H2, H3
+- Emphasis
+- Indented text, multi levels
+- Unordered lists and sub-lists
+- Link
+- Image
+- Horizontal rule
 
 Syntax
 
@@ -67,13 +67,13 @@ __strong emphasis__
 
 Indents:
 On a new line, at the start of the line, add two spaces per indent.
-  Indent level 1
+Indent level 1
 	Indent level 2
 
 Unordered lists:
 On a new line, at the start of the line, add two spaces, an asterisks and a space.
 For nested lists, add two additional spaces in front of the asterisk per list level increment.
-  * Unordered List level 1
+* Unordered List level 1
 	* Unordered List level 2
 
 Link:
@@ -215,12 +215,12 @@ Horizontal rules:
 ___
 *Emphasis* and **strong emphasis** change the appearance of the text.
 ## H2 Header: indented text.
-  This text has an indent (two leading spaces).
+This text has an indent (two leading spaces).
 	This one has two.
 ### H3 Header: Lists
-  * Unordered lists
+* Unordered lists
 	* Lists can be indented with two extra spaces.
-  * Lists can have [links like this one to Avoyd](https://www.avoyd.com/) and *emphasized text*
+* Lists can have [links like this one to Avoyd](https://www.avoyd.com/) and *emphasized text*
 )";
 	Markdown( markdownText );
 }
@@ -285,13 +285,13 @@ namespace ImGui
 
 	enum class MarkdownFormatType
 	{
-		 NORMAL_TEXT,
-		 HEADING,
-		 UNORDERED_LIST,
-		 LINK,
-		 EMPHASIS,
-		 CODE,
-		 TABLE
+		NORMAL_TEXT,
+		HEADING,
+		UNORDERED_LIST,
+		LINK,
+		EMPHASIS,
+		CODE,
+		TABLE
 	};
 
 	struct MarkdownFormatInfo
@@ -1129,14 +1129,14 @@ namespace ImGui
 				{
 					em.state = Emphasis::RIGHT;
 					em.text.stop = i;
-				   // pass through to case Emphasis::RIGHT
+				// pass through to case Emphasis::RIGHT
 				}
 				else
 				{
 					break;
 				}
 			#if __cplusplus >= 201703L
-				  [[fallthrough]];
+				[[fallthrough]];
 			#endif
 			case Emphasis::RIGHT:
 				if( em.sym == c )
@@ -1485,7 +1485,7 @@ namespace ImGui
 			if( markdownFormatInfo_.level == 1 )
 			{
 				// normal emphasis
- 				if( start_ )
+				if( start_ )
 				{
 					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyle().Colors[ ImGuiCol_TextDisabled ] );
 				}

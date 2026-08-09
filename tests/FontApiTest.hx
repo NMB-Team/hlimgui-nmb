@@ -2,9 +2,10 @@ import imgui.ImGui;
 import imgui.types.ImFont;
 
 class FontApiTest extends imgui.ImGuiApp {
-	static var pakPath: String;
-	var additional: ImFont;
-	var lateFont: ImFont;
+	static var pakPath:String;
+
+	var additional:ImFont;
+	var lateFont:ImFont;
 	var frame = 0;
 
 	override function init() {
@@ -14,7 +15,7 @@ class FontApiTest extends imgui.ImGuiApp {
 		super.init();
 	}
 
-	override function update(dt: Float) {
+	override function update(dt:Float) {
 		ImGui.begin("Font API test");
 		ImGui.text("Default font");
 		if (additional != null)
@@ -43,7 +44,8 @@ class FontApiTest extends imgui.ImGuiApp {
 				if (pakPath != null) {
 					hxd.res.Loader.currentInstance.dispose();
 					hxd.res.Loader.currentInstance = null;
-					if (sys.FileSystem.exists(pakPath)) sys.FileSystem.deleteFile(pakPath);
+					if (sys.FileSystem.exists(pakPath))
+						sys.FileSystem.deleteFile(pakPath);
 				}
 				hxd.System.exit();
 			default:

@@ -1,27 +1,22 @@
 #include "utils.h"
 
-HL_PRIM vimvec2* HL_NAME(get_content_region_max)()
-{
+HL_PRIM vimvec2* HL_NAME(get_content_region_max)() {
 	return ImGui::GetContentRegionMax();
 }
 
-HL_PRIM vimvec2* HL_NAME(get_content_region_avail)()
-{
+HL_PRIM vimvec2* HL_NAME(get_content_region_avail)() {
 	return ImGui::GetContentRegionAvail();
 }
 
-HL_PRIM vimvec2* HL_NAME(get_window_content_region_min)()
-{
+HL_PRIM vimvec2* HL_NAME(get_window_content_region_min)() {
 	return ImGui::GetWindowContentRegionMin();
 }
 
-HL_PRIM vimvec2* HL_NAME(get_window_content_region_max)()
-{
+HL_PRIM vimvec2* HL_NAME(get_window_content_region_max)() {
 	return ImGui::GetWindowContentRegionMax();
 }
 
-HL_PRIM float HL_NAME(get_window_content_region_width)()
-{
+HL_PRIM float HL_NAME(get_window_content_region_width)() {
 	return ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x;
 }
 

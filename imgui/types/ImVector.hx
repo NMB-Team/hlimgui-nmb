@@ -2,9 +2,18 @@ package imgui.types;
 
 @:keep
 @:struct class ImVector {
-  
-  public var size: Int;
-  public var capacity: Int;
-  public var data: hl.Bytes;
-  
+	/**
+		Number of initialized elements.
+	**/
+	public var size:Int;
+
+	/**
+		Gets or sets capacity.
+	**/
+	public var capacity:Int;
+
+	/**
+		Gets or sets data.
+	**/
+	public var data:hl.Bytes;
 }

@@ -4,40 +4,33 @@
 #define _TFONTATLAS _ABSTRACT(imfontatlas)
 #define _TFONT _ABSTRACT(imfont)
 #define F_NAME(n) HL_NAME(imfontatlas_##n)
-#define DEFINE_FPRIM(t,name,args) DEFINE_PRIM(t,imfontatlas_##name,_TFONTATLAS args)
+#define DEFINE_FPRIM(t, name, args) DEFINE_PRIM(t, imfontatlas_##name, _TFONTATLAS args)
 
-HL_PRIM ImFontAtlas* HL_NAME(get_font_atlas)()
-{
+HL_PRIM ImFontAtlas* HL_NAME(get_font_atlas)() {
 	return ImGui::GetIO().Fonts;
 }
 
-HL_PRIM ImFont* F_NAME(add_font)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
-{
+HL_PRIM ImFont* F_NAME(add_font)(ImFontAtlas* fonts, ImFontConfig* font_cfg) {
 	return fonts->AddFont(font_cfg);
 }
 
-HL_PRIM ImFont* F_NAME(add_font_default)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
-{
+HL_PRIM ImFont* F_NAME(add_font_default)(ImFontAtlas* fonts, ImFontConfig* font_cfg) {
 	return fonts->AddFontDefault(font_cfg);
 }
 
-HL_PRIM ImFont* F_NAME(add_font_default_vector)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
-{
+HL_PRIM ImFont* F_NAME(add_font_default_vector)(ImFontAtlas* fonts, ImFontConfig* font_cfg) {
 	return fonts->AddFontDefaultVector(font_cfg);
 }
 
-HL_PRIM ImFont* F_NAME(add_font_default_bitmap)(ImFontAtlas* fonts, ImFontConfig* font_cfg)
-{
+HL_PRIM ImFont* F_NAME(add_font_default_bitmap)(ImFontAtlas* fonts, ImFontConfig* font_cfg) {
 	return fonts->AddFontDefaultBitmap(font_cfg);
 }
 
-HL_PRIM ImFont* F_NAME(add_font_from_file_ttf)(ImFontAtlas* fonts, vstring* filename, float size_pixels, ImFontConfig* font_cfg, varray* glyph_ranges)
-{
+HL_PRIM ImFont* F_NAME(add_font_from_file_ttf)(ImFontAtlas* fonts, vstring* filename, float size_pixels, ImFontConfig* font_cfg, varray* glyph_ranges) {
 	return fonts->AddFontFromFileTTF(convertString(filename), size_pixels, font_cfg, convertArray(glyph_ranges, ImWchar));
 }
 
-HL_PRIM ImFont* F_NAME(add_font_from_memory_ttf)(ImFontAtlas* fonts, vbyte* font_data, int font_size, float size_pixels, ImFontConfig* font_cfg, varray* glyph_ranges)
-{
+HL_PRIM ImFont* F_NAME(add_font_from_memory_ttf)(ImFontAtlas* fonts, vbyte* font_data, int font_size, float size_pixels, ImFontConfig* font_cfg, varray* glyph_ranges) {
 	// Because font_data is allocated on GC, we want to ensure font builder won't free it.
 	if (font_cfg == nullptr) {
 		ImFontConfig cfg = ImFontConfig();
@@ -52,38 +45,31 @@ HL_PRIM ImFont* F_NAME(add_font_from_memory_ttf)(ImFontAtlas* fonts, vbyte* font
 // TODO: AddFontFromMemoryCompressedTTF
 // TODO: AddFontFromMemoryCompressedBase85TTF
 
-HL_PRIM void F_NAME(clear_input_data)(ImFontAtlas* fonts)
-{
+HL_PRIM void F_NAME(clear_input_data)(ImFontAtlas* fonts) {
 	fonts->ClearInputData();
 }
 
-HL_PRIM void F_NAME(clear_tex_data)(ImFontAtlas* fonts)
-{
+HL_PRIM void F_NAME(clear_tex_data)(ImFontAtlas* fonts) {
 	fonts->ClearTexData();
 }
 
-HL_PRIM void F_NAME(clear_fonts)(ImFontAtlas* fonts)
-{
+HL_PRIM void F_NAME(clear_fonts)(ImFontAtlas* fonts) {
 	fonts->ClearFonts();
 }
 
-HL_PRIM void F_NAME(clear)(ImFontAtlas* fonts)
-{
+HL_PRIM void F_NAME(clear)(ImFontAtlas* fonts) {
 	fonts->Clear();
 }
 
-HL_PRIM void F_NAME(remove_font)(ImFontAtlas* fonts, ImFont* font)
-{
+HL_PRIM void F_NAME(remove_font)(ImFontAtlas* fonts, ImFont* font) {
 	fonts->RemoveFont(font);
 }
 
-HL_PRIM void F_NAME(compact_cache)(ImFontAtlas* fonts)
-{
+HL_PRIM void F_NAME(compact_cache)(ImFontAtlas* fonts) {
 	fonts->CompactCache();
 }
 
-HL_PRIM bool F_NAME(build)(ImFontAtlas* fonts)
-{
+HL_PRIM bool F_NAME(build)(ImFontAtlas* fonts) {
 	return fonts->Build();
 }
 
@@ -96,29 +82,25 @@ typedef struct {
 } vtexdata;
 #define _TEXDATA _OBJ(_BYTES _I32 _I32 _I32)
 
-HL_PRIM void F_NAME(get_tex_data_as_alpha8)(ImFontAtlas* fonts, vtexdata* output)
-{
+HL_PRIM void F_NAME(get_tex_data_as_alpha8)(ImFontAtlas* fonts, vtexdata* output) {
 	unsigned char* pixels;
 
 	fonts->GetTexDataAsAlpha8(&pixels, &output->width, &output->height, &output->bytesPerPixel);
 	output->buffer = hl_copy_bytes(pixels, output->width * output->height * output->bytesPerPixel);
 }
 
-HL_PRIM void F_NAME(get_tex_data_as_rgba32)(ImFontAtlas* fonts, vtexdata* output)
-{
+HL_PRIM void F_NAME(get_tex_data_as_rgba32)(ImFontAtlas* fonts, vtexdata* output) {
 	unsigned char* pixels;
 
 	fonts->GetTexDataAsRGBA32(&pixels, &output->width, &output->height, &output->bytesPerPixel);
 	output->buffer = hl_copy_bytes(pixels, output->width * output->height * output->bytesPerPixel);
 }
 
-HL_PRIM bool F_NAME(is_built)(ImFontAtlas* fonts)
-{
+HL_PRIM bool F_NAME(is_built)(ImFontAtlas* fonts) {
 	return fonts->IsBuilt();
 }
 
-HL_PRIM void F_NAME(set_tex_id)(ImFontAtlas* fonts, ImTextureID id)
-{
+HL_PRIM void F_NAME(set_tex_id)(ImFontAtlas* fonts, ImTextureID id) {
 	fonts->SetTexID(id);
 }
 
@@ -140,23 +122,19 @@ HL_PRIM void F_NAME(set_tex_id)(ImFontAtlas* fonts, ImTextureID id)
 // 	return ranges_to_array(fonts->GetGlyphRangesDefault);
 // }
 
-HL_PRIM int F_NAME(add_custom_rect_regular)(ImFontAtlas* fonts, int width, int height)
-{
+HL_PRIM int F_NAME(add_custom_rect_regular)(ImFontAtlas* fonts, int width, int height) {
 	return fonts->AddCustomRectRegular(width, height);
 }
 
-HL_PRIM int F_NAME(add_custom_rect_font_glyph)(ImFontAtlas* fonts, ImFont* font, ImWchar id, int width, int height, float advance_x, vimvec2* offset)
-{
+HL_PRIM int F_NAME(add_custom_rect_font_glyph)(ImFontAtlas* fonts, ImFont* font, ImWchar id, int width, int height, float advance_x, vimvec2* offset) {
 	return fonts->AddCustomRectFontGlyph(font, id, width, height, advance_x, offset != nullptr ? *offset->v() : ImVec2(0, 0));
 }
 
-HL_PRIM ImFontAtlasCustomRect* F_NAME(get_custom_rect_by_index)(ImFontAtlas* fonts, int index)
-{
+HL_PRIM ImFontAtlasCustomRect* F_NAME(get_custom_rect_by_index)(ImFontAtlas* fonts, int index) {
 	return const_cast<ImFontAtlasCustomRect*>(fonts->GetCustomRectByIndex(index));
 }
 
-HL_PRIM void F_NAME(calc_custom_rect_uv)(ImFontAtlas* fonts, ImFontAtlasCustomRect* rect, vimvec2* out_uv_min, vimvec2* out_uv_max)
-{
+HL_PRIM void F_NAME(calc_custom_rect_uv)(ImFontAtlas* fonts, ImFontAtlasCustomRect* rect, vimvec2* out_uv_min, vimvec2* out_uv_max) {
 	return fonts->CalcCustomRectUV(rect, out_uv_min->v(), out_uv_max->v());
 }
 
@@ -165,12 +143,11 @@ typedef struct {
 	vimvec2* offset;
 	vimvec2* size;
 	vimvec4* uv_border; // xy = min, zw = max
-	vimvec4* uv_fill; // xy = min, zw = max
+	vimvec4* uv_fill;   // xy = min, zw = max
 } vcursordata;
 #define _CURSORDATA _OBJ(_IMVEC2 _IMVEC2 _IMVEC4 _IMVEC4)
 
-HL_PRIM bool F_NAME(get_mouse_cursor_tex_data)(ImFontAtlas* fonts, ImGuiMouseCursor cursor, vcursordata* output)
-{
+HL_PRIM bool F_NAME(get_mouse_cursor_tex_data)(ImFontAtlas* fonts, ImGuiMouseCursor cursor, vcursordata* output) {
 	ImVec2 uv_border[2];
 	ImVec2 uv_fill[2];
 	bool result = ImFontAtlasGetMouseCursorTexData(fonts, cursor, output->offset->v(), output->size->v(), uv_border, uv_fill);
@@ -181,24 +158,20 @@ HL_PRIM bool F_NAME(get_mouse_cursor_tex_data)(ImFontAtlas* fonts, ImGuiMouseCur
 	return result;
 }
 
-HL_PRIM void HL_NAME(push_font)(ImFont* font, float* font_size_base_unscaled)
-{
+HL_PRIM void HL_NAME(push_font)(ImFont* font, float* font_size_base_unscaled) {
 	ImGui::PushFont(font, font_size_base_unscaled != nullptr ? *font_size_base_unscaled : 0.0f);
 }
 
-HL_PRIM void HL_NAME(pop_font)()
-{
+HL_PRIM void HL_NAME(pop_font)() {
 	ImGui::PopFont();
 }
 
-HL_PRIM ImFont* HL_NAME(get_font)()
-{
+HL_PRIM ImFont* HL_NAME(get_font)() {
 	return ImGui::GetFont();
 }
 
-HL_PRIM void HL_NAME(imfontconfig_init)(ImFontConfig* cfg)
-{
-	new (cfg)ImFontConfig();
+HL_PRIM void HL_NAME(imfontconfig_init)(ImFontConfig* cfg) {
+	new (cfg) ImFontConfig();
 }
 
 DEFINE_PRIM(_TFONTATLAS, get_font_atlas, _NO_ARG);
@@ -229,6 +202,6 @@ DEFINE_FPRIM(_VOID, calc_custom_rect_uv, _STRUCT _IMVEC2 _IMVEC2);
 DEFINE_FPRIM(_BOOL, get_mouse_cursor_tex_data, _I32 _CURSORDATA);
 
 DEFINE_PRIM(_VOID, push_font, _TFONT _REF(_F32));
-DEFINE_PRIM(_VOID, pop_font, _NO_ARG );
+DEFINE_PRIM(_VOID, pop_font, _NO_ARG);
 DEFINE_PRIM(_TFONT, get_font, _NO_ARG);
 DEFINE_PRIM(_VOID, imfontconfig_init, _STRUCT);

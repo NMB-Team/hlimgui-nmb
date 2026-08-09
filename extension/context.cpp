@@ -1,22 +1,18 @@
 #include "utils.h"
 
-HL_PRIM ImGuiContext* HL_NAME(create_context)()
-{
+HL_PRIM ImGuiContext* HL_NAME(create_context)() {
 	return ImGui::CreateContext(NULL);
 }
 
-HL_PRIM void HL_NAME(destroy_context)(ImGuiContext* ptr)
-{
+HL_PRIM void HL_NAME(destroy_context)(ImGuiContext* ptr) {
 	ImGui::DestroyContext(ptr);
 }
 
-HL_PRIM ImGuiContext* HL_NAME(get_current_context)()
-{
+HL_PRIM ImGuiContext* HL_NAME(get_current_context)() {
 	return ImGui::GetCurrentContext();
 }
 
-HL_PRIM void HL_NAME(set_current_context)(ImGuiContext* ptr)
-{
+HL_PRIM void HL_NAME(set_current_context)(ImGuiContext* ptr) {
 	ImGui::SetCurrentContext(ptr);
 }
 

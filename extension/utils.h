@@ -24,9 +24,9 @@
 
 #define convertString(st) st != nullptr ? unicodeToUTF8(st).c_str() : NULL
 #define convertStringNullAsEmpty(st) st != nullptr ? unicodeToUTF8(st).c_str() : ""
-#define convertPtr(ptr,default_value) ptr != nullptr ? *ptr : default_value
-#define convertArray(arr,type) arr != nullptr ? hl_aptr(arr,type) : nullptr
-#define convertVec(ptr,default_value) ptr != nullptr ? ImVec2(ptr) : ImVec2(default_value)
+#define convertPtr(ptr, default_value) ptr != nullptr ? *ptr : default_value
+#define convertArray(arr, type) arr != nullptr ? hl_aptr(arr, type) : nullptr
+#define convertVec(ptr, default_value) ptr != nullptr ? ImVec2(ptr) : ImVec2(default_value)
 
 #ifndef _WIN32
 #define throw_error(err) hl_throw(hl_alloc_strbytes((const uchar*)(USTR(err))))
@@ -39,8 +39,9 @@
 // Equates to:
 // DEFINE_PRIM(_I32,get_prop_name,_NO_ARG)
 // DEFINE_PRIM(_VOID,set_prop_name,_REF(_I32))
-#define DEFINE_PRIM_PROP(t,name,args) DEFINE_PRIM(t,get_##name,_NO_ARG)\
-	DEFINE_PRIM(_VOID,set_##name,args)
+#define DEFINE_PRIM_PROP(t, name, args) \
+	DEFINE_PRIM(t, get_##name, _NO_ARG) \
+	DEFINE_PRIM(_VOID, set_##name, args)
 
 void convertColor(ImU32 color, float& r, float& g, float& b, float& a);
 int unicodeSizeInUTF8(vstring* hl_string);
@@ -48,8 +49,12 @@ void unicodeToUTF8Buffer(vstring* hl_string, char* out);
 std::string unicodeToUTF8(vstring* hl_string);
 
 // Converters that handle nullptr with default value
-inline ImVec2 getImVec2(vimvec2* vec2, const ImVec2& default_value = ImVec2(0, 0)) { return vec2 == nullptr ? default_value :  ImVec2(vec2); }
-inline ImVec4 getImVec4(vimvec4* vec4, const ImVec4& default_value = ImVec4(0, 0, 0, 0)) { return vec4 == nullptr ? default_value : ImVec4(vec4); }
+inline ImVec2 getImVec2(vimvec2* vec2, const ImVec2& default_value = ImVec2(0, 0)) {
+	return vec2 == nullptr ? default_value : ImVec2(vec2);
+}
+inline ImVec4 getImVec4(vimvec4* vec4, const ImVec4& default_value = ImVec4(0, 0, 0, 0)) {
+	return vec4 == nullptr ? default_value : ImVec4(vec4);
+}
 
 vbyte* getVByteFromCStr(const char* str);
 
@@ -67,8 +72,14 @@ void setStructImVec4(vdynamic* dyn, const char* name, const ImVec4& values);
 void getStructArrayImVec4(vdynamic* dyn, const char* name, ImVec4* values, int size);
 void setStructArrayImVec4(vdynamic* dyn, const char* name, const ImVec4* values, int size);
 
-inline void assertArraySize(varray* arr, int size) {if (arr->size != size) throw_error("Invalid array size");}
-inline void assertArraySizeRange(varray* arr, int size_min, int size_max) {if (arr->size < size_min && arr->size > size_max) throw_error("Invalid array size");}
+inline void assertArraySize(varray* arr, int size) {
+	if (arr->size != size)
+		throw_error("Invalid array size");
+}
+inline void assertArraySizeRange(varray* arr, int size_min, int size_max) {
+	if (arr->size < size_min && arr->size > size_max)
+		throw_error("Invalid array size");
+}
 
 // Drawing
 void renderDrawLists(ImDrawData* draw_data);

@@ -1,0 +1,35 @@
+{
+	"lineEnds": {
+		"rightCurly": "after",
+		"objectLiteralCurly": {}
+	},
+	"sameLine": {
+		"tryBody": "same"
+	},
+	"emptyLines": {
+		"importAndUsing": {
+			"betweenImportsLevel": "firstLevelPackage",
+			"betweenImports": 1
+		}
+	},
+	"wrapping": {
+		"maxLineLength": 250,
+		"callParameter": {
+			"defaultWrap": "fillLine",
+			"rules": [
+				{
+					"conditions": [
+						{
+							"cond": "anyItemLength >= n",
+							"value": 250
+						}
+					],
+					"type": "keep"
+				}
+			]
+		}
+	},
+	"whitespace": {
+		"functionTypeHaxe3Policy": "around"
+	}
+}
