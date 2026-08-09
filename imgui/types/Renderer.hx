@@ -139,6 +139,21 @@ class RenderList {
 	**/
 	public var size:Int;
 
+	/**
+		Generated vertex count for this render pass.
+	**/
+	public var vertexCount:Int;
+
+	/**
+		Generated compact vertex bytes for this render pass.
+	**/
+	public var vertexBytes:Int;
+
+	/**
+		Native render-data preparation time when benchmark instrumentation is enabled.
+	**/
+	public var prepareTimeUs:Int;
+
 	function new() {
 		lists = new hl.NativeArray(0);
 	}
@@ -160,6 +175,41 @@ class RenderData {
 	public var vertexBufferSize:Int;
 
 	/**
+		Number of vertices in `vertexBuffer`.
+	**/
+	public var vertexCount:Int;
+
+	/**
+		Vertex size in bytes.
+	**/
+	public var vertexStride:Int;
+
+	/**
+		Byte offset of the position attribute.
+	**/
+	public var positionOffset:Int;
+
+	/**
+		Byte offset of the UV attribute.
+	**/
+	public var uvOffset:Int;
+
+	/**
+		Byte offset of the packed color attribute.
+	**/
+	public var colorOffset:Int;
+
+	/**
+		Draw-data viewport origin on the X axis.
+	**/
+	public var displayPosX:Single;
+
+	/**
+		Draw-data viewport origin on the Y axis.
+	**/
+	public var displayPosY:Single;
+
+	/**
 		Gets or sets index buffer.
 	**/
 	public var indexBuffer:Bytes;
@@ -168,6 +218,16 @@ class RenderData {
 		The index buffer size.
 	**/
 	public var indexBufferSize:Int;
+
+	/**
+		Number of 32-bit indices in `indexBuffer`.
+	**/
+	public var indexCount:Int;
+
+	/**
+		Allocated native index-buffer size in bytes.
+	**/
+	public var indexBufferCapacity:Int;
 
 	/**
 		Gets or sets commands.
@@ -221,6 +281,11 @@ class RenderCommand {
 		Gets or sets clip height.
 	**/
 	public var clipHeight:Int;
+
+	/**
+		Requests the renderer to restore its normal draw state.
+	**/
+	public var resetRenderState:Bool;
 
 	/**
 		If present - instead of regular draw call invoke the callback.

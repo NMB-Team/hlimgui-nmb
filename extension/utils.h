@@ -12,9 +12,9 @@
 #define _RENDERTEXTURECALLBACK _FUN(_VOID, _TRENDERTEXTURELIST)
 #define _TRENDERTEXTUREDATA _OBJ(_TIMTEXTUREDATA _I32 _I32 _IMTEXID _BYTES _I32 _I32 _I32)
 #define _TRENDERTEXTURELIST _OBJ(_ARR _I32)
-#define _TRENDERCOMMAND _OBJ(_IMTEXID _I32 _I32 _I32 _I32 _I32 _I32 _TRENDERCALLBACK _DYN)
-#define _TRENDERDATA _OBJ(_BYTES _I32 _BYTES _I32 _ARR _I32)
-#define _TRENDERLIST _OBJ(_ARR _I32)
+#define _TRENDERCOMMAND _OBJ(_IMTEXID _I32 _I32 _I32 _I32 _I32 _I32 _BOOL _TRENDERCALLBACK _DYN)
+#define _TRENDERDATA _OBJ(_BYTES _I32 _I32 _I32 _I32 _I32 _I32 _F32 _F32 _BYTES _I32 _I32 _I32 _ARR _I32)
+#define _TRENDERLIST _OBJ(_ARR _I32 _I32 _I32 _I32)
 
 #include <string>
 #include <hl.h>
@@ -43,7 +43,6 @@
 	DEFINE_PRIM(t, get_##name, _NO_ARG) \
 	DEFINE_PRIM(_VOID, set_##name, args)
 
-void convertColor(ImU32 color, float& r, float& g, float& b, float& a);
 int unicodeSizeInUTF8(vstring* hl_string);
 void unicodeToUTF8Buffer(vstring* hl_string, char* out);
 std::string unicodeToUTF8(vstring* hl_string);
@@ -83,3 +82,6 @@ inline void assertArraySizeRange(varray* arr, int size_min, int size_max) {
 
 // Drawing
 void renderDrawLists(ImDrawData* draw_data);
+void rootRenderCallback(vclosure* callback, vdynamic* data);
+void releaseRenderCallback(vclosure* callback, vdynamic* data);
+void clearPendingRenderCallbacks();

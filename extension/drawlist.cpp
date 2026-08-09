@@ -4,6 +4,43 @@
 #define F_NAME(n) HL_NAME(drawlist_##n)
 #define DEFINE_FPRIM(t, name, args) DEFINE_PRIM(t, drawlist_##name, _TDRAWLIST args)
 
+namespace {
+struct RenderCallbackRoot {
+	vclosure* callback;
+	vdynamic* data;
+};
+
+std::vector<RenderCallbackRoot*> pending_render_callbacks;
+}
+
+void rootRenderCallback(vclosure* callback, vdynamic* data) {
+	RenderCallbackRoot* root = new RenderCallbackRoot{callback, data};
+	hl_add_root(&root->callback);
+	hl_add_root(&root->data);
+	pending_render_callbacks.push_back(root);
+}
+
+void releaseRenderCallback(vclosure* callback, vdynamic* data) {
+	for (auto root = pending_render_callbacks.begin(); root != pending_render_callbacks.end(); root++) {
+		if ((*root)->callback != callback || (*root)->data != data)
+			continue;
+		hl_remove_root(&(*root)->callback);
+		hl_remove_root(&(*root)->data);
+		delete *root;
+		pending_render_callbacks.erase(root);
+		return;
+	}
+}
+
+void clearPendingRenderCallbacks() {
+	for (RenderCallbackRoot* root : pending_render_callbacks) {
+		hl_remove_root(&root->callback);
+		hl_remove_root(&root->data);
+		delete root;
+	}
+	pending_render_callbacks.clear();
+}
+
 HL_PRIM ImDrawList* HL_NAME(get_window_draw_list)() {
 	return ImGui::GetWindowDrawList();
 }
@@ -185,6 +222,7 @@ HL_PRIM void F_NAME(path_rect)(ImDrawList* drawlist, vimvec2* rect_min, vimvec2*
 // Advanced
 
 HL_PRIM void F_NAME(add_callback)(ImDrawList* drawlist, vclosure* callback, vdynamic* data) {
+	rootRenderCallback(callback, data);
 	drawlist->AddCallback(callback, data);
 }
 

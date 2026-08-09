@@ -1,12 +1,5 @@
 #include "utils.h"
 
-void convertColor(ImU32 color, float& r, float& g, float& b, float& a) {
-	r = ((color >> IM_COL32_R_SHIFT) & 0xFF) / 255.0f;
-	g = ((color >> IM_COL32_G_SHIFT) & 0xFF) / 255.0f;
-	b = ((color >> IM_COL32_B_SHIFT) & 0xFF) / 255.0f;
-	a = ((color >> IM_COL32_A_SHIFT) & 0xFF) / 255.0f;
-}
-
 int unicodeSizeInUTF8(vstring* hl_string) {
 	uchar* c = hl_string->bytes;
 	uchar* end = c + hl_string->length;

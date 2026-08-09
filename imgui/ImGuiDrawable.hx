@@ -8,6 +8,11 @@ import h2d.Tile;
 
 import h3d.mat.Texture;
 
+#if !hlimgui_heaps_old_buffer_alloc
+import hxd.BufferFormat.InputFormat;
+import hxd.BufferFormat.Precision;
+#end
+
 import imgui.ImGui;
 
 import hxd.Key;
@@ -28,10 +33,32 @@ private typedef ManagedImGuiTexture = {
 	var pixels:hxd.Pixels;
 }
 
+#if !hlimgui_heaps_old_buffer_alloc
+private class ImGuiPositionShader extends hxsl.Shader {
+	static var SRC = {
+		@const var enabled:Bool;
+		@param var displayOffset:Vec2;
+		var absolutePosition:Vec4;
+		function vertex() {
+			if (enabled)
+				absolutePosition.xy -= displayOffset;
+		}
+	}
+}
+#end
+
 /**
 	Owns reusable Heaps buffers and textures used by the Dear ImGui renderer.
 **/
 class ImGuiDrawableBuffers {
+	#if !hlimgui_heaps_old_buffer_alloc
+	static final vertexFormat = hxd.BufferFormat.make([
+		{name: "position", type: InputFormat.DVec2},
+		{name: "uv", type: InputFormat.DVec2},
+		{name: "color", type: InputFormat.DVec4, precision: Precision.U8}
+	]);
+	#end
+
 	/**
 		The instance.
 	**/
@@ -57,8 +84,29 @@ class ImGuiDrawableBuffers {
 	**/
 	public var bufferCount:Int;
 
+	/** Last generated ImGui vertex count. **/
+	public var lastVertexCount(default, null):Int = 0;
+
+	/** Last generated ImGui draw-list count. **/
+	public var lastDrawListCount(default, null):Int = 0;
+
+	/** Last vertex stride uploaded to the GPU. **/
+	public var lastVertexStride(default, null):Int = 0;
+
+	/** Last number of vertex bytes uploaded to the GPU. **/
+	public var lastVertexBytes(default, null):Int = 0;
+
+	/** Last native preparation time in microseconds, or zero without benchmark instrumentation. **/
+	public var lastPrepareTimeUs(default, null):Int = 0;
+
 	var noTexture:Texture;
 	final textures:Array<ManagedImGuiTexture> = [];
+	#if hlimgui_heaps_old_buffer_alloc
+	final legacyVertexData:Array<hxd.FloatBuffer> = [];
+	#end
+	#if hlimgui_render_benchmark
+	var benchmarkSamples = 0;
+	#end
 
 	var commandData:RenderCommandCallbackData = @:privateAccess new RenderCommandCallbackData();
 
@@ -90,7 +138,7 @@ class ImGuiDrawableBuffers {
 		ImGui.setTextureCallback(updateTextures);
 
 		var io = ImGui.getIO();
-		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
+		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures | ImGuiBackendFlags.RendererHasVtxOffset;
 
 		noTexture = Tile.fromColor(0xffffff).getTexture();
 		this.initialized = true;
@@ -109,6 +157,9 @@ class ImGuiDrawableBuffers {
 			vertex_buffer.dispose();
 		}
 		this.vertex_buffers = [];
+		#if hlimgui_heaps_old_buffer_alloc
+		legacyVertexData.resize(0);
+		#end
 		this.commands = [];
 
 		ImGui.setRenderCallback(null);
@@ -226,58 +277,122 @@ class ImGuiDrawableBuffers {
 
 	private function renderDrawList(renderList:RenderList) {
 		bufferCount = 0;
+		lastDrawListCount = renderList.size;
+		lastVertexCount = renderList.vertexCount;
+		lastPrepareTimeUs = renderList.prepareTimeUs;
+		#if hlimgui_heaps_old_buffer_alloc
+		lastVertexStride = 8 * 4;
+		lastVertexBytes = renderList.vertexCount * 8 * 4;
+		#else
+		lastVertexStride = renderList.size == 0 ? 0 : renderList.lists[0].vertexStride;
+		lastVertexBytes = renderList.vertexBytes;
+		#end
+
+		#if hlimgui_render_benchmark
+		if (++benchmarkSamples % 120 == 0) {
+			final bytesPerVertex = lastVertexCount == 0 ? 0 : lastVertexBytes / lastVertexCount;
+			Sys.println('hlimgui renderer: vertices=$lastVertexCount, prepare=${lastPrepareTimeUs}us, vertexUpload=$lastVertexBytes bytes, stride=$bytesPerVertex');
+		}
+		#end
 
 		for (i in 0...renderList.size) {
 			var data = renderList.lists[i];
 
-			final vertexStride = 8;
-			var vertexCount = Std.int(data.vertexBufferSize / (vertexStride * 4)); // data.vertexBufferSize>>5;
-			var indexCount = data.indexBufferSize >> 2;
-			// if (vertexCount == 0) continue;
+			final vertexCount = data.vertexCount;
+			final indexCount = data.indexCount;
+			if (data.vertexBufferSize != vertexCount * data.vertexStride)
+				throw "Invalid ImGui vertex buffer size";
+			#if !hlimgui_heaps_old_buffer_alloc
+			if (data.vertexStride != vertexFormat.strideBytes
+				|| data.positionOffset != vertexFormat.calculateInputOffset("position")
+				|| data.uvOffset != vertexFormat.calculateInputOffset("uv")
+				|| data.colorOffset != vertexFormat.calculateInputOffset("color"))
+				throw "Unsupported ImDrawVert memory layout";
+			#end
 
 			// create or reuse vertex buffer
 			if (i == this.vertex_buffers.length) {
-				#if hlimgui_heaps_old_buffer_alloc
-				this.vertex_buffers[i] = new h3d.Buffer(vertexCount, vertexStride, [RawFormat, Dynamic]);
-				#else
-				this.vertex_buffers[i] = new h3d.Buffer(vertexCount, hxd.BufferFormat.H2D, [Dynamic]);
-				#end
+				this.vertex_buffers[i] = createVertexBuffer(vertexCount);
 				this.index_buffers[i] = new h3d.Indexes(indexCount, true);
 			} else {
 				if (this.vertex_buffers[i].vertices < vertexCount) {
+					final capacity = growCapacity(vertexCount, this.vertex_buffers[i].vertices);
 					this.vertex_buffers[i].dispose();
-					#if hlimgui_heaps_old_buffer_alloc
-					this.vertex_buffers[i] = new h3d.Buffer(vertexCount, vertexStride, [RawFormat, Dynamic]);
-					#else
-					this.vertex_buffers[i] = new h3d.Buffer(vertexCount, hxd.BufferFormat.H2D, [Dynamic]);
-					#end
+					this.vertex_buffers[i] = createVertexBuffer(capacity);
 				}
 				if (this.index_buffers[i].count < indexCount) {
+					final capacity = growCapacity(indexCount, this.index_buffers[i].count);
 					this.index_buffers[i].dispose();
-					this.index_buffers[i] = new h3d.Indexes(indexCount, true);
+					this.index_buffers[i] = new h3d.Indexes(capacity, true);
 				}
 			}
-			this.vertex_buffers[i].uploadBytes(data.vertexBuffer.toBytes(data.vertexBufferSize), 0, vertexCount);
+			uploadVertices(i, data);
 			this.index_buffers[i].uploadBytes(data.indexBuffer.toBytes(data.indexBufferSize), 0, indexCount);
 			this.commands[i] = data; // data.commands.sub(0, data.commandCount);
 			bufferCount++;
 		}
 	}
 
+	static inline function growCapacity(required:Int, current:Int):Int {
+		return Std.int(Math.max(required, current + (current >> 1)));
+	}
+
+	function createVertexBuffer(capacity:Int):h3d.Buffer {
+		#if hlimgui_heaps_old_buffer_alloc
+		return new h3d.Buffer(capacity, 8, [RawFormat, Dynamic]);
+		#else
+		return new h3d.Buffer(capacity, vertexFormat, [Dynamic]);
+		#end
+	}
+
+	function uploadVertices(index:Int, data:RenderData):Void {
+		#if hlimgui_heaps_old_buffer_alloc
+		var vertices = legacyVertexData[index];
+		if (vertices == null)
+			vertices = legacyVertexData[index] = new hxd.FloatBuffer();
+		vertices.grow(data.vertexCount * 8);
+		for (vertex in 0...data.vertexCount) {
+			final source = vertex * data.vertexStride;
+			final destination = vertex * 8;
+			vertices[destination] = data.vertexBuffer.getF32(source + data.positionOffset) - data.displayPosX;
+			vertices[destination + 1] = data.vertexBuffer.getF32(source + data.positionOffset + 4) - data.displayPosY;
+			vertices[destination + 2] = data.vertexBuffer.getF32(source + data.uvOffset);
+			vertices[destination + 3] = data.vertexBuffer.getF32(source + data.uvOffset + 4);
+			vertices[destination + 4] = data.vertexBuffer.getUI8(source + data.colorOffset) / 255;
+			vertices[destination + 5] = data.vertexBuffer.getUI8(source + data.colorOffset + 1) / 255;
+			vertices[destination + 6] = data.vertexBuffer.getUI8(source + data.colorOffset + 2) / 255;
+			vertices[destination + 7] = data.vertexBuffer.getUI8(source + data.colorOffset + 3) / 255;
+		}
+		vertex_buffers[index].uploadFloats(vertices, 0, data.vertexCount);
+		#else
+		vertex_buffers[index].uploadBytes(data.vertexBuffer.toBytes(data.vertexBufferSize), 0, data.vertexCount);
+		#end
+	}
+
 	/**
 		Helper calling InputText+Build.
 	**/
-	public function draw(ctx:h2d.RenderContext, obj:h2d.Drawable) {
+	public function draw(ctx:h2d.RenderContext, obj:ImGuiDrawable) {
 		var e = ctx.engine;
 		commandData.ctx = ctx;
 		commandData.obj = obj;
 		for (i in 0...bufferCount) {
 			var data = commands[i];
+			#if !hlimgui_heaps_old_buffer_alloc
+			@:privateAccess {
+				final offsetX = data.displayPosX * obj.matA + data.displayPosY * obj.matC;
+				final offsetY = data.displayPosX * obj.matB + data.displayPosY * obj.matD;
+				obj.positionShader.enabled = offsetX != 0 || offsetY != 0;
+				obj.positionShader.displayOffset.set(offsetX, offsetY);
+			}
+			#end
 			var cmdList = data.commands;
 			for (j in 0...data.commandCount) {
 				var cmd = cmdList[j];
-				if (cmd.callback != null) {
-					e.setRenderZone(); // Makre sure to reset clip rect.
+				if (cmd.resetRenderState) {
+					e.setRenderZone();
+				} else if (cmd.callback != null) {
+					e.setRenderZone(); // Make sure to reset clip rect.
 					cmd.callback(data, cmd, commandData);
 				} else if (cmd.elemCount > 0 && ctx.beginDrawObject(obj, cmd.textureID == null ? noTexture : cmd.textureID)) {
 					e.setRenderZone(cmd.clipLeft, cmd.clipTop, cmd.clipWidth, cmd.clipHeight);
@@ -332,6 +447,9 @@ class ImGuiDrawableBuffers {
 class ImGuiDrawable extends h2d.Drawable {
 	var keycode_map:Map<Int, Int>;
 	var wheel_inverted:Bool;
+	#if !hlimgui_heaps_old_buffer_alloc
+	final positionShader:ImGuiPositionShader;
+	#end
 	#if hlimgui_cursor
 	var cursorMap:Map<ImGuiMouseCursor, hxd.Cursor> = [];
 	#end
@@ -342,6 +460,10 @@ class ImGuiDrawable extends h2d.Drawable {
 	**/
 	public function new(?parent, ?addDefaultFont = true) {
 		super(parent);
+		#if !hlimgui_heaps_old_buffer_alloc
+		positionShader = addShader(new ImGuiPositionShader());
+		positionShader.enabled = false;
+		#end
 		ImGuiDrawableBuffers.instance.initialize(addDefaultFont);
 
 		var scene = getScene();
