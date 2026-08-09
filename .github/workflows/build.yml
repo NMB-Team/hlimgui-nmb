@@ -131,15 +131,47 @@ jobs:
 
       - name: Update nightly release
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-        uses: andelf/nightly-release@main
+        shell: pwsh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: nightly
-          name: Nightly Release
-          body: |
-            Automated Windows build of `hlimgui` using NMB HashLink.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = 'nightly'
+          $asset = 'hlimgui-windows.zip'
+          $notes = @'
+          Automated Windows build of `hlimgui` using NMB HashLink.
 
-            Download `hlimgui-windows.zip` and extract it where you want to keep the library files.
-          files: |
-            hlimgui-windows.zip
+          Download `hlimgui-windows.zip` and extract it where you want to keep the library files.
+          '@
+
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          $releaseExists = $LASTEXITCODE -eq 0
+
+          if (-not $releaseExists) {
+            gh release create $tag $asset `
+              --repo $env:GITHUB_REPOSITORY `
+              --target $env:GITHUB_SHA `
+              --title 'Nightly Release' `
+              --notes $notes `
+              --prerelease
+
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Failed to create the nightly release.'
+            }
+            exit 0
+          }
+
+          gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/git/refs/tags/$tag" `
+            -f sha=$env:GITHUB_SHA `
+            -F force=true
+
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Failed to move the nightly tag.'
+          }
+
+          gh release upload $tag $asset `
+            --repo $env:GITHUB_REPOSITORY `
+            --clobber
+
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Failed to replace the nightly asset.'
+          }

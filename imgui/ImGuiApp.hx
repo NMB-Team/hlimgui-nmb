@@ -10,18 +10,18 @@ import sdl.Sdl as SdlPlatform;
 #end
 
 /**
-	  A simplified Heaps App that can be used to get Imgui integrated without much hassle.
+	A simplified Heaps App that can be used to get Imgui integrated without much hassle.
 
-	  It uses a separate 2D scene to render ImGui contents, as well as prioritises imgui as recepient for input events.
+	It uses a separate 2D scene to render ImGui contents, as well as prioritises imgui as recepient for input events.
 
-	  Usage example:
-	  ```haxe
-	  class MyGameApp extends #if hlimgui imgui.ImGuiApp #else hxd.App #end {
+	Usage example:
+	```haxe
+	class MyGameApp extends #if hlimgui imgui.ImGuiApp #else hxd.App #end {
 
 	// Use your regular App setup.
 
-	  }
-	  ```
+	}
+	```
 **/
 class ImGuiApp extends hxd.App {
 	var imguiInitialized = false;
@@ -29,7 +29,8 @@ class ImGuiApp extends hxd.App {
 	var imguiDrawable:imgui.ImGuiDrawable;
 
 	/**
-		Called right after ImGui.newFrame(), note that none of Heaps event loop processing happened yet.
+		Called right after ImGui.newFrame().
+		Input events for the current frame have already been processed.
 	**/
 	function onNewFrame() {}
 
@@ -341,7 +342,9 @@ class ImGuiApp extends hxd.App {
 			var oldWin = hxd.Window.getInstance();
 			var w = v.PlatformHandle;
 			w.setCurrent();
+			#if !limen
 			@:privateAccess w.window.present();
+			#end
 			oldWin.setCurrent();
 		};
 		#end
@@ -379,27 +382,32 @@ class ImGuiApp extends hxd.App {
 	// Main loop is completely overriden because Heaps have no proper way to inject non-standard scenes into an update loop.
 	override function mainLoop() {
 		hxd.Timer.update();
+
+		var dt = hxd.Timer.dt; // fetch again in case it's been modified in update()
+
 		if (imguiDrawable != null)
 			imguiDrawable.update(hxd.Timer.dt);
+
+		sevents.checkEvents();
+
+		if (isDisposed)
+			return;
+
 		ImGui.newFrame();
 		onNewFrame();
-		sevents.checkEvents();
-		if (isDisposed) {
-			ImGui.endFrame();
-			return;
-		}
 		update(hxd.Timer.dt);
+
 		if (isDisposed) {
 			ImGui.endFrame();
 			return;
 		}
-		var dt = hxd.Timer.dt; // fetch again in case it's been modified in update()
-		if (s2d != null)
-			s2d.setElapsedTime(dt);
-		if (s3d != null)
-			s3d.setElapsedTime(dt);
-		if (imguiScene != null)
-			imguiScene.setElapsedTime(dt);
+
+		dt = hxd.Timer.dt;
+
+		s2d?.setElapsedTime(dt);
+		s3d?.setElapsedTime(dt);
+		imguiScene?.setElapsedTime(dt);
+
 		engine.render(this);
 	}
 

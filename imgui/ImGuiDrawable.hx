@@ -518,51 +518,49 @@ class ImGuiDrawable extends h2d.Drawable {
 			case EPush:
 				io.addMouseButtonEvent(event.button, true);
 
-				if (io.WantCaptureMouse) {
+				if (io.WantCaptureMouse)
 					event.propagate = false;
-				}
+
 			case ERelease:
 				io.addMouseButtonEvent(event.button, false);
 
-				if (io.WantCaptureMouse) {
+				if (io.WantCaptureMouse)
 					event.propagate = false;
-				}
 
 			case EWheel:
 				io.addMouseWheelEvent(0, this.wheel_inverted ? event.wheelDelta : -event.wheelDelta);
 
-				if (io.WantCaptureMouse) {
+				if (io.WantCaptureMouse)
 					event.propagate = false;
-				}
 
 			case EKeyDown:
-				if (this.keycode_map.exists(event.keyCode)) {
+				if (this.keycode_map.exists(event.keyCode))
 					io.addKeyEvent(this.keycode_map[event.keyCode], true);
-					if (io.WantCaptureKeyboard) {
-						event.propagate = false;
-					}
 
-					// In multidriver, we don't use heaps' input system so we need to manage key mods ourself
-					#if multidriver
-					updateModifiers(event.keyCode, true);
-					#end
-				}
+				// In multidriver, we don't use heaps' input system so we need to manage key mods ourself
+				#if multidriver
+				updateModifiers(event.keyCode, true);
+				#end
+
+				if (io.WantCaptureKeyboard)
+					event.propagate = false;
+
 			case EKeyUp:
-				if (this.keycode_map.exists(event.keyCode)) {
+				if (this.keycode_map.exists(event.keyCode))
 					io.addKeyEvent(this.keycode_map[event.keyCode], false);
-					if (io.WantCaptureKeyboard) {
-						event.propagate = false;
-					}
 
-					#if multidriver
-					updateModifiers(event.keyCode, false);
-					#end
-				}
+				#if multidriver
+				updateModifiers(event.keyCode, false);
+				#end
+
+				if (io.WantCaptureKeyboard)
+					event.propagate = false;
+
 			case ETextInput:
 				io.addInputCharacter(event.charCode);
-				if (io.WantCaptureKeyboard) {
+				if (io.WantCaptureKeyboard)
 					event.propagate = false;
-				}
+
 				#if multidriver
 				// It looks goofy to hide these behind multidriver, but the normal model listens for heaps
 				// stack events, not window events. Focus events mean something completely different in
@@ -572,6 +570,7 @@ class ImGuiDrawable extends h2d.Drawable {
 				case EFocusLost:
 					io.addFocusEvent(false);
 				#end
+
 			default:
 		}
 	}
