@@ -11,6 +11,15 @@ class FontApiTest extends imgui.ImGuiApp {
 	override function init() {
 		ImGui.fonts.setDefault(hxd.Res.Roboto_Medium, 18);
 		additional = ImGui.fonts.addResource("Cousine-Regular.ttf", 16);
+
+		if (!additional.isLoaded())
+			throw "Additional font was not loaded";
+
+		if (!additional.hasGlyph("A".code))
+			throw "Additional font does not contain expected ASCII glyph";
+
+		trace('Loaded font: ${additional.getDebugName()}');
+
 		hl.Gc.major();
 		super.init();
 	}

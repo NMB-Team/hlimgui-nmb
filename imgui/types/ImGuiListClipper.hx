@@ -25,8 +25,8 @@ package imgui.types;
 	clipping based on visibility to only submit items that are in view.
 	The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
 	(Dear ImGui already clip items based on their bounds but: it needs to first layout the item to do so, and generally
-	 fetching/submitting your own data incurs additional cost. Coarse clipping using ImGuiListClipper allows you to easily
-	 scale using lists with tens of thousands of items without a problem)
+	fetching/submitting your own data incurs additional cost. Coarse clipping using ImGuiListClipper allows you to easily
+	scale using lists with tens of thousands of items without a problem)
 	Usage:
 	```haxe
 	var clipper = new ImGuiListClipper();

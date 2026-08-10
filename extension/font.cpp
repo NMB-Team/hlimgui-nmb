@@ -174,6 +174,27 @@ HL_PRIM void HL_NAME(imfontconfig_init)(ImFontConfig* cfg) {
 	new (cfg) ImFontConfig();
 }
 
+HL_PRIM bool HL_NAME(imfont_is_loaded)(ImFont* font) {
+	return font != nullptr && font->IsLoaded();
+}
+
+HL_PRIM bool HL_NAME(imfont_has_glyph)(ImFont* font, int codepoint) {
+	if (font == nullptr)
+		return false;
+
+	if (codepoint < 0 || codepoint > IM_UNICODE_CODEPOINT_MAX)
+		return false;
+
+	return font->IsGlyphInFont((ImWchar)codepoint);
+}
+
+HL_PRIM vbyte* HL_NAME(imfont_get_debug_name)(ImFont* font) {
+	if (font == nullptr)
+		return getVByteFromCStr("");
+
+	return getVByteFromCStr(font->GetDebugName());
+}
+
 DEFINE_PRIM(_TFONTATLAS, get_font_atlas, _NO_ARG);
 DEFINE_FPRIM(_TFONT, add_font, _STRUCT);
 DEFINE_FPRIM(_TFONT, add_font_default, _STRUCT);
@@ -205,3 +226,7 @@ DEFINE_PRIM(_VOID, push_font, _TFONT _REF(_F32));
 DEFINE_PRIM(_VOID, pop_font, _NO_ARG);
 DEFINE_PRIM(_TFONT, get_font, _NO_ARG);
 DEFINE_PRIM(_VOID, imfontconfig_init, _STRUCT);
+
+DEFINE_PRIM(_BOOL, imfont_is_loaded, _TFONT);
+DEFINE_PRIM(_BOOL, imfont_has_glyph, _TFONT _I32);
+DEFINE_PRIM(_BYTES, imfont_get_debug_name, _TFONT);

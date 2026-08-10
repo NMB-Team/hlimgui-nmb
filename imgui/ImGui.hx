@@ -6034,7 +6034,13 @@ class ImGui {
 	/**
 		Start a new Dear ImGui frame, you can submit any command from this point until Render()/EndFrame().
 	**/
-	public static function newFrame() {}
+	public static function newFrame() {
+		ImTypeCache.newFrame();
+		new_frame();
+	}
+
+	@:hlNative("hlimgui", "new_frame")
+	static function new_frame() {}
 
 	/**
 		Ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
