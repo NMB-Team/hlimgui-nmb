@@ -585,6 +585,9 @@ class ImGuiDrawableBuffers {
 **/
 class ImGuiDrawable extends h2d.Drawable {
 	var keycode_map:Map<Int, Int>;
+	#if multidriver
+	var modifier_keys_down:Map<Int, Bool> = [];
+	#end
 	var wheel_inverted:Bool;
 	#if !hlimgui_heaps_old_buffer_alloc
 	final positionShader:ImGuiPositionShader;
@@ -631,30 +634,49 @@ class ImGuiDrawable extends h2d.Drawable {
 				KeyCode.SPACE => ImGuiKey.Space,
 				KeyCode.ENTER => ImGuiKey.Enter,
 				KeyCode.ESCAPE => ImGuiKey.Escape,
-				KeyCode.NUMPAD_ENTER => ImGuiKey.KeypadEnter,
 				KeyCode.LSHIFT => ImGuiKey.LeftShift,
 				KeyCode.RSHIFT => ImGuiKey.RightShift,
 				KeyCode.LALT => ImGuiKey.LeftAlt,
 				KeyCode.RALT => ImGuiKey.RightAlt,
 				KeyCode.LCTRL => ImGuiKey.LeftCtrl,
 				KeyCode.RCTRL => ImGuiKey.RightCtrl,
-				KeyCode.F1 => ImGuiKey.F1,
-				KeyCode.F2 => ImGuiKey.F2,
-				KeyCode.F3 => ImGuiKey.F3,
-				KeyCode.F4 => ImGuiKey.F4,
-				KeyCode.F5 => ImGuiKey.F5,
-				KeyCode.F6 => ImGuiKey.F6,
-				KeyCode.F7 => ImGuiKey.F7,
-				KeyCode.F8 => ImGuiKey.F8,
-				KeyCode.F9 => ImGuiKey.F9,
-				KeyCode.F10 => ImGuiKey.F10,
-				KeyCode.F11 => ImGuiKey.F11,
-				KeyCode.F12 => ImGuiKey.F12,
+				KeyCode.LEFT_WINDOW_KEY => ImGuiKey.LeftSuper,
+				KeyCode.RIGHT_WINDOW_KEY => ImGuiKey.RightSuper,
+				KeyCode.CONTEXT_MENU => ImGuiKey.Menu,
+				KeyCode.QWERTY_QUOTE => ImGuiKey.Apostrophe,
+				KeyCode.QWERTY_COMMA => ImGuiKey.Comma,
+				KeyCode.QWERTY_MINUS => ImGuiKey.Minus,
+				KeyCode.QWERTY_PERIOD => ImGuiKey.Period,
+				KeyCode.QWERTY_SLASH => ImGuiKey.Slash,
+				KeyCode.QWERTY_SEMICOLON => ImGuiKey.Semicolon,
+				KeyCode.QWERTY_EQUALS => ImGuiKey.Equal,
+				KeyCode.QWERTY_BRACKET_LEFT => ImGuiKey.LeftBracket,
+				KeyCode.QWERTY_BACKSLASH => ImGuiKey.Backslash,
+				KeyCode.QWERTY_BRACKET_RIGHT => ImGuiKey.RightBracket,
+				KeyCode.QWERTY_TILDE => ImGuiKey.GraveAccent,
+				KeyCode.INTL_BACKSLASH => ImGuiKey.Oem102,
+				KeyCode.CAPS_LOCK => ImGuiKey.CapsLock,
+				KeyCode.SCROLL_LOCK => ImGuiKey.ScrollLock,
+				KeyCode.NUM_LOCK => ImGuiKey.NumLock,
+				KeyCode.PAUSE_BREAK => ImGuiKey.Pause,
+				KeyCode.NUMPAD_DOT => ImGuiKey.KeypadDecimal,
+				KeyCode.NUMPAD_DIV => ImGuiKey.KeypadDivide,
+				KeyCode.NUMPAD_MULT => ImGuiKey.KeypadMultiply,
+				KeyCode.NUMPAD_SUB => ImGuiKey.KeypadSubtract,
+				KeyCode.NUMPAD_ADD => ImGuiKey.KeypadAdd,
+				KeyCode.NUMPAD_ENTER => ImGuiKey.KeypadEnter,
 			];
 
-			// Add letters
+			for (ko in 0...10) {
+				keycode_map[KeyCode.NUMBER_0 + ko] = ImGuiKey.Key0 + ko;
+				keycode_map[KeyCode.NUMPAD_0 + ko] = ImGuiKey.Keypad0 + ko;
+			}
+
 			for (ko in 0...26)
 				keycode_map[KeyCode.A + ko] = ImGuiKey.A + ko;
+
+			for (ko in 0...24)
+				keycode_map[KeyCode.F1 + ko] = ImGuiKey.F1 + ko;
 
 			#if !multidriver
 			eventScene = scene;
@@ -716,7 +738,7 @@ class ImGuiDrawable extends h2d.Drawable {
 		io.addKeyEvent(ImGuiKey.ModShift, Key.isDown(KeyCode.SHIFT));
 		io.addKeyEvent(ImGuiKey.ModAlt, Key.isDown(KeyCode.ALT));
 		io.addKeyEvent(ImGuiKey.ModCtrl, Key.isDown(KeyCode.CTRL));
-		// ImGui.addKeyEvent( ImGuiKey.ModSuper, Key.isDown( KeyCode.SUPER ) ); // Unsupported currently.
+		io.addKeyEvent(ImGuiKey.ModSuper, Key.isDown(KeyCode.LEFT_WINDOW_KEY) || Key.isDown(KeyCode.RIGHT_WINDOW_KEY));
 		#end
 
 		#if multidriver
@@ -749,6 +771,8 @@ class ImGuiDrawable extends h2d.Drawable {
 			event.relY += window.window.y;
 		}
 		onEvent(event);
+		if (!event.propagate)
+			originalEvent.propagate = false;
 
 		if (viewport != null) {
 			switch (event.kind) {
@@ -791,8 +815,9 @@ class ImGuiDrawable extends h2d.Drawable {
 					event.propagate = false;
 
 			case EKeyDown:
-				if (this.keycode_map.exists(event.keyCode))
-					io.addKeyEvent(this.keycode_map[event.keyCode], true);
+				var imguiKey = this.keycode_map[event.keyCode];
+				if (imguiKey != null)
+					io.addKeyEvent(imguiKey, true);
 
 				// In multidriver, we don't use heaps' input system so we need to manage key mods ourself
 				#if multidriver
@@ -803,8 +828,9 @@ class ImGuiDrawable extends h2d.Drawable {
 					event.propagate = false;
 
 			case EKeyUp:
-				if (this.keycode_map.exists(event.keyCode))
-					io.addKeyEvent(this.keycode_map[event.keyCode], false);
+				var imguiKey = this.keycode_map[event.keyCode];
+				if (imguiKey != null)
+					io.addKeyEvent(imguiKey, false);
 
 				#if multidriver
 				updateModifiers(event.keyCode, false);
@@ -825,6 +851,7 @@ class ImGuiDrawable extends h2d.Drawable {
 				case EFocus:
 					io.addFocusEvent(true);
 				case EFocusLost:
+					modifier_keys_down.clear();
 					io.addFocusEvent(false);
 				#end
 
@@ -832,17 +859,40 @@ class ImGuiDrawable extends h2d.Drawable {
 		}
 	}
 
+	#if multidriver
 	function updateModifiers(code:Int, down:Bool) {
 		var io = ImGui.getIO();
+		var modifier:Int;
+		var left:Int;
+		var right:Int;
 		switch (code) {
 			case KeyCode.LCTRL | KeyCode.RCTRL:
-				io.addKeyEvent(ImGuiKey.ModCtrl, down);
+				modifier = ImGuiKey.ModCtrl;
+				left = KeyCode.LCTRL;
+				right = KeyCode.RCTRL;
 			case KeyCode.LALT | KeyCode.RALT:
-				io.addKeyEvent(ImGuiKey.ModAlt, down);
+				modifier = ImGuiKey.ModAlt;
+				left = KeyCode.LALT;
+				right = KeyCode.RALT;
 			case KeyCode.LSHIFT | KeyCode.RSHIFT:
-				io.addKeyEvent(ImGuiKey.ModShift, down);
+				modifier = ImGuiKey.ModShift;
+				left = KeyCode.LSHIFT;
+				right = KeyCode.RSHIFT;
+			case KeyCode.LEFT_WINDOW_KEY | KeyCode.RIGHT_WINDOW_KEY:
+				modifier = ImGuiKey.ModSuper;
+				left = KeyCode.LEFT_WINDOW_KEY;
+				right = KeyCode.RIGHT_WINDOW_KEY;
+			default:
+				return;
 		}
+
+		var wasDown = modifier_keys_down[left] == true || modifier_keys_down[right] == true;
+		modifier_keys_down[code] = down;
+		var isDown = modifier_keys_down[left] == true || modifier_keys_down[right] == true;
+		if (wasDown != isDown)
+			io.addKeyEvent(modifier, isDown);
 	}
+	#end
 
 	override function draw(ctx:h2d.RenderContext) {
 		if (!disposed)
