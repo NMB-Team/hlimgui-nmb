@@ -27,60 +27,25 @@ jobs:
         with:
           arch: x64
 
-      - name: Install NMB HashLink
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Download HashLink
+        shell: pwsh
         run: |
-          $repo = 'NMB-Team/hashlink-nmb'
-          $workflow = 'build.yml'
-          $artifact = 'windows-vs2026-64'
-          $downloadDir = Join-Path $env:RUNNER_TEMP 'hashlink-download'
-          $extractDir = Join-Path $env:RUNNER_TEMP 'hashlink-extract'
-          $installDir = 'C:\HaxeToolkit\hashlink'
-
-          $runId = $null
-          for ($page = 1; $page -le 5 -and -not $runId; $page++) {
-            $runsData = gh api "/repos/$repo/actions/workflows/$workflow/runs?branch=master&status=success&per_page=50&page=$page" | ConvertFrom-Json
-            foreach ($candidate in @($runsData.workflow_runs | Sort-Object created_at -Descending)) {
-              $artifactsData = gh api "/repos/$repo/actions/runs/$($candidate.id)/artifacts" | ConvertFrom-Json
-              $match = @($artifactsData.artifacts | Where-Object { $_.name -eq $artifact -and -not $_.expired } | Select-Object -First 1)
-              if ($match) {
-                $runId = $candidate.id
-                break
-              }
-            }
-          }
-          if (-not $runId) {
-            throw "No non-expired $artifact artifact found in $repo/$workflow."
+          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/HaxeFoundation/hashlink/releases/latest'
+          $asset = $release.assets | Where-Object { $_.name -like 'hashlink-*-win.zip' } | Select-Object -First 1
+          if (-not $asset) {
+            throw 'Could not find a Windows HashLink release asset.'
           }
 
-          New-Item -ItemType Directory -Force $downloadDir | Out-Null
-          gh run download $runId --repo $repo --name $artifact --dir $downloadDir
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile 'hashlink-win.zip'
+          Expand-Archive -LiteralPath 'hashlink-win.zip' -DestinationPath 'hashlink' -Force
 
-          $zip = Get-ChildItem -LiteralPath $downloadDir -Filter '*.zip' -File -Recurse | Select-Object -First 1
-          if ($zip) {
-            Expand-Archive -LiteralPath $zip.FullName -DestinationPath $extractDir -Force
-            $sourceRoot = $extractDir
-          } else {
-            $sourceRoot = $downloadDir
+          $hashlinkDir = Get-ChildItem -Path 'hashlink' -Directory | Select-Object -First 1
+          if (-not $hashlinkDir) {
+            throw 'Could not locate the extracted HashLink directory.'
           }
 
-          $hlExe = Get-ChildItem -LiteralPath $sourceRoot -Filter 'hl.exe' -File -Recurse | Select-Object -First 1
-          if (-not $hlExe) {
-            throw "Downloaded $artifact does not contain hl.exe."
-          }
-
-          if (Test-Path -LiteralPath $installDir) {
-            Remove-Item -LiteralPath $installDir -Recurse -Force
-          }
-          New-Item -ItemType Directory -Force (Split-Path $installDir -Parent) | Out-Null
-          Copy-Item -LiteralPath $hlExe.Directory.FullName -Destination $installDir -Recurse -Force
-
-          "HASHLINKPATH=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "HASHLINK_PATH=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "HASHLINK_BIN=$installDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $installDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          & "$installDir\hl.exe" --version
+          "HASHLINK=$($hashlinkDir.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "$($hashlinkDir.FullName)" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build native extension
         run: |

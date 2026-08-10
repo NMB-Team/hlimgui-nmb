@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "clip_rect.h"
 
 #include <algorithm>
 #include <chrono>
@@ -64,6 +65,10 @@ typedef struct {
 	int vertex_count;
 	int vertex_bytes;
 	int prepare_time_us;
+	float framebuffer_scale_x;
+	float framebuffer_scale_y;
+	int framebuffer_width;
+	int framebuffer_height;
 } vrenderlist;
 
 static vrenderlist* render_list = nullptr;
@@ -158,6 +163,10 @@ void renderDrawLists(ImDrawData* draw_data) {
 	render_list->size = cmd_lists_count;
 	render_list->vertex_count = 0;
 	render_list->vertex_bytes = 0;
+	render_list->framebuffer_scale_x = draw_data->FramebufferScale.x;
+	render_list->framebuffer_scale_y = draw_data->FramebufferScale.y;
+	render_list->framebuffer_width = std::max(0, int(draw_data->DisplaySize.x * draw_data->FramebufferScale.x));
+	render_list->framebuffer_height = std::max(0, int(draw_data->DisplaySize.y * draw_data->FramebufferScale.y));
 	vrenderdata** hl_cmd_list_ptr = hl_aptr(render_list->lists, vrenderdata*);
 
 	for (int n = 0; n < cmd_lists_count; n++) {
@@ -223,12 +232,24 @@ void renderDrawLists(ImDrawData* draw_data) {
 
 			hl_cmd_buffer->texture_id = (vdynamic*)(intptr_t)pcmd->GetTexID();
 			hl_cmd_buffer->index_offset = pcmd->IdxOffset;
-			hl_cmd_buffer->elem_count = pcmd->ElemCount;
 
-			hl_cmd_buffer->clip_left = int(pcmd->ClipRect.x - draw_data->DisplayPos.x);
-			hl_cmd_buffer->clip_top = int(pcmd->ClipRect.y - draw_data->DisplayPos.y);
-			hl_cmd_buffer->clip_width = int(pcmd->ClipRect.z - pcmd->ClipRect.x);
-			hl_cmd_buffer->clip_height = int(pcmd->ClipRect.w - pcmd->ClipRect.y);
+			const FramebufferClipRect clip = makeFramebufferClipRect(
+				pcmd->ClipRect.x,
+				pcmd->ClipRect.y,
+				pcmd->ClipRect.z,
+				pcmd->ClipRect.w,
+				draw_data->DisplayPos.x,
+				draw_data->DisplayPos.y,
+				draw_data->FramebufferScale.x,
+				draw_data->FramebufferScale.y,
+				render_list->framebuffer_width,
+				render_list->framebuffer_height
+			);
+			hl_cmd_buffer->elem_count = pcmd->UserCallback == nullptr && !clip.visible ? 0 : pcmd->ElemCount;
+			hl_cmd_buffer->clip_left = clip.left;
+			hl_cmd_buffer->clip_top = clip.top;
+			hl_cmd_buffer->clip_width = clip.width;
+			hl_cmd_buffer->clip_height = clip.height;
 
 			hl_cmd_buffer->reset_render_state = pcmd->UserCallback == ImDrawCallback_ResetRenderState;
 			if (pcmd->UserCallback != nullptr && !hl_cmd_buffer->reset_render_state) {

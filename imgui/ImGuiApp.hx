@@ -320,6 +320,7 @@ class ImGuiApp extends hxd.App {
 				var oldSceneWidth = s2d.width;
 				var oldSceneHeight = s2d.height;
 				var oldScaleMode = s2d.scaleMode;
+				var oldSceneWindow = s2d.window;
 
 				e.window = w;
 				e.resize(w.width, w.height);
@@ -341,6 +342,7 @@ class ImGuiApp extends hxd.App {
 
 				e.resize(oldW, oldH);
 				e.window = oldWin;
+				s2d.window = oldSceneWindow;
 				s2d.scaleMode = oldScaleMode;
 			}
 

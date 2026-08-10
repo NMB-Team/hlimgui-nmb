@@ -154,6 +154,26 @@ class RenderList {
 	**/
 	public var prepareTimeUs:Int;
 
+	/**
+		Dear ImGui framebuffer pixels per logical X unit for this render pass.
+	**/
+	public var framebufferScaleX:Single;
+
+	/**
+		Dear ImGui framebuffer pixels per logical Y unit for this render pass.
+	**/
+	public var framebufferScaleY:Single;
+
+	/**
+		Width of the Dear ImGui viewport framebuffer in pixels.
+	**/
+	public var framebufferWidth:Int;
+
+	/**
+		Height of the Dear ImGui viewport framebuffer in pixels.
+	**/
+	public var framebufferHeight:Int;
+
 	function new() {
 		lists = new hl.NativeArray(0);
 	}

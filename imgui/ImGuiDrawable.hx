@@ -99,6 +99,15 @@ class ImGuiDrawableBuffers {
 	/** Last native preparation time in microseconds, or zero without benchmark instrumentation. **/
 	public var lastPrepareTimeUs(default, null):Int = 0;
 
+	/** Current Dear ImGui framebuffer width in pixels. **/
+	public var framebufferWidth(default, null):Int = 0;
+
+	/** Current Dear ImGui framebuffer height in pixels. **/
+	public var framebufferHeight(default, null):Int = 0;
+
+	var framebufferScaleX:Single = 1;
+	var framebufferScaleY:Single = 1;
+
 	var noTexture:Texture;
 	final textures:Array<ManagedImGuiTexture> = [];
 	#if hlimgui_heaps_old_buffer_alloc
@@ -231,6 +240,10 @@ class ImGuiDrawableBuffers {
 		lastVertexStride = 0;
 		lastVertexBytes = 0;
 		lastPrepareTimeUs = 0;
+		framebufferWidth = 0;
+		framebufferHeight = 0;
+		framebufferScaleX = 1;
+		framebufferScaleY = 1;
 		#if hlimgui_render_benchmark
 		benchmarkSamples = 0;
 		#end
@@ -376,6 +389,10 @@ class ImGuiDrawableBuffers {
 		lastDrawListCount = renderList.size;
 		lastVertexCount = renderList.vertexCount;
 		lastPrepareTimeUs = renderList.prepareTimeUs;
+		framebufferWidth = renderList.framebufferWidth;
+		framebufferHeight = renderList.framebufferHeight;
+		framebufferScaleX = renderList.framebufferScaleX;
+		framebufferScaleY = renderList.framebufferScaleY;
 		#if hlimgui_heaps_old_buffer_alloc
 		lastVertexStride = 8 * 4;
 		lastVertexBytes = renderList.vertexCount * 8 * 4;
@@ -490,14 +507,40 @@ class ImGuiDrawableBuffers {
 				} else if (cmd.callback != null) {
 					e.setRenderZone(); // Make sure to reset clip rect.
 					cmd.callback(data, cmd, commandData);
-				} else if (cmd.elemCount > 0 && ctx.beginDrawObject(obj, cmd.textureID == null ? noTexture : cmd.textureID)) {
-					e.setRenderZone(cmd.clipLeft, cmd.clipTop, cmd.clipWidth, cmd.clipHeight);
+				} else if (cmd.elemCount > 0
+					&& ctx.beginDrawObject(obj, cmd.textureID == null ? noTexture : cmd.textureID)
+					&& setClipRect(e, ctx, cmd)) {
 					e.renderIndexed(vertex_buffers[i], index_buffers[i], Std.int(cmd.indexOffset / 3), Std.int(cmd.elemCount / 3));
 				}
 			}
 		}
 
 		e.setRenderZone();
+	}
+
+	function setClipRect(e:h3d.Engine, ctx:h2d.RenderContext, cmd:RenderCommand):Bool {
+		if (framebufferWidth <= 0 || framebufferHeight <= 0 || framebufferScaleX <= 0 || framebufferScaleY <= 0)
+			return false;
+
+		@:privateAccess final sceneScaleX = ctx.scene.viewportA * e.width * 0.5;
+		@:privateAccess final sceneScaleY = ctx.scene.viewportD * e.height * 0.5;
+		@:privateAccess final sceneOriginX = (ctx.scene.viewportX + 1) * e.width * 0.5;
+		@:privateAccess final sceneOriginY = (ctx.scene.viewportY + 1) * e.height * 0.5;
+
+		final clipMinX = Math.max(0, Math.min(e.width, sceneOriginX + cmd.clipLeft * sceneScaleX / framebufferScaleX));
+		final clipMinY = Math.max(0, Math.min(e.height, sceneOriginY + cmd.clipTop * sceneScaleY / framebufferScaleY));
+		final clipMaxX = Math.max(0, Math.min(e.width, sceneOriginX + (cmd.clipLeft + cmd.clipWidth) * sceneScaleX / framebufferScaleX));
+		final clipMaxY = Math.max(0, Math.min(e.height, sceneOriginY + (cmd.clipTop + cmd.clipHeight) * sceneScaleY / framebufferScaleY));
+
+		final left = Math.floor(clipMinX);
+		final top = Math.floor(clipMinY);
+		final right = Math.ceil(clipMaxX);
+		final bottom = Math.ceil(clipMaxY);
+		if (right <= left || bottom <= top)
+			return false;
+
+		e.setRenderZone(left, top, right - left, bottom - top);
+		return true;
 	}
 
 	/**
