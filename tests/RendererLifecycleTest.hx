@@ -152,7 +152,13 @@ class RendererLifecycleTest extends hxd.App {
 			if (expectedInitialized) {
 				if (buffers.noTexture == null || buffers.noTexture.isDisposed())
 					throw "Initialized renderer has no valid fallback texture";
-			} else if (buffers.bufferCount != 0 || buffers.vertex_buffers.length != 0 || buffers.index_buffers.length != 0 || buffers.commands.length != 0 || buffers.noTexture != null || buffers.textures.length != 0 || buffers.font_texture != null) {
+			} else if (buffers.bufferCount != 0
+				|| buffers.vertex_buffers.length != 0
+				|| buffers.index_buffers.length != 0
+				|| buffers.commands.length != 0
+				|| buffers.noTexture != null
+				|| buffers.managedTextures.iterator().hasNext()
+				|| buffers.font_texture != null) {
 				throw "Final renderer release retained reusable state";
 			}
 			if (ImGui.getCurrentContext() != null) {

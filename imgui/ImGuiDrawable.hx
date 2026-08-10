@@ -109,7 +109,7 @@ class ImGuiDrawableBuffers {
 	var framebufferScaleY:Single = 1;
 
 	var noTexture:Texture;
-	final textures:Array<ManagedImGuiTexture> = [];
+	final managedTextures:Map<Int, ManagedImGuiTexture> = [];
 	#if hlimgui_heaps_old_buffer_alloc
 	final legacyVertexData:Array<hxd.FloatBuffer> = [];
 	#end
@@ -230,9 +230,9 @@ class ImGuiDrawableBuffers {
 		#if hlimgui_heaps_old_buffer_alloc
 		legacyVertexData.resize(0);
 		#end
-		for (managed in textures)
+		for (managed in managedTextures)
 			managed.texture.dispose();
-		textures.resize(0);
+		managedTextures.clear();
 		noTexture = null;
 		font_texture = null;
 		lastVertexCount = 0;
@@ -267,7 +267,7 @@ class ImGuiDrawableBuffers {
 					final pixels = texturePixels(update);
 					final texture = Texture.fromPixels(pixels);
 					texture.preventAutoDispose();
-					textures.push({texture: texture, pixels: pixels});
+					managedTextures[update.uniqueId] = {texture: texture, pixels: pixels};
 					if (font_texture == null)
 						font_texture = texture;
 					#if hlimgui_cursor
@@ -275,32 +275,24 @@ class ImGuiDrawableBuffers {
 					#end
 					update.textureData.setTexture(texture);
 				case WantUpdates:
-					final managed = findTexture(update.textureId);
+					final managed = managedTextures[update.uniqueId];
 					if (managed == null)
 						throw 'Missing managed ImGui texture ${update.uniqueId}';
 					managed.pixels = texturePixels(update);
 					managed.texture.uploadPixels(managed.pixels);
 					update.textureData.setUpdated();
 				case WantDestroy:
-					final managed = findTexture(update.textureId);
+					final managed = managedTextures[update.uniqueId];
 					if (managed != null) {
 						managed.texture.dispose();
-						textures.remove(managed);
 						if (font_texture == managed.texture)
 							font_texture = null;
+						managedTextures.remove(update.uniqueId);
 					}
 					update.textureData.setDestroyed();
 				case Ok | Destroyed:
 			}
 		}
-	}
-
-	private function findTexture(textureId:ImTextureID):Null<ManagedImGuiTexture> {
-		final texture:Texture = cast textureId;
-		for (managed in textures)
-			if (managed.texture == texture)
-				return managed;
-		return null;
 	}
 
 	private function texturePixels(update:RenderTextureData):hxd.Pixels {
