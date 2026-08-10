@@ -27,6 +27,13 @@ class ImGuiApp extends hxd.App {
 	var imguiInitialized = false;
 	var imguiScene:ImGuiScene;
 	var imguiDrawable:imgui.ImGuiDrawable;
+	#if multidriver
+	var mainWindow:hxd.Window;
+	var mainWindowEventTarget:hxd.Event -> Void;
+	var mainWindowResizeTarget:Void -> Void;
+	var mainWindowMoveTarget:Void -> Void;
+	var previousMainWindowMove:Void -> Void;
+	#end
 
 	/**
 		Called right after ImGui.newFrame().
@@ -59,22 +66,27 @@ class ImGuiApp extends hxd.App {
 		var v = pio.setMainViewport(hxd.Window.getInstance());
 		if (v != null) {
 			var w = hxd.Window.getInstance();
+			mainWindow = w;
+			previousMainWindowMove = w.onMove;
 
-			w.onMove = () -> {
+			mainWindowMoveTarget = () -> {
 				v.PlatformRequestMove = true;
 			}
+			w.onMove = mainWindowMoveTarget;
 
 			@:privateAccess
 			{
 				var d = imguiDrawable;
-				w.addEventTarget((e:hxd.Event) -> {
+				mainWindowEventTarget = (e:hxd.Event) -> {
 					d.onMultiWindowEvent(w, e, v);
-				});
+				};
+				w.addEventTarget(mainWindowEventTarget);
 			}
 
-			w.addResizeEvent(() -> {
+			mainWindowResizeTarget = () -> {
 				v.PlatformRequestResize = true;
-			});
+			};
+			w.addResizeEvent(mainWindowResizeTarget);
 		}
 
 		#if (hlsdl || limen)
@@ -429,10 +441,48 @@ class ImGuiApp extends hxd.App {
 	}
 
 	override function dispose() {
-		if (imguiScene != null)
+		#if multidriver
+		disposeMultidriver();
+		#end
+		if (imguiDrawable != null) {
+			imguiDrawable.dispose();
+			imguiDrawable = null;
+		}
+		if (imguiScene != null) {
+			sevents.removeScene(imguiScene);
 			imguiScene.dispose();
+			imguiScene = null;
+		}
+		imguiInitialized = false;
 		super.dispose();
 	}
+
+	#if multidriver
+	function disposeMultidriver() {
+		if (mainWindow != null) {
+			if (mainWindowEventTarget != null)
+				mainWindow.removeEventTarget(mainWindowEventTarget);
+			if (mainWindowResizeTarget != null)
+				mainWindow.removeResizeEvent(mainWindowResizeTarget);
+			if (Reflect.compareMethods(mainWindow.onMove, mainWindowMoveTarget))
+				mainWindow.onMove = previousMainWindowMove;
+			mainWindow = null;
+			mainWindowEventTarget = null;
+			mainWindowResizeTarget = null;
+			mainWindowMoveTarget = null;
+			previousMainWindowMove = null;
+		}
+
+		if (ImGui.getCurrentContext() != null) {
+			ImGui.destroyPlatformWindows();
+			ImGui.getPlatformIO().setMainViewport(null);
+			var io = ImGui.getIO();
+			io.ConfigFlags &= ~ImGuiConfigFlags.ViewportsEnable;
+			io.BackendFlags &= ~(ImGuiBackendFlags.PlatformHasViewports | ImGuiBackendFlags.RendererHasViewports | ImGuiBackendFlags.HasMouseHoveredViewport);
+		}
+		ImGui.clearPlatformCallbacks();
+	}
+	#end
 }
 
 private class ImGuiScene extends h2d.Scene {
@@ -462,7 +512,11 @@ private class ImGuiScene extends h2d.Scene {
 	override public function handleEvent(e:hxd.Event, last:hxd.SceneEvents.Interactive):hxd.SceneEvents.Interactive {
 		if (last == overlay)
 			return null;
-		@:privateAccess drawable.onEvent(e);
+		@:privateAccess {
+			if (drawable.disposed)
+				return null;
+			drawable.onEvent(e);
+		}
 		var io = ImGui.getIO();
 		return if (io.WantCaptureMouse
 			&& (e.kind == EPush || e.kind == ERelease || e.kind == EWheel || e.kind == EMove || e.kind == ECheck)

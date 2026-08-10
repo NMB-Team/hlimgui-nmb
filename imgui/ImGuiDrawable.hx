@@ -110,7 +110,12 @@ class ImGuiDrawableBuffers {
 
 	var commandData:RenderCommandCallbackData = @:privateAccess new RenderCommandCallbackData();
 
-	private var initialized:Bool;
+	private var initialized:Bool = false;
+	private var ownerCount:Int = 0;
+	private var compatibilityOwner:Bool = false;
+	#if hlimgui_cursor
+	private var previousCursorHandler:hxd.Cursor -> Void;
+	#end
 
 	/**
 		Gets or sets font texture.
@@ -125,12 +130,55 @@ class ImGuiDrawableBuffers {
 	#end
 
 	/**
+		Acquires shared renderer ownership, initializing its resources for the first owner.
+	**/
+	public function acquire(addDefaultFont:Bool = true) {
+		if (ownerCount == 0) {
+			try {
+				initializeInternal(addDefaultFont);
+			} catch (error:Dynamic) {
+				disposeInternal();
+				throw error;
+			}
+		}
+		ownerCount++;
+	}
+
+	/**
+		Releases shared renderer ownership and its resources after the final owner.
+	**/
+	public function release() {
+		if (ownerCount <= 0)
+			throw "ImGui renderer release without acquire";
+
+		ownerCount--;
+		if (ownerCount == 0)
+			disposeInternal();
+	}
+
+	/**
 		Initializes this instance and its native resources.
 	**/
 	public function initialize(addDefaultFont:Bool = true) {
-		if (this.initialized) {
+		if (compatibilityOwner)
 			return;
-		}
+		acquire(addDefaultFont);
+		compatibilityOwner = true;
+	}
+
+	/**
+		Releases resources acquired through `initialize()`.
+	**/
+	public function dispose() {
+		if (!compatibilityOwner)
+			return;
+		compatibilityOwner = false;
+		release();
+	}
+
+	private function initializeInternal(addDefaultFont:Bool) {
+		if (initialized)
+			throw "ImGui renderer initialized without a final release";
 
 		ImGui.provideTypes();
 		ImGui.ensureContext();
@@ -141,44 +189,62 @@ class ImGuiDrawableBuffers {
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures | ImGuiBackendFlags.RendererHasVtxOffset;
 
 		noTexture = Tile.fromColor(0xffffff).getTexture();
-		this.initialized = true;
+		#if hlimgui_cursor
+		previousCursorHandler = hxd.System.setCursor;
+		hxd.System.setCursor = updateCursor;
+		#end
+		initialized = true;
 	}
 
-	/**
-		Releases resources owned by this instance.
-	**/
-	public function dispose() {
-		for (index_buffer in this.index_buffers) {
+	private function disposeInternal() {
+		ImGui.setRenderCallback(null);
+		ImGui.setTextureCallback(null);
+		if (ImGui.getCurrentContext() != null) {
+			var io = ImGui.getIO();
+			io.BackendFlags &= ~(ImGuiBackendFlags.RendererHasTextures | ImGuiBackendFlags.RendererHasVtxOffset);
+			ImGui.invalidateRendererTextures();
+		}
+
+		bufferCount = 0;
+		commands = [];
+		commandData.ctx = null;
+		commandData.obj = null;
+		for (index_buffer in index_buffers) {
 			index_buffer.dispose();
 		}
-		this.index_buffers = [];
+		index_buffers = [];
 
-		for (vertex_buffer in this.vertex_buffers) {
+		for (vertex_buffer in vertex_buffers) {
 			vertex_buffer.dispose();
 		}
-		this.vertex_buffers = [];
+		vertex_buffers = [];
 		#if hlimgui_heaps_old_buffer_alloc
 		legacyVertexData.resize(0);
 		#end
-		this.commands = [];
-
-		ImGui.setRenderCallback(null);
-		ImGui.setTextureCallback(null);
-		ImGui.invalidateRendererTextures();
 		for (managed in textures)
 			managed.texture.dispose();
 		textures.resize(0);
+		noTexture = null;
 		font_texture = null;
+		lastVertexCount = 0;
+		lastDrawListCount = 0;
+		lastVertexStride = 0;
+		lastVertexBytes = 0;
+		lastPrepareTimeUs = 0;
+		#if hlimgui_render_benchmark
+		benchmarkSamples = 0;
+		#end
 		#if hlimgui_cursor
 		cursor_map.clear();
+		if (Reflect.compareMethods(hxd.System.setCursor, updateCursor))
+			hxd.System.setCursor = previousCursorHandler;
+		previousCursorHandler = null;
 		#end
 
-		this.initialized = false;
+		initialized = false;
 	}
 
-	private function new() {
-		this.initialized = false;
-	}
+	private function new() {}
 
 	private function updateTextures(textureList:RenderTextureList) {
 		for (i in 0...textureList.size) {
@@ -271,6 +337,36 @@ class ImGuiDrawableBuffers {
 					}
 				}
 			cursor_map[i] = hxd.Cursor.Custom(new hxd.Cursor.CustomCursor([cursorBitmap], 0, Std.int(cursor.offset.x), Std.int(cursor.offset.y)));
+		}
+	}
+
+	private function updateCursor(cursor:hxd.Cursor) {
+		if (ImGui.getCurrentContext() == null) {
+			previousCursorHandler(cursor);
+			return;
+		}
+
+		switch (ImGui.getMouseCursor()) {
+			case None:
+				hxd.System.setNativeCursor(Hide);
+			case Arrow:
+				hxd.System.setNativeCursor(cursor);
+			case TextInput:
+				hxd.System.setNativeCursor(TextInput);
+			case ResizeAll:
+				hxd.System.setNativeCursor(Move);
+			case Hand:
+				hxd.System.setNativeCursor(Button);
+			// case ResizeNS:
+			// case ResizeEW:
+			// case ResizeNESW:
+			// case ResizeNWSE:
+			// case NotAllowed:
+			case expected:
+				var mappedCursor = cursor_map[expected];
+				if (mappedCursor != null)
+					cursor = mappedCursor;
+				hxd.System.setNativeCursor(cursor);
 		}
 	}
 	#end
@@ -450,10 +546,12 @@ class ImGuiDrawable extends h2d.Drawable {
 	#if !hlimgui_heaps_old_buffer_alloc
 	final positionShader:ImGuiPositionShader;
 	#end
-	#if hlimgui_cursor
-	var cursorMap:Map<ImGuiMouseCursor, hxd.Cursor> = [];
+	#if !multidriver
+	private var eventScene:h2d.Scene;
 	#end
 	private var scene_size:{width:Int, height:Int};
+	private var rendererAcquired:Bool = false;
+	private var disposed:Bool = false;
 
 	/**
 		Creates a new `ImGuiDrawable` instance.
@@ -464,77 +562,94 @@ class ImGuiDrawable extends h2d.Drawable {
 		positionShader = addShader(new ImGuiPositionShader());
 		positionShader.enabled = false;
 		#end
-		ImGuiDrawableBuffers.instance.initialize(addDefaultFont);
+		try {
+			ImGuiDrawableBuffers.instance.acquire(addDefaultFont);
+			rendererAcquired = true;
 
-		var scene = getScene();
-		var io = ImGui.getIO();
-		io.DisplaySize.x = scene.width;
-		io.DisplaySize.y = scene.height;
-		this.scene_size = {width: scene.width, height: scene.height};
+			var scene = getScene();
+			var io = ImGui.getIO();
+			io.DisplaySize.x = scene.width;
+			io.DisplaySize.y = scene.height;
+			this.scene_size = {width: scene.width, height: scene.height};
 
-		this.keycode_map = [
-			KeyCode.TAB => ImGuiKey.Tab,
-			KeyCode.LEFT => ImGuiKey.LeftArrow,
-			KeyCode.RIGHT => ImGuiKey.RightArrow,
-			KeyCode.UP => ImGuiKey.UpArrow,
-			KeyCode.DOWN => ImGuiKey.DownArrow,
-			KeyCode.PGUP => ImGuiKey.PageUp,
-			KeyCode.PGDOWN => ImGuiKey.PageDown,
-			KeyCode.HOME => ImGuiKey.Home,
-			KeyCode.END => ImGuiKey.End,
-			KeyCode.INSERT => ImGuiKey.Insert,
-			KeyCode.DELETE => ImGuiKey.Delete,
-			KeyCode.BACKSPACE => ImGuiKey.Backspace,
-			KeyCode.SPACE => ImGuiKey.Space,
-			KeyCode.ENTER => ImGuiKey.Enter,
-			KeyCode.ESCAPE => ImGuiKey.Escape,
-			KeyCode.NUMPAD_ENTER => ImGuiKey.KeypadEnter,
-			KeyCode.LSHIFT => ImGuiKey.LeftShift,
-			KeyCode.RSHIFT => ImGuiKey.RightShift,
-			KeyCode.LALT => ImGuiKey.LeftAlt,
-			KeyCode.RALT => ImGuiKey.RightAlt,
-			KeyCode.LCTRL => ImGuiKey.LeftCtrl,
-			KeyCode.RCTRL => ImGuiKey.RightCtrl,
-			KeyCode.F1 => ImGuiKey.F1,
-			KeyCode.F2 => ImGuiKey.F2,
-			KeyCode.F3 => ImGuiKey.F3,
-			KeyCode.F4 => ImGuiKey.F4,
-			KeyCode.F5 => ImGuiKey.F5,
-			KeyCode.F6 => ImGuiKey.F6,
-			KeyCode.F7 => ImGuiKey.F7,
-			KeyCode.F8 => ImGuiKey.F8,
-			KeyCode.F9 => ImGuiKey.F9,
-			KeyCode.F10 => ImGuiKey.F10,
-			KeyCode.F11 => ImGuiKey.F11,
-			KeyCode.F12 => ImGuiKey.F12,
-		];
+			this.keycode_map = [
+				KeyCode.TAB => ImGuiKey.Tab,
+				KeyCode.LEFT => ImGuiKey.LeftArrow,
+				KeyCode.RIGHT => ImGuiKey.RightArrow,
+				KeyCode.UP => ImGuiKey.UpArrow,
+				KeyCode.DOWN => ImGuiKey.DownArrow,
+				KeyCode.PGUP => ImGuiKey.PageUp,
+				KeyCode.PGDOWN => ImGuiKey.PageDown,
+				KeyCode.HOME => ImGuiKey.Home,
+				KeyCode.END => ImGuiKey.End,
+				KeyCode.INSERT => ImGuiKey.Insert,
+				KeyCode.DELETE => ImGuiKey.Delete,
+				KeyCode.BACKSPACE => ImGuiKey.Backspace,
+				KeyCode.SPACE => ImGuiKey.Space,
+				KeyCode.ENTER => ImGuiKey.Enter,
+				KeyCode.ESCAPE => ImGuiKey.Escape,
+				KeyCode.NUMPAD_ENTER => ImGuiKey.KeypadEnter,
+				KeyCode.LSHIFT => ImGuiKey.LeftShift,
+				KeyCode.RSHIFT => ImGuiKey.RightShift,
+				KeyCode.LALT => ImGuiKey.LeftAlt,
+				KeyCode.RALT => ImGuiKey.RightAlt,
+				KeyCode.LCTRL => ImGuiKey.LeftCtrl,
+				KeyCode.RCTRL => ImGuiKey.RightCtrl,
+				KeyCode.F1 => ImGuiKey.F1,
+				KeyCode.F2 => ImGuiKey.F2,
+				KeyCode.F3 => ImGuiKey.F3,
+				KeyCode.F4 => ImGuiKey.F4,
+				KeyCode.F5 => ImGuiKey.F5,
+				KeyCode.F6 => ImGuiKey.F6,
+				KeyCode.F7 => ImGuiKey.F7,
+				KeyCode.F8 => ImGuiKey.F8,
+				KeyCode.F9 => ImGuiKey.F9,
+				KeyCode.F10 => ImGuiKey.F10,
+				KeyCode.F11 => ImGuiKey.F11,
+				KeyCode.F12 => ImGuiKey.F12,
+			];
 
-		// Add letters
-		for (ko in 0...26)
-			keycode_map[KeyCode.A + ko] = ImGuiKey.A + ko;
+			// Add letters
+			for (ko in 0...26)
+				keycode_map[KeyCode.A + ko] = ImGuiKey.A + ko;
 
-		#if !multidriver
-		scene.addEventListener(onEvent);
-		#end
+			#if !multidriver
+			eventScene = scene;
+			scene.addEventListener(onEvent);
+			#end
 
-		#if hlimgui_cursor
-		hxd.System.setCursor = updateCursor;
-		#end
-
-		this.wheel_inverted = false;
+			this.wheel_inverted = false;
+		} catch (error:Dynamic) {
+			dispose();
+			throw error;
+		}
 	}
 
 	/**
 		Releases resources owned by this instance.
 	**/
 	public function dispose() {
-		ImGuiDrawableBuffers.instance.dispose();
+		if (disposed)
+			return;
+		disposed = true;
+		#if !multidriver
+		if (eventScene != null) {
+			eventScene.removeEventListener(onEvent);
+			eventScene = null;
+		}
+		#end
+		if (rendererAcquired) {
+			rendererAcquired = false;
+			ImGuiDrawableBuffers.instance.release();
+		}
 	}
 
 	/**
 		Updates this instance for the current frame.
 	**/
 	public function update(dt:Float) {
+		if (disposed)
+			return;
 		var io = ImGui.getIO();
 
 		io.DeltaTime = dt > 0 ? dt : 1 / 60;
@@ -569,33 +684,6 @@ class ImGuiDrawable extends h2d.Drawable {
 		#end
 	}
 
-	#if hlimgui_cursor
-	function updateCursor(cursor:hxd.Cursor) {
-		switch (ImGui.getMouseCursor()) {
-			case None:
-				hxd.System.setNativeCursor(Hide);
-			case Arrow:
-				hxd.System.setNativeCursor(cursor);
-			case TextInput:
-				hxd.System.setNativeCursor(TextInput);
-			case ResizeAll:
-				hxd.System.setNativeCursor(Move);
-			case Hand:
-				hxd.System.setNativeCursor(Button);
-			// case ResizeNS:
-			// case ResizeEW:
-			// case ResizeNESW:
-			// case ResizeNWSE:
-			// case NotAllowed:
-			case expected:
-				var cur = ImGuiDrawableBuffers.instance.cursor_map[expected];
-				if (cur != null)
-					cursor = cur;
-				hxd.System.setNativeCursor(cursor);
-		}
-	}
-	#end
-
 	#if multidriver
 	// When in multidriver mode, mouse cooridnates operate in absoluate space instead of relative.
 	// Adjust the event accordingly
@@ -604,6 +692,8 @@ class ImGuiDrawable extends h2d.Drawable {
 		Forwards a platform event to the matching Dear ImGui viewport.
 	**/
 	public function onMultiWindowEvent(window:hxd.Window, originalEvent:hxd.Event, viewport:ImGuiViewport) {
+		if (disposed)
+			return;
 		var event = new hxd.Event(originalEvent.kind, originalEvent.relX, originalEvent.relY);
 		event.button = originalEvent.button;
 		event.wheelDelta = originalEvent.wheelDelta;
@@ -630,6 +720,8 @@ class ImGuiDrawable extends h2d.Drawable {
 	#end
 
 	private function onEvent(event:hxd.Event) {
+		if (disposed)
+			return;
 		var io = ImGui.getIO();
 		switch (event.kind) {
 			#if !multidriver
@@ -710,7 +802,8 @@ class ImGuiDrawable extends h2d.Drawable {
 	}
 
 	override function draw(ctx:h2d.RenderContext) {
-		ImGuiDrawableBuffers.instance.draw(ctx, this);
+		if (!disposed)
+			ImGuiDrawableBuffers.instance.draw(ctx, this);
 	}
 }
 #end

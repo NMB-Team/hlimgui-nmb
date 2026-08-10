@@ -8792,6 +8792,11 @@ class ImGui {
 	public static function destroyPlatformWindows():Void {};
 
 	/**
+		Clears callbacks installed by the platform and viewport renderer backends.
+	**/
+	@:noCompletion public static function clearPlatformCallbacks():Void {};
+
+	/**
 		This is a helper for backends.
 	**/
 	public static function findViewportByID(viewport_id:ImGuiID):ImGuiViewport {
