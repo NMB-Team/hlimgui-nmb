@@ -1,6 +1,0 @@
--cp tests
--lib heaps
--lib limen
--main ImGuiAppLifecycleTest
--hl extension/build/imgui-app-lifecycle-test.hl
--D hlimgui

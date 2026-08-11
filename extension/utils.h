@@ -43,8 +43,6 @@
 	DEFINE_PRIM(t, get_##name, _NO_ARG) \
 	DEFINE_PRIM(_VOID, set_##name, args)
 
-int unicodeSizeInUTF8(vstring* hl_string);
-void unicodeToUTF8Buffer(vstring* hl_string, char* out);
 std::string unicodeToUTF8(vstring* hl_string);
 
 // Converters that handle nullptr with default value
@@ -76,7 +74,7 @@ inline void assertArraySize(varray* arr, int size) {
 		throw_error("Invalid array size");
 }
 inline void assertArraySizeRange(varray* arr, int size_min, int size_max) {
-	if (arr->size < size_min && arr->size > size_max)
+	if (arr->size < size_min || arr->size > size_max)
 		throw_error("Invalid array size");
 }
 

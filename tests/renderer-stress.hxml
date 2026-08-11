@@ -1,8 +1,0 @@
--cp tests
--lib heaps
--lib limen
--main RendererStressTest
--hl extension/build/renderer-stress-test.hl
--D hlimgui
--D hlimgui_render_benchmark
--D resourcesPath=extension/lib/imgui/misc/fonts

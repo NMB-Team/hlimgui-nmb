@@ -1,66 +1,48 @@
 #include "utils.h"
 
-int unicodeSizeInUTF8(vstring* hl_string) {
-	uchar* c = hl_string->bytes;
-	uchar* end = c + hl_string->length;
-	int utf8bytes = 0;
-	while (c != end) {
-		auto v = *c;
-		if (v < 0x80)
-			utf8bytes++;
-		else if (v < 0x800)
-			utf8bytes += 2;
-		else if (v >= 0xD800 && v <= 0xDFFF) {
-			utf8bytes += 4;
-			c++;
-		} else
-			utf8bytes += 3;
-		c++;
+namespace {
+void appendUTF8(std::string& result, unsigned int codePoint) {
+	if (codePoint <= 0x7F) {
+		result += static_cast<char>(codePoint);
+	} else if (codePoint <= 0x7FF) {
+		result += static_cast<char>(0xC0 | (codePoint >> 6));
+		result += static_cast<char>(0x80 | (codePoint & 0x3F));
+	} else if (codePoint <= 0xFFFF) {
+		result += static_cast<char>(0xE0 | (codePoint >> 12));
+		result += static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F));
+		result += static_cast<char>(0x80 | (codePoint & 0x3F));
+	} else {
+		result += static_cast<char>(0xF0 | (codePoint >> 18));
+		result += static_cast<char>(0x80 | ((codePoint >> 12) & 0x3F));
+		result += static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F));
+		result += static_cast<char>(0x80 | (codePoint & 0x3F));
 	}
-	return utf8bytes;
 }
-// UNSAFE API - no size checks are done! Use `unicodeSizeInUTF8` to estimate the output buffer size and alloc accordingly!
-void unicodeToUTF8Buffer(vstring* hl_string, char* out) {
-	uchar* c = hl_string->bytes;
-	uchar* end = c + hl_string->length;
-	int p = 0;
-	while (c != end) {
-		unsigned int v = (unsigned int)*c;
-		if (v <= 0x7F)
-			out[p++] = (char)v;
-		else if (v <= 0x7FF) {
-			out[p++] = (char)(0xC0 | (v >> 6));
-			out[p++] = (char)(0x80 | (v & 0x3F));
-		} else if (v >= 0xD800 && v <= 0xDFFF) {
-			int k = ((((int)v - 0xD800) << 10) | (((int)*++c) - 0xDC00)) + 0x10000;
-			out[p++] = (char)(0xF0 | (k >> 18));
-			out[p++] = (char)(0x80 | ((k >> 12) & 0x3F));
-			out[p++] = (char)(0x80 | ((k >> 6) & 0x3F));
-			out[p++] = (char)(0x80 | (k & 0x3F));
-		} else {
-			out[p++] = (char)(0xE0 | (v >> 12));
-			out[p++] = (char)(0x80 | ((v >> 6) & 0x3F));
-			out[p++] = (char)(0x80 | (v & 0x3F));
-		}
-		c++;
-	}
 }
 
 std::string unicodeToUTF8(vstring* hl_string) {
 	std::string result;
+	result.reserve(static_cast<size_t>(hl_string->length) * 3);
 
 	for (int i = 0; i < hl_string->length; i++) {
-		auto code = ((unsigned short*)hl_string->bytes)[i];
-		if (code <= 0x7F) {
-			result += char(code);
-		} else if (code <= 0x7FF) {
-			result += char(0xC0 | (code >> 6));   /* 110xxxxx */
-			result += char(0x80 | (code & 0x3F)); /* 10xxxxxx */
-		} else {
-			result += char(0xE0 | (code >> 12));         /* 1110xxxx */
-			result += char(0x80 | ((code >> 6) & 0x3F)); /* 10xxxxxx */
-			result += char(0x80 | (code & 0x3F));        /* 10xxxxxx */
+		unsigned int codePoint = hl_string->bytes[i];
+		if (codePoint >= 0xD800 && codePoint <= 0xDBFF) {
+			if (i + 1 < hl_string->length) {
+				const unsigned int lowSurrogate = hl_string->bytes[i + 1];
+				if (lowSurrogate >= 0xDC00 && lowSurrogate <= 0xDFFF) {
+					codePoint = 0x10000 + ((codePoint - 0xD800) << 10) + (lowSurrogate - 0xDC00);
+					i++;
+				} else {
+					codePoint = 0xFFFD;
+				}
+			} else {
+				codePoint = 0xFFFD;
+			}
+		} else if (codePoint >= 0xDC00 && codePoint <= 0xDFFF) {
+			codePoint = 0xFFFD;
 		}
+
+		appendUTF8(result, codePoint);
 	}
 
 	return result;

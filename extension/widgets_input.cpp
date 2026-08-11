@@ -17,13 +17,13 @@ static char* textBuffer = NULL;
 static int textBufferSize = 0;
 
 void stringToBuffer(vstring** str) {
-	int len = unicodeSizeInUTF8(*str) + 1;
+	const std::string utf8 = unicodeToUTF8(*str);
+	int len = static_cast<int>(utf8.size()) + 1;
 	if (len >= textBufferSize) {
 		textBufferSize = (len / BUFFER_RESIZE_STEP) * BUFFER_RESIZE_STEP + BUFFER_RESIZE_STEP;
 		textBuffer = (char*)realloc(textBuffer, textBufferSize);
 	}
-	unicodeToUTF8Buffer(*str, textBuffer);
-	textBuffer[len - 1] = 0;
+	memcpy(textBuffer, utf8.c_str(), len);
 }
 
 void bufferToString(vstring** str) {
@@ -120,18 +120,18 @@ HL_PRIM bool HL_NAME(input_scalar_n)(vstring* label, int type, varray* v, vdynam
 		case ImGuiDataType_Float:
 			{
 				float fstep = step == nullptr ? 0.0f : hl_dyn_castf(&step->v, step->t);
-				float fstep_fast = step == nullptr ? 0.0f : hl_dyn_castf(&step_fast->v, step_fast->t);
+				float fstep_fast = step_fast == nullptr ? 0.0f : hl_dyn_castf(&step_fast->v, step_fast->t);
 				return ImGui::InputScalarN(convertString(label), type, hl_aptr(v, float), v->size, fstep > 0.0f ? &fstep : NULL, fstep_fast > 0.0f ? &fstep_fast : NULL, convertString(format), flags);
 			}
 		case ImGuiDataType_Double:
 			{
 				double dstep = step == nullptr ? 0.0 : hl_dyn_castd(&step->v, step->t);
-				double dstep_fast = step == nullptr ? 0.0 : hl_dyn_castd(&step_fast->v, step_fast->t);
+				double dstep_fast = step_fast == nullptr ? 0.0 : hl_dyn_castd(&step_fast->v, step_fast->t);
 				return ImGui::InputScalarN(convertString(label), type, hl_aptr(v, double), v->size, dstep > 0.0 ? &dstep : NULL, dstep_fast > 0.0 ? &dstep_fast : NULL, convertString(format), flags);
 			}
 		default:
 			int istep = step == nullptr ? 0 : hl_dyn_casti(&step->v, step->t, &hlt_i32);
-			int istep_fast = step == nullptr ? 0 : hl_dyn_casti(&step->v, step->t, &hlt_i32);
+			int istep_fast = step_fast == nullptr ? 0 : hl_dyn_casti(&step_fast->v, step_fast->t, &hlt_i32);
 			return ImGui::InputScalarN(convertString(label), type, hl_aptr(v, void), v->size, istep > 0 ? &istep : NULL, istep_fast > 0 ? &istep_fast : NULL, convertString(format), flags);
 	}
 }

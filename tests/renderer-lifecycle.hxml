@@ -1,6 +1,0 @@
--cp tests
--lib heaps
--lib limen
--main RendererLifecycleTest
--hl extension/build/renderer-lifecycle-test.hl
--D hlimgui
