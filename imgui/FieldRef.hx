@@ -23,10 +23,18 @@ typedef FieldRefPtr<T> = hl.Ref<T>;
 @:noCompletion
 @:hlNative("hlimgui")
 class FieldRefNative {
+	public static function fieldref_i8_hash(data:Dynamic, fieldHash:Int):hl.Ref<hl.UI8> {
+		return null;
+	}
+
 	/**
 		Returns a mutable native reference to `field` on `data`.
 	**/
 	public static function fieldref_i8(data:Dynamic, field:String):hl.Ref<hl.UI8> {
+		return null;
+	}
+
+	public static function fieldref_i16_hash(data:Dynamic, fieldHash:Int):hl.Ref<hl.UI16> {
 		return null;
 	}
 
@@ -37,10 +45,18 @@ class FieldRefNative {
 		return null;
 	}
 
+	public static function fieldref_i32_hash(data:Dynamic, fieldHash:Int):hl.Ref<Int> {
+		return null;
+	}
+
 	/**
 		Returns a mutable native reference to `field` on `data`.
 	**/
 	public static function fieldref_i32(data:Dynamic, field:String):hl.Ref<Int> {
+		return null;
+	}
+
+	public static function fieldref_i64_hash(data:Dynamic, fieldHash:Int):hl.Ref<hl.I64> {
 		return null;
 	}
 
@@ -51,10 +67,18 @@ class FieldRefNative {
 		return null;
 	}
 
+	public static function fieldref_f32_hash(data:Dynamic, fieldHash:Int):hl.Ref<Single> {
+		return null;
+	}
+
 	/**
 		Returns a mutable native reference to `field` on `data`.
 	**/
 	public static function fieldref_f32(data:Dynamic, field:String):hl.Ref<Single> {
+		return null;
+	}
+
+	public static function fieldref_f64_hash(data:Dynamic, fieldHash:Int):hl.Ref<Float> {
 		return null;
 	}
 
@@ -65,6 +89,10 @@ class FieldRefNative {
 		return null;
 	}
 
+	public static function fieldref_bool_hash(data:Dynamic, fieldHash:Int):hl.Ref<Bool> {
+		return null;
+	}
+
 	/**
 		Returns a mutable native reference to `field` on `data`.
 	**/
@@ -72,10 +100,18 @@ class FieldRefNative {
 		return null;
 	}
 
+	public static function fieldref_bytes_hash(data:Dynamic, fieldHash:Int):hl.Ref<hl.Bytes> {
+		return null;
+	}
+
 	/**
 		Returns a mutable native reference to `field` on `data`.
 	**/
 	public static function fieldref_bytes(data:Dynamic, field:String):hl.Ref<hl.Bytes> {
+		return null;
+	}
+
+	public static function fieldref_dyn_hash(data:Dynamic, fieldHash:Int):hl.Ref<Dynamic> {
 		return null;
 	}
 
@@ -95,6 +131,23 @@ class FieldRefNative {
 **/
 @:forward
 abstract FieldRef<T>(FieldRefPtr<T>) from FieldRefPtr<T> to FieldRefPtr<T> {
+	@:noCompletion
+	public static macro function hashFieldName(field:ExprOf<String>):ExprOf<Int> {
+		return switch (field.expr) {
+			case EConst(CString(name, _)):
+				macro $v{hashName(name)};
+			default:
+				Context.error("Field name must be a string literal", field.pos);
+		}
+	}
+
+	static function hashName(field:String):Int {
+		var hash:haxe.Int32 = 0;
+		for (i in 0...field.length)
+			hash = hash * 223 + field.charCodeAt(i);
+		return hash % 0x1FFFFF7B;
+	}
+
 	@:from
 
 	/**
@@ -123,7 +176,7 @@ abstract FieldRef<T>(FieldRefPtr<T>) from FieldRefPtr<T> to FieldRefPtr<T> {
 			default:
 				// trace(te.t);
 		}
-		method = "fieldref_" + method;
+		method = "fieldref_" + method + "_hash";
 		e = Context.getTypedExpr(te);
 
 		switch (e.expr) {
@@ -135,13 +188,13 @@ abstract FieldRef<T>(FieldRefPtr<T>) from FieldRefPtr<T> to FieldRefPtr<T> {
 			case EConst(CIdent("null")):
 				return e; // null pass
 			case EField(d, field, _):
-				return macro imgui.FieldRef.FieldRefNative.$method($d, $v{field});
+				return macro imgui.FieldRef.FieldRefNative.$method($d, $v{hashName(field)});
 			case EConst(Constant.CIdent(fname)):
 				var tvars = haxe.macro.Context.getLocalTVars();
 				if (tvars.exists(fname) || fname == "this")
 					return macro hl.Ref.make($e);
 				else
-					return macro imgui.FieldRef.FieldRefNative.$method(this, $v{fname}); // Omitted `this.`
+					return macro imgui.FieldRef.FieldRefNative.$method(this, $v{hashName(fname)}); // Omitted `this.`
 			default:
 				throw "Cannot make FieldRef from this expression! Supported types: Local variables and instance fields. Use `wref` for properties.";
 		}

@@ -61,88 +61,111 @@ void* get_obj_field(vdynamic* d, int hfield) {
 	return nullptr;
 }
 
-// vstring* is 2-char wide
-HL_PRIM int hl_hash_vstring(uchar* name) {
-	int h = 0;
-	// ASCII should be enough
-	while (*name) {
-		h = 223 * h + (unsigned)*name;
-		name++;
-	}
-	h %= 0x1FFFFF7B;
-	return h;
-}
-
-HL_PRIM void* HL_NAME(fieldref_hash)(vdynamic* d, int hfield) {
-	return get_obj_field(d, hfield);
-}
-
-HL_PRIM void* HL_NAME(fieldref)(vdynamic* d, vstring* field) {
-	if (field == nullptr)
-		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
-}
-
 HL_PRIM void* HL_NAME(fieldref_dyn)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_dyn_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_i8)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_i8_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_i16)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_i16_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_i32)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_i32_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_i64)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_i64_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_f32)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_f32_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_f64)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_f64_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_bool)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_bool_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 HL_PRIM void* HL_NAME(fieldref_bytes)(vdynamic* d, vstring* field) {
 	if (field == nullptr)
 		return d;
-	return get_obj_field(d, hl_hash_vstring(field->bytes));
+	return get_obj_field(d, hl_hash_gen(field->bytes, false));
+}
+
+HL_PRIM void* HL_NAME(fieldref_bytes_hash)(vdynamic* d, int hfield) {
+	return get_obj_field(d, hfield);
 }
 
 DEFINE_PRIM(_REF(_DYN), fieldref_dyn, _DYN _STRING);
+DEFINE_PRIM(_REF(_DYN), fieldref_dyn_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_I8), fieldref_i8, _DYN _STRING);
+DEFINE_PRIM(_REF(_I8), fieldref_i8_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_I16), fieldref_i16, _DYN _STRING);
+DEFINE_PRIM(_REF(_I16), fieldref_i16_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_I32), fieldref_i32, _DYN _STRING);
+DEFINE_PRIM(_REF(_I32), fieldref_i32_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_I64), fieldref_i64, _DYN _STRING);
+DEFINE_PRIM(_REF(_I64), fieldref_i64_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_F32), fieldref_f32, _DYN _STRING);
+DEFINE_PRIM(_REF(_F32), fieldref_f32_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_F64), fieldref_f64, _DYN _STRING);
+DEFINE_PRIM(_REF(_F64), fieldref_f64_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_BOOL), fieldref_bool, _DYN _STRING);
+DEFINE_PRIM(_REF(_BOOL), fieldref_bool_hash, _DYN _I32);
 DEFINE_PRIM(_REF(_BYTES), fieldref_bytes, _DYN _STRING);
+DEFINE_PRIM(_REF(_BYTES), fieldref_bytes_hash, _DYN _I32);
