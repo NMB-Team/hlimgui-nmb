@@ -99,6 +99,24 @@ class ImGuiDrawableBuffers {
 	/** Last native preparation time in microseconds, or zero without benchmark instrumentation. **/
 	public var lastPrepareTimeUs(default, null):Int = 0;
 
+	/** Last renderer upload time in microseconds, or zero without benchmark instrumentation. **/
+	public var lastRendererTimeUs(default, null):Int = 0;
+
+	/** Last generated index byte count. **/
+	public var lastIndexBytes(default, null):Int = 0;
+
+	/** Last number of index bytes copied by the native bridge. **/
+	public var lastIndexCopyBytes(default, null):Int = 0;
+
+	/** Last number of indices rebased by the native bridge. **/
+	public var lastRebasedIndexCount(default, null):Int = 0;
+
+	/** Last number of commands with a non-zero vertex offset. **/
+	public var lastNonzeroVtxOffsetCount(default, null):Int = 0;
+
+	/** Largest vertex count in one draw list in the last render pass. **/
+	public var lastMaxDrawListVertexCount(default, null):Int = 0;
+
 	/** Current Dear ImGui framebuffer width in pixels. **/
 	public var framebufferWidth(default, null):Int = 0;
 
@@ -195,7 +213,8 @@ class ImGuiDrawableBuffers {
 		ImGui.setTextureCallback(updateTextures);
 
 		var io = ImGui.getIO();
-		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures | ImGuiBackendFlags.RendererHasVtxOffset;
+		io.BackendFlags &= ~ImGuiBackendFlags.RendererHasVtxOffset;
+		io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
 
 		noTexture = Tile.fromColor(0xffffff).getTexture();
 		#if hlimgui_cursor
@@ -240,6 +259,12 @@ class ImGuiDrawableBuffers {
 		lastVertexStride = 0;
 		lastVertexBytes = 0;
 		lastPrepareTimeUs = 0;
+		lastRendererTimeUs = 0;
+		lastIndexBytes = 0;
+		lastIndexCopyBytes = 0;
+		lastRebasedIndexCount = 0;
+		lastNonzeroVtxOffsetCount = 0;
+		lastMaxDrawListVertexCount = 0;
 		framebufferWidth = 0;
 		framebufferHeight = 0;
 		framebufferScaleX = 1;
@@ -377,10 +402,18 @@ class ImGuiDrawableBuffers {
 	#end
 
 	private function renderDrawList(renderList:RenderList) {
+		#if hlimgui_render_benchmark
+		final rendererStart = haxe.Timer.stamp();
+		#end
 		bufferCount = 0;
 		lastDrawListCount = renderList.size;
 		lastVertexCount = renderList.vertexCount;
 		lastPrepareTimeUs = renderList.prepareTimeUs;
+		lastIndexBytes = renderList.indexBytes;
+		lastIndexCopyBytes = renderList.indexCopyBytes;
+		lastRebasedIndexCount = renderList.rebasedIndexCount;
+		lastNonzeroVtxOffsetCount = renderList.nonzeroVtxOffsetCount;
+		lastMaxDrawListVertexCount = renderList.maxDrawListVertexCount;
 		framebufferWidth = renderList.framebufferWidth;
 		framebufferHeight = renderList.framebufferHeight;
 		framebufferScaleX = renderList.framebufferScaleX;
@@ -391,13 +424,6 @@ class ImGuiDrawableBuffers {
 		#else
 		lastVertexStride = renderList.size == 0 ? 0 : renderList.lists[0].vertexStride;
 		lastVertexBytes = renderList.vertexBytes;
-		#end
-
-		#if hlimgui_render_benchmark
-		if (++benchmarkSamples % 120 == 0) {
-			final bytesPerVertex = lastVertexCount == 0 ? 0 : lastVertexBytes / lastVertexCount;
-			Sys.println('hlimgui renderer: vertices=$lastVertexCount, prepare=${lastPrepareTimeUs}us, vertexUpload=$lastVertexBytes bytes, stride=$bytesPerVertex');
-		}
 		#end
 
 		for (i in 0...renderList.size) {
@@ -436,6 +462,16 @@ class ImGuiDrawableBuffers {
 			this.commands[i] = data; // data.commands.sub(0, data.commandCount);
 			bufferCount++;
 		}
+
+		#if hlimgui_render_benchmark
+		lastRendererTimeUs = Std.int((haxe.Timer.stamp() - rendererStart) * 1000000);
+		if (++benchmarkSamples % 120 == 0) {
+			final bytesPerVertex = lastVertexCount == 0 ? 0 : lastVertexBytes / lastVertexCount;
+			Sys.println('hlimgui renderer: vertices=$lastVertexCount, prepare=${lastPrepareTimeUs}us, renderer=${lastRendererTimeUs}us, vertexUpload=$lastVertexBytes bytes, stride=$bytesPerVertex, indexBytes=$lastIndexBytes, indexCopied=$lastIndexCopyBytes, rebased=$lastRebasedIndexCount, nonzeroVtxOffset=$lastNonzeroVtxOffsetCount');
+		}
+		#else
+		lastRendererTimeUs = 0;
+		#end
 	}
 
 	static inline function growCapacity(required:Int, current:Int):Int {

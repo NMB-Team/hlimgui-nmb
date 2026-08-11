@@ -155,6 +155,31 @@ class RenderList {
 	public var prepareTimeUs:Int;
 
 	/**
+		Generated index bytes processed by the native bridge.
+	**/
+	public var indexBytes:Int;
+
+	/**
+		Index bytes copied by the native bridge.
+	**/
+	public var indexCopyBytes:Int;
+
+	/**
+		Number of indices rebased by the native bridge.
+	**/
+	public var rebasedIndexCount:Int;
+
+	/**
+		Number of draw commands with a non-zero vertex offset.
+	**/
+	public var nonzeroVtxOffsetCount:Int;
+
+	/**
+		Largest vertex count in one generated draw list.
+	**/
+	public var maxDrawListVertexCount:Int;
+
+	/**
 		Dear ImGui framebuffer pixels per logical X unit for this render pass.
 	**/
 	public var framebufferScaleX:Single;
@@ -245,7 +270,7 @@ class RenderData {
 	public var indexCount:Int;
 
 	/**
-		Allocated native index-buffer size in bytes.
+		Capacity of the borrowed native index buffer in bytes.
 	**/
 	public var indexBufferCapacity:Int;
 

@@ -65,6 +65,11 @@ typedef struct {
 	int vertex_count;
 	int vertex_bytes;
 	int prepare_time_us;
+	int index_bytes;
+	int index_copy_bytes;
+	int rebased_index_count;
+	int nonzero_vtx_offset_count;
+	int max_draw_list_vertex_count;
 	float framebuffer_scale_x;
 	float framebuffer_scale_y;
 	int framebuffer_width;
@@ -163,6 +168,11 @@ void renderDrawLists(ImDrawData* draw_data) {
 	render_list->size = cmd_lists_count;
 	render_list->vertex_count = 0;
 	render_list->vertex_bytes = 0;
+	render_list->index_bytes = 0;
+	render_list->index_copy_bytes = 0;
+	render_list->rebased_index_count = 0;
+	render_list->nonzero_vtx_offset_count = 0;
+	render_list->max_draw_list_vertex_count = 0;
 	render_list->framebuffer_scale_x = draw_data->FramebufferScale.x;
 	render_list->framebuffer_scale_y = draw_data->FramebufferScale.y;
 	render_list->framebuffer_width = std::max(0, int(draw_data->DisplaySize.x * draw_data->FramebufferScale.x));
@@ -193,18 +203,15 @@ void renderDrawLists(ImDrawData* draw_data) {
 		hl_cmd_list->display_pos_y = draw_data->DisplayPos.y;
 		render_list->vertex_count += nb_vertex;
 		render_list->vertex_bytes += vertex_buffer_size;
+		render_list->max_draw_list_vertex_count = std::max(render_list->max_draw_list_vertex_count, nb_vertex);
 
-		// Keep a writable index copy so non-zero ImDrawCmd::VtxOffset values can be rebased for Heaps.
+		// The Haxe callback uploads synchronously while ImDrawData is alive, matching the borrowed vertex-buffer lifetime.
 		const int index_buffer_size = cmd_list->IdxBuffer.size_in_bytes();
-		if (hl_cmd_list->index_buffer_capacity < index_buffer_size) {
-			const int capacity = std::max(index_buffer_size, hl_cmd_list->index_buffer_capacity + hl_cmd_list->index_buffer_capacity / 2);
-			hl_cmd_list->index_buffer = hl_alloc_bytes(capacity);
-			hl_cmd_list->index_buffer_capacity = capacity;
-		}
-		if (index_buffer_size > 0)
-			memcpy(hl_cmd_list->index_buffer, cmd_list->IdxBuffer.Data, index_buffer_size);
+		hl_cmd_list->index_buffer = reinterpret_cast<vbyte*>(cmd_list->IdxBuffer.Data);
 		hl_cmd_list->index_buffer_size = index_buffer_size;
 		hl_cmd_list->index_count = cmd_list->IdxBuffer.size();
+		hl_cmd_list->index_buffer_capacity = int(sizeof(ImDrawIdx) * cmd_list->IdxBuffer.Capacity);
+		render_list->index_bytes += index_buffer_size;
 
 		// create the array for command buffer
 		int command_count = cmd_list->CmdBuffer.size();
@@ -223,9 +230,9 @@ void renderDrawLists(ImDrawData* draw_data) {
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++) {
 			const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
 			if (pcmd->VtxOffset != 0) {
-				ImDrawIdx* indices = reinterpret_cast<ImDrawIdx*>(hl_cmd_list->index_buffer);
-				for (unsigned int index = pcmd->IdxOffset; index < pcmd->IdxOffset + pcmd->ElemCount; index++)
-					indices[index] += pcmd->VtxOffset;
+				render_list->nonzero_vtx_offset_count++;
+				IM_ASSERT(pcmd->VtxOffset == 0 && "32-bit ImDrawIdx without RendererHasVtxOffset must produce zero vertex offsets");
+				throw_error("Unexpected non-zero ImDrawCmd::VtxOffset");
 			}
 
 			vrendercommand* hl_cmd_buffer = hl_commands[cmd_i] == nullptr ? (hl_commands[cmd_i] = (vrendercommand*)hl_alloc_obj(hlt_rendercommand)) : hl_commands[cmd_i];
