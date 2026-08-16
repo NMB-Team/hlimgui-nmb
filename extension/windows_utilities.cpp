@@ -64,6 +64,10 @@ HL_PRIM void HL_NAME(set_next_window_bg_alpha)(float alpha) {
 	ImGui::SetNextWindowBgAlpha(alpha);
 }
 
+HL_PRIM void HL_NAME(set_next_window_viewport)(ImGuiID viewport_id) {
+	ImGui::SetNextWindowViewport(viewport_id);
+}
+
 HL_PRIM void HL_NAME(set_window_pos)(vimvec2* pos, ImGuiCond* cond) {
 	ImGui::SetWindowPos(pos, convertPtr(cond, 0));
 }
@@ -116,6 +120,7 @@ DEFINE_PRIM(_VOID, set_next_window_content_size, _IMVEC2);
 DEFINE_PRIM(_VOID, set_next_window_collapsed, _BOOL _REF(_I32));
 DEFINE_PRIM(_VOID, set_next_window_focus, _NO_ARG);
 DEFINE_PRIM(_VOID, set_next_window_bg_alpha, _F32);
+DEFINE_PRIM(_VOID, set_next_window_viewport, _I32);
 DEFINE_PRIM(_VOID, set_window_pos, _IMVEC2 _REF(_I32));
 DEFINE_PRIM(_VOID, set_window_size, _IMVEC2 _REF(_I32));
 DEFINE_PRIM(_VOID, set_window_collapsed, _BOOL _REF(_I32));

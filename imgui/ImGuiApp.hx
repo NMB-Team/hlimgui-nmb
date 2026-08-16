@@ -408,21 +408,26 @@ class ImGuiApp extends hxd.App {
 			return;
 
 		ImGui.newFrame();
-		onNewFrame();
-		update(hxd.Timer.dt);
+		try {
+			onNewFrame();
+			update(hxd.Timer.dt);
 
-		if (isDisposed) {
+			if (isDisposed) {
+				ImGui.endFrame();
+				return;
+			}
+
+			dt = hxd.Timer.dt;
+
+			s2d?.setElapsedTime(dt);
+			s3d?.setElapsedTime(dt);
+			imguiScene?.setElapsedTime(dt);
+
+			engine.render(this);
+		} catch (error:haxe.Exception) {
 			ImGui.endFrame();
-			return;
+			throw error;
 		}
-
-		dt = hxd.Timer.dt;
-
-		s2d?.setElapsedTime(dt);
-		s3d?.setElapsedTime(dt);
-		imguiScene?.setElapsedTime(dt);
-
-		engine.render(this);
 	}
 
 	/**

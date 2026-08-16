@@ -5963,6 +5963,11 @@ class ImGui {
 	**/
 	public static final fonts = new ImGuiFonts();
 
+	/**
+		The default notification center, rendered automatically by `render()`.
+	**/
+	public static final notifications = new NotificationCenter();
+
 	// Context
 
 	/**
@@ -5979,6 +5984,7 @@ class ImGui {
 		final destroyedContext = ctx == null ? getCurrentContext() : ctx;
 		destroy_context(ctx);
 		fonts.contextDestroyed(destroyedContext);
+		notifications.clear();
 	}
 
 	@:hlNative("hlimgui", "destroy_context")
@@ -6050,7 +6056,13 @@ class ImGui {
 	/**
 		Ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData().
 	**/
-	public static function render() {}
+	public static function render() {
+		notifications.render();
+		render_frame();
+	}
+
+	@:hlNative("hlimgui", "render")
+	static function render_frame() {}
 
 	// Demo, Debug, Information
 
@@ -6287,6 +6299,11 @@ class ImGui {
 		Set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
 	**/
 	public static function setNextWindowBgAlpha(alpha:Single) {}
+
+	/**
+		Sets the viewport for the next window.
+	**/
+	public static function setNextWindowViewport(viewport_id:ImGuiID) {}
 
 	/**
 		(not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.

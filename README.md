@@ -32,7 +32,7 @@ mkdir build
 cd build
 
 cmake ..
-cmake --build .
+cmake --build . --config Release
 ```
 It builds a target `hdll` file, which you can copy to the root of the project.
 
@@ -118,6 +118,32 @@ This library comes with a built-in Heaps support with the following features:
 * `imgui.ImGuiDrawable` is a primary renderer for ImGui content and can be used to set up your own ImGui integration if `ImGuiApp` is not viable.
 * `imgui.ImTextureID` is mapped to `h3d.mat.Texture`.
 * A number of methods that take `h2d.Tile` instead of `ImTextureID` for easier image rendering.
+
+### Notifications
+
+The default notification center is rendered automatically by `ImGui.render()`:
+
+```haxe
+ImGui.notifications.success("Project saved");
+ImGui.notifications.error("Export failed", {duration: 8});
+ImGui.notifications.warning("Connection lost", {
+	key: "connection",
+	action: {
+		label: "Retry",
+		callback: reconnect
+	}
+});
+```
+
+Supplying the same `key` replaces and restarts a notification instead of adding a duplicate. The returned notification can also be updated, restarted, or dismissed. Placement, queue limits, animation timings, layout, and colors are available through `ImGui.notifications.style`.
+
+Enter and exit easing accept any normalized `Float -> Float` callback. Leaving them null keeps linear animation:
+
+```haxe
+ImGui.notifications.style.enterEase = t -> 1 - Math.pow(1 - t, 3);
+ImGui.notifications.style.exitEase = t -> t * t;
+ImGui.notifications.style.reflowEase = t -> 1 - Math.pow(1 - t, 3);
+```
 
 Mulit-window viewport support can be added with `-D multidriver`
 
