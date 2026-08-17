@@ -75,7 +75,6 @@ class NotificationStyle {
 	public var reflowEase:Null<NotificationEase>;
 	public var pauseOnHover = true;
 	public var padding = new ImVec2(14, 11);
-	public var background = new ImVec4(0.075, 0.08, 0.095, 0.96);
 	public var neutral = new ImVec4(0.72, 0.75, 0.82, 1);
 	public var info = new ImVec4(0.25, 0.62, 1, 1);
 	public var success = new ImVec4(0.25, 0.82, 0.49, 1);
@@ -299,7 +298,6 @@ class NotificationCenter {
 			ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, style.padding);
 			ImGui.pushStyleVar(ImGuiStyleVar.WindowRounding, style.rounding);
 			ImGui.pushStyleVar(ImGuiStyleVar.WindowBorderSize, style.borderSize);
-			ImGui.pushStyleColor(ImGuiCol.WindowBg, style.background);
 			ImGui.pushStyleColor(ImGuiCol.Border, accent);
 			ImGui.pushStyleColor(ImGuiCol.Button, ImTypeCache.vec4(accent.x, accent.y, accent.z, 0.45));
 			ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImTypeCache.vec4(accent.x, accent.y, accent.z, 0.7));
@@ -317,8 +315,19 @@ class NotificationCenter {
 				}
 
 				if (notification.dismissible) {
-					ImGui.setCursorPosX(ImGui.getWindowContentRegionMax().x - ImGui.getFrameHeight());
-					closeClicked = ImGui.smallButton("x##dismiss");
+					final closeWidth = ImGui.getFrameHeight();
+					final closeHeight = ImGui.getTextLineHeight();
+					ImGui.setCursorPosX(ImGui.getWindowContentRegionMax().x - closeWidth);
+					closeClicked = ImGui.button("##dismiss", ImTypeCache.vec2(closeWidth, closeHeight));
+					final closeMin = ImGui.getItemRectMin();
+					final closeMax = ImGui.getItemRectMax();
+					final centerX:Single = (closeMin.x + closeMax.x) * 0.5;
+					final centerY:Single = (closeMin.y + closeMax.y) * 0.5;
+					final radius:Single = closeHeight * 0.24;
+					final color = ImGui.getColorU32(ImGui.getStyleColorVec4(ImGuiCol.Text));
+					final drawList = ImGui.getWindowDrawList();
+					drawList.addLine(ImTypeCache.vec2(centerX - radius, centerY - radius), ImTypeCache.vec2(centerX + radius, centerY + radius), color, 1.25);
+					drawList.addLine(ImTypeCache.vec2(centerX - radius, centerY + radius), ImTypeCache.vec2(centerX + radius, centerY - radius), color, 1.25);
 				}
 
 				ImGui.textWrapped(notification.message);
@@ -339,7 +348,7 @@ class NotificationCenter {
 				targetStackOffset += ImGui.getWindowHeight() + style.gap;
 			}
 			ImGui.end();
-			ImGui.popStyleColor(5);
+			ImGui.popStyleColor(4);
 			ImGui.popStyleVar(4);
 
 			if (!notification.dismissalRequested && notification.duration > 0 && getLifetime(notification, now) >= notification.duration) {
