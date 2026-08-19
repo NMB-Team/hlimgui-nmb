@@ -29,11 +29,24 @@ enum abstract NotificationPlacement(Int) from Int to Int {
 }
 
 /**
+	A notification lifecycle or action callback.
+**/
+typedef NotificationCallback = Void -> Void;
+
+/**
+	Callbacks invoked by notification lifecycle transitions.
+**/
+typedef NotificationCallbacks = {
+	@:optional var start:NotificationCallback;
+	@:optional var finish:NotificationCallback;
+}
+
+/**
 	Optional action displayed below a notification message.
 **/
 typedef NotificationAction = {
 	var label:String;
-	var callback:Void -> Void;
+	var callback:NotificationCallback;
 	@:optional var dismiss:Bool;
 }
 
@@ -49,6 +62,7 @@ typedef NotificationOptions = {
 	@:optional var title:String;
 	@:optional var duration:Float;
 	@:optional var dismissible:Bool;
+	@:optional var callbacks:NotificationCallbacks;
 	@:optional var action:NotificationAction;
 	@:optional var key:String;
 }
@@ -84,6 +98,12 @@ class NotificationStyle {
 	public function new() {}
 }
 
+private enum abstract NotificationPhase(Int) {
+	var Queued = 0;
+	var Visible;
+	var Dismissing;
+}
+
 /**
 	A live notification returned by `NotificationCenter`.
 
@@ -98,6 +118,7 @@ class Notification {
 	public var kind:NotificationKind;
 	public var duration:Float;
 	public var dismissible:Bool;
+	public var callbacks:Null<NotificationCallbacks>;
 	public var action:Null<NotificationAction>;
 	public var isDismissed(get, never):Bool;
 
@@ -105,7 +126,7 @@ class Notification {
 	var startedAt:Null<Float>;
 	var pausedLifetime = 0.;
 	var dismissedAt:Null<Float>;
-	var dismissalRequested = false;
+	var phase = NotificationPhase.Queued;
 	var stackInitialized = false;
 	var stackFrom = 0.;
 	var stackTarget = 0.;
@@ -133,7 +154,7 @@ class Notification {
 
 	@:noCompletion
 	inline function get_isDismissed():Bool {
-		return dismissalRequested;
+		return phase == NotificationPhase.Dismissing;
 	}
 }
 
@@ -182,12 +203,8 @@ class NotificationCenter {
 		var notification = key == null ? null : find(key);
 
 		if (notification == null) {
-			if (style.maxQueued > 0) {
-				while (notifications.length >= style.maxQueued)
-					notifications.shift();
-			}
 			notification = new Notification(this, nextId++, key);
-			notifications.push(notification);
+			enqueue(notification);
 		}
 
 		notification.message = message;
@@ -195,6 +212,7 @@ class NotificationCenter {
 		notification.kind = kind;
 		notification.duration = options == null || options.duration == null ? 4.0 : options.duration;
 		notification.dismissible = options == null || options.dismissible == null ? true : options.dismissible;
+		notification.callbacks = options == null ? null : options.callbacks;
 		notification.action = options == null ? null : options.action;
 		restart(notification);
 		return notification;
@@ -215,8 +233,13 @@ class NotificationCenter {
 		Starts the dismissal animation for a notification owned by this center.
 	**/
 	public function dismiss(notification:Notification):Void {
-		if (notification.owner == this)
-			notification.dismissalRequested = true;
+		if (notification.owner != this)
+			return;
+		notification.phase = NotificationPhase.Dismissing;
+		if (notification.startedAt == null) {
+			notifications.remove(notification);
+			return;
+		}
 	}
 
 	/**
@@ -225,25 +248,42 @@ class NotificationCenter {
 	public function restart(notification:Notification):Void {
 		if (notification.owner != this)
 			return;
+		if (!notifications.contains(notification)) {
+			enqueue(notification);
+			notification.stackInitialized = false;
+		}
 		notification.startedAt = null;
 		notification.pausedLifetime = 0;
 		notification.dismissedAt = null;
-		notification.dismissalRequested = false;
+		notification.phase = NotificationPhase.Queued;
 	}
 
 	/**
-		Starts the dismissal animation for every queued notification.
+		Dismisses every notification. Pending notifications are removed without being shown.
 	**/
 	public function dismissAll():Void {
-		for (notification in notifications)
-			notification.dismissalRequested = true;
+		var index = notifications.length;
+		while (index-- > 0)
+			dismiss(notifications[index]);
 	}
 
 	/**
 		Removes every notification immediately.
 	**/
 	public function clear():Void {
+		for (notification in notifications)
+			notification.phase = NotificationPhase.Dismissing;
 		notifications.resize(0);
+	}
+
+	private function enqueue(notification:Notification):Void {
+		if (style.maxQueued > 0) {
+			while (notifications.length >= style.maxQueued) {
+				final removed = notifications.shift();
+				removed.phase = NotificationPhase.Dismissing;
+			}
+		}
+		notifications.push(notification);
 	}
 
 	/**
@@ -259,9 +299,11 @@ class NotificationCenter {
 		renderedFrame = frame;
 
 		final now = ImGui.getTime();
-		removeFinished(now);
-		if (notifications.length == 0)
+		var callbacks:Null<Array<NotificationCallback>> = removeFinished(now);
+		if (notifications.length == 0) {
+			runCallbacks(callbacks);
 			return;
+		}
 
 		final viewport = ImGui.getMainViewport();
 		final left = style.placement == NotificationPlacement.TopLeft || style.placement == NotificationPlacement.BottomLeft;
@@ -276,9 +318,17 @@ class NotificationCenter {
 		for (notification in notifications) {
 			if (shown == style.maxVisible)
 				break;
-			if (notification.startedAt == null)
+			if (notification.startedAt == null) {
 				notification.startedAt = now;
-			if (notification.dismissalRequested && notification.dismissedAt == null)
+				notification.phase = NotificationPhase.Visible;
+				final startCallback = notification.callbacks == null ? null : notification.callbacks.start;
+				if (startCallback != null) {
+					if (callbacks == null)
+						callbacks = [];
+					callbacks.push(startCallback);
+				}
+			}
+			if (notification.phase == NotificationPhase.Dismissing && notification.dismissedAt == null)
 				notification.dismissedAt = now;
 
 			final visibility = getVisibility(notification, now);
@@ -334,13 +384,13 @@ class NotificationCenter {
 				if (notification.action != null)
 					actionClicked = ImGui.button(notification.action.label + "##action");
 
-				if (style.pauseOnHover && !notification.dismissalRequested && ImGui.isWindowHovered())
+				if (style.pauseOnHover && notification.phase != NotificationPhase.Dismissing && ImGui.isWindowHovered())
 					notification.pausedLifetime += ImGui.getIO().DeltaTime;
 
 				if (style.progressHeight > 0 && notification.duration > 0) {
 					final position = ImGui.getWindowPos();
 					final size = ImGui.getWindowSize();
-					final remaining = notification.dismissalRequested ? 0 : Math.max(0, 1 - getLifetime(notification, now) / notification.duration);
+					final remaining = notification.phase == NotificationPhase.Dismissing ? 0 : Math.max(0, 1 - getLifetime(notification, now) / notification.duration);
 					final barY:Single = position.y + size.y - style.progressHeight;
 					ImGui.getWindowDrawList()
 						.addRectFilled(ImTypeCache.vec2(position.x, barY), ImTypeCache.vec2(cast(position.x + size.x * remaining), position.y + size.y), ImGui.getColorU32(accent));
@@ -351,8 +401,10 @@ class NotificationCenter {
 			ImGui.popStyleColor(4);
 			ImGui.popStyleVar(4);
 
-			if (!notification.dismissalRequested && notification.duration > 0 && getLifetime(notification, now) >= notification.duration) {
-				notification.dismissalRequested = true;
+			if (notification.phase != NotificationPhase.Dismissing
+				&& notification.duration > 0
+				&& getLifetime(notification, now) >= notification.duration) {
+				notification.phase = NotificationPhase.Dismissing;
 				notification.dismissedAt = now;
 			}
 
@@ -363,12 +415,15 @@ class NotificationCenter {
 				final action = notification.action;
 				if (action.dismiss == null || action.dismiss)
 					dismiss(notification);
-				action.callback();
+				if (callbacks == null)
+					callbacks = [];
+				callbacks.push(action.callback);
 			}
 			shown++;
 		}
 
-		removeFinished(now);
+		callbacks = removeFinished(now, callbacks);
+		runCallbacks(callbacks);
 	}
 
 	@:noCompletion
@@ -376,13 +431,29 @@ class NotificationCenter {
 		return notifications.length;
 	}
 
-	private function removeFinished(now:Float):Void {
+	private function removeFinished(now:Float, ?callbacks:Array<NotificationCallback>):Null<Array<NotificationCallback>> {
 		var index = notifications.length;
 		while (index-- > 0) {
-			final dismissedAt = notifications[index].dismissedAt;
-			if (dismissedAt != null && now - dismissedAt >= style.fadeOut)
+			final notification = notifications[index];
+			final dismissedAt = notification.dismissedAt;
+			if (dismissedAt != null && now - dismissedAt >= style.fadeOut) {
 				notifications.splice(index, 1);
+				final finishCallback = notification.callbacks == null ? null : notification.callbacks.finish;
+				if (finishCallback != null) {
+					if (callbacks == null)
+						callbacks = [];
+					callbacks.push(finishCallback);
+				}
+			}
 		}
+		return callbacks;
+	}
+
+	private function runCallbacks(callbacks:Null<Array<NotificationCallback>>):Void {
+		if (callbacks == null)
+			return;
+		for (callback in callbacks)
+			callback();
 	}
 
 	private function getVisibility(notification:Notification, now:Float):Float {

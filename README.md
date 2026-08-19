@@ -124,7 +124,12 @@ This library comes with a built-in Heaps support with the following features:
 The default notification center is rendered automatically by `ImGui.render()`:
 
 ```haxe
-ImGui.notifications.success("Project saved");
+ImGui.notifications.success("Project saved", {
+	callbacks: {
+		start: playNotificationSound,
+		finish: onNotificationFinished
+	}
+});
 ImGui.notifications.error("Export failed", {duration: 8});
 ImGui.notifications.warning("Connection lost", {
 	key: "connection",
