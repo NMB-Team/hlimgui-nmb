@@ -136,7 +136,11 @@ class ImGuiApp extends hxd.App {
 				#elseif (hlsdl || limen)
 				var mainWindow = hxd.Window.inst;
 				var w = new hxd.Window("ImGui Viewport", 100, 100, {fixed: false, hidden: true});
+				#if hlsdl
 				w.displayMode = hxd.Window.DisplayMode.Borderless;
+				#elseif limen
+				w.displayMode = hxd.Window.DisplayMode.WindowedFullscreen; // use fixed fullscreen
+				#end
 				var e = h3d.Engine.getCurrent();
 				// Disable vsync on these windows; else we end up waiting for vblank for every individual window.
 				w.vsync = false;
