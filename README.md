@@ -9,7 +9,7 @@ First, make sure that HashLink, CMake and a C/C++ compiler are installed on your
   - By cloning it to another directory and using `haxelib dev hlimgui path/to/hlimgui`
   - With lix: See https://github.com/lix-pm/lix.client#local-development
   - With [gsm](https://github.com/tobil4sk/haxe-git-submodule-manager): `haxelib --global run gsm add hlimgui https://github.com/nspitko/hlimgui`
-2. Make sure your `hl.exe` is in the `PATH` or one of the following environment variables point at the directory where it's located.
+2. Make sure `hl` (`hl.exe` on Windows) is in `PATH`, or set `HASHLINK`, `HASHLINK_BIN`, `HASHLINK_PATH`, or `HASHLINKPATH` to its installation directory.
 3. Run `haxelib run hlimgui build -u` to update submodules (`-u` flag) and compile the .hdll file.
 4. Add `-lib hlimgui` to your `build.hxml`
 5. When shipping, make sure to copy the `hlimgui.hdll` from hashlink directory or run `haxelib run hlimgui install path/to/output/dir`

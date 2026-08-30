@@ -12,6 +12,53 @@ permissions:
   contents: write
 
 jobs:
+  linux:
+    name: Linux build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install --yes build-essential cmake haxe ninja-build
+
+      - name: Build and install HashLink
+        run: |
+          git clone --depth 1 https://github.com/HaxeFoundation/hashlink.git hashlink
+          make -C hashlink --jobs "$(nproc)" libhl.so hl
+          sudo install -m 755 hashlink/hl /usr/local/bin/hl
+          sudo install -m 755 hashlink/libhl.so /usr/local/lib/libhl.so
+          sudo install -m 644 hashlink/src/hl.h hashlink/src/hl_ffi.h hashlink/src/hlc.h /usr/local/include/
+          sudo ldconfig
+
+      - name: Build native extension
+        run: |
+          cmake -S extension -B extension/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build extension/build --target hlimgui.hdll
+
+      - name: Verify HashLink extension loading
+        run: |
+          haxe -cp .github/smoke -main LinuxSmoke -hl extension/build/linux-smoke.hl
+          cd extension/build
+          LD_LIBRARY_PATH=. hl linux-smoke.hl
+
+      - name: Package release files
+        run: |
+          mkdir -p dist/hlimgui-linux
+          cp extension/build/hlimgui.hdll dist/hlimgui-linux/
+          test -f dist/hlimgui-linux/hlimgui.hdll
+          tar -czf hlimgui-linux.tar.gz -C dist/hlimgui-linux .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: hlimgui-linux
+          path: hlimgui-linux.tar.gz
+          compression-level: 0
+
   windows:
     name: Windows build
     runs-on: windows-2025-vs2026
@@ -103,9 +150,9 @@ jobs:
           $tag = 'nightly'
           $asset = 'hlimgui-windows.zip'
           $notes = @'
-          Automated Windows build of `hlimgui` using NMB HashLink.
+          Automated Windows and Linux builds of `hlimgui` using NMB HashLink.
 
-          Download `hlimgui-windows.zip` and extract it where you want to keep the library files.
+          Download the archive for your platform and extract it where you want to keep the library files.
           '@
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
@@ -140,3 +187,23 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw 'Failed to replace the nightly asset.'
           }
+
+  linux-release:
+    name: Publish Linux nightly release
+    needs:
+      - linux
+      - windows
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: hlimgui-linux
+          path: .
+
+      - name: Update nightly release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload nightly hlimgui-linux.tar.gz --repo "$GITHUB_REPOSITORY" --clobber

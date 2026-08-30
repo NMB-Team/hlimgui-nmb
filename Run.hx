@@ -55,7 +55,7 @@ class Run {
 				Sys.command("cmake", buildArgs);
 				Sys.setCwd(libPath);
 
-				if (!flags.contains("-n") && !flags.contains("--no-install")) {
+				if (!flags.contains("-ni") && !flags.contains("--no-install")) {
 					commands["install"].exec(args, []);
 				}
 			}
@@ -63,11 +63,11 @@ class Run {
 		{
 			name: "install",
 			args: "[output]",
-			help: "Copy the .hdll file to [output] or hl.exe location
+			help: "Copy the .hdll file to [output] or HashLink executable location
     Args:
       \u001B[93m[output]\u001B[0m            The directory to which copy the generated .hdll file.
-                          If not given, will try to copy it to the location of `hl.exe` by
-                          looking for it in `HASHLINK_BIN`, `HASHLINK_PATH`,
+                          If not given, will try to copy it to the location of `hl` (`hl.exe` on Windows) by
+                          looking for it in `HASHLINK`, `HASHLINK_BIN`, `HASHLINK_PATH`,
                           `HASHLINKPATH`, `PATH`, and common install locations.",
 			exec: (args, _) -> {
 				final hdllPath = Path.join([libPath, HLIMGUI_HDLL]);
@@ -79,7 +79,7 @@ class Run {
 				if (args.length == 0) {
 					outputPath = findHashLinkBin();
 					if (outputPath == null)
-						Sys.println("Warning: Could not locate hl.exe, .hdll file won't be copied for easy access!");
+						Sys.println("Warning: Could not locate the HashLink executable, .hdll file won't be copied for easy access!");
 				} else {
 					outputPath = args.shift();
 					if (!Path.isAbsolute(outputPath))
@@ -137,7 +137,7 @@ class Run {
 	}
 
 	static function findHashLinkBin():Null<String> {
-		for (name in ["HASHLINK_BIN", "HASHLINK_PATH", "HASHLINKPATH"]) {
+		for (name in ["HASHLINK", "HASHLINK_BIN", "HASHLINK_PATH", "HASHLINKPATH"]) {
 			final dir = hashLinkBinFrom(Sys.getEnv(name));
 			if (dir != null)
 				return dir;
@@ -156,6 +156,8 @@ class Run {
 		final commonPaths = Sys.systemName() == "Windows" ? ["C:\\HaxeToolkit\\hashlink", "C:\\HashLink"] : [
 			"/usr/local/bin",
 			"/usr/local",
+			"/usr/bin",
+			"/usr",
 			"/opt/homebrew/bin",
 			"/opt/homebrew",
 			"/opt/hashlink/bin",
