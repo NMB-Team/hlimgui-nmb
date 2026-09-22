@@ -411,6 +411,12 @@ class ImGuiApp extends hxd.App {
 		if (isDisposed)
 			return;
 
+		#if limen
+		// fix for vulkan
+		if (!engine.driver.isFrameReady())
+			return;
+		#end
+
 		ImGui.newFrame();
 		try {
 			onNewFrame();
