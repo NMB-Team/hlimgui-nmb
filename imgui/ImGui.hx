@@ -3070,41 +3070,16 @@ enum abstract ImFontAtlasFlags(Int) from Int to Int {
 		Disables mouse cursors.
 	**/
 	var NoMouseCursors:Int = 2;
-}
-
-/**
-	Flags controlling draw list.
-**/
-enum abstract ImDrawListFlags(Int) from Int to Int {
-	/**
-		No options or flags.
-	**/
-	var None:Int = 0;
 
 	/**
-		Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
+		Disables baked line textures and anti-aliased strokes.
 	**/
-	var AntiAliasedLines:Int = 1 << 0;
+	var NoBakedLines:Int = 1 << 2;
 
 	/**
-		Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering). Latched at the beginning of the frame (copied to ImDrawList).
+		Disables baked round corners.
 	**/
-	var AntiAliasedLinesUseTex:Int = 1 << 1;
-
-	/**
-		Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.). Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-	**/
-	var AntiAliasedFill:Int = 1 << 2;
-
-	/**
-		Enables allow vtx offset behavior.
-	**/
-	var AllowVtxOffset:Int = 1 << 3;
-
-	/**
-		Enables text no pixel snap behavior.
-	**/
-	var TextNoPixelSnap:Int = 1 << 4;
+	var NoBakedRoundCorners:Int = 1 << 3;
 }
 
 /**
@@ -3648,13 +3623,17 @@ enum abstract ImGuiItemFlags(Int) from Int to Int {
 	var LiveEditOnInputScalar = 1 << 8;
 
 	/**
+		Represents a mixed value and applies edits on validation.
+	**/
+	var MixedValue = 1 << 9;
+
+	/**
 		Enables live edit on input behavior.
 	**/
 	var LiveEditOnInput = LiveEditOnInputText | LiveEditOnInputScalar;
 }
 
 // Flags for ImDrawList functions
-// (Legacy: bit 0 must always correspond to ImDrawFlags_Closed to be backward compatible with old API using a bool. Bits 1..3 must be unused)
 
 /**
 	Flags controlling draw.
@@ -3669,66 +3648,74 @@ enum abstract ImDrawFlags(Int) from Int to Int {
 		Enables closed behavior.
 	**/
 	var Closed = 1 << 9;
+	var JoinMiter = 1 << 10;
+	var CapSquare = 1 << 11;
+	var AAFill = 1 << 12;
+	var AALines = 1 << 13;
+	var AALineEnds = 1 << 14;
+	var StrokeInside = 1 << 17;
+	var StrokeCenter = 2 << 17;
+	var StrokeCenterBiased = 3 << 17;
+	var StrokeOutside = 4 << 17;
+	var StrokeLegacy = 7 << 17;
+	var TextNoPixelSnap = 1 << 20;
+	var UseTexForRoundCorners = 1 << 21;
+	var UseVtxOffset = 1 << 22;
 
 	/**
 		AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0.0f; we default to all corners). Was 0x01.
 	**/
-	var RoundCornersTopLeft = 1 << 4; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0.0f; we default to all corners). Was 0x01.
+	var RoundTopLeft = 1 << 4; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-left corner only (when rounding > 0.0f; we default to all corners). Was 0x01.
 
 	/**
 		AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0.0f; we default to all corners). Was 0x02.
 	**/
-	var RoundCornersTopRight = 1 << 5; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0.0f; we default to all corners). Was 0x02.
+	var RoundTopRight = 1 << 5; // AddRect(); AddRectFilled(); PathRect(): enable rounding top-right corner only (when rounding > 0.0f; we default to all corners). Was 0x02.
 
 	/**
 		AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f; we default to all corners). Was 0x04.
 	**/
-	var RoundCornersBottomLeft = 1 << 6; // AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f; we default to all corners). Was 0x04.
+	var RoundBottomLeft = 1 << 6; // AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f; we default to all corners). Was 0x04.
 
 	/**
 		AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f; we default to all corners). Wax 0x08.
 	**/
-	var RoundCornersBottomRight = 1 << 7; // AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f; we default to all corners). Wax 0x08.
+	var RoundBottomRight = 1 << 7; // AddRect(); AddRectFilled(); PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f; we default to all corners). Wax 0x08.
 
 	/**
 		AddRect(); AddRectFilled(); PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero; NOT an implicit flag!
 	**/
-	var RoundCornersNone = 1 << 8; // AddRect(); AddRectFilled(); PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero; NOT an implicit flag!
+	var RoundNone = 1 << 8; // AddRect(); AddRectFilled(); PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero; NOT an implicit flag!
 
 	/**
 		Enables round corners top behavior.
 	**/
-	var RoundCornersTop = RoundCornersTopLeft | RoundCornersTopRight;
+	var RoundTop = RoundTopLeft | RoundTopRight;
 
 	/**
 		Enables round corners bottom behavior.
 	**/
-	var RoundCornersBottom = RoundCornersBottomLeft | RoundCornersBottomRight;
+	var RoundBottom = RoundBottomLeft | RoundBottomRight;
 
 	/**
 		Enables round corners left behavior.
 	**/
-	var RoundCornersLeft = RoundCornersBottomLeft | RoundCornersTopLeft;
+	var RoundLeft = RoundBottomLeft | RoundTopLeft;
 
 	/**
 		Enables round corners right behavior.
 	**/
-	var RoundCornersRight = RoundCornersBottomRight | RoundCornersTopRight;
+	var RoundRight = RoundBottomRight | RoundTopRight;
 
 	/**
 		Enables round corners all behavior.
 	**/
-	var RoundCornersAll = RoundCornersTopLeft | RoundCornersTopRight | RoundCornersBottomLeft | RoundCornersBottomRight;
-
-	/**
-		Default to ALL corners if none of the _RoundCornersXX flags are specified.
-	**/
-	var RoundCornersDefault_ = (1 << 4 | 1 << 5 | 1 << 6 | 1 << 7); // Default to ALL corners if none of the _RoundCornersXX flags are specified.
+	var RoundAll = RoundTopLeft | RoundTopRight | RoundBottomLeft | RoundBottomRight;
 
 	/**
 		Enables round corners mask behavior.
 	**/
-	var RoundCornersMask_ = RoundCornersAll | RoundCornersNone;
+	var RoundMask_ = RoundAll | RoundNone;
 }
 
 /**
@@ -4585,9 +4572,9 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var DockingSeparatorSize:Single;
 	var MouseCursorScale:Single; // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
 	var AntiAliasedLines:Bool; // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-	var AntiAliasedLinesUseTex:Bool; // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering. Latched at the beginning of the frame (copied to ImDrawList).
+	var AntiAliasedLineEnds:Bool; // Enable anti-aliased stroke ends. More useful for thick lines, with an additional rendering cost.
 	var AntiAliasedFill:Bool; // Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.). Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-	var CurveTessellationTol:Single; // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
+	var CurveTessellationMaxError:Single; // Maximum curve tessellation error in pixels. Decrease for higher quality and more geometry.
 	var CircleTessellationMaxError:Single; // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
 	@:flattenMap(ImGuiCol) var Colors:ImVec4S;
 	var HoverStationaryDelay:Single;
@@ -4597,6 +4584,9 @@ abstract ImVec4(ImVec4S) from ImVec4S to ImVec4S {
 	var HoverFlagsForTooltipNav:ImGuiHoveredFlags;
 	@:noCompletion var _MainScale:Single;
 	@:noCompletion var _NextFrameFontSizeBase:Single;
+	// Preserve the native layout of upstream's obsolete trailing fields.
+	@:noCompletion private var _LegacyAntiAliasedLinesUseTex:Bool;
+	@:noCompletion private var _LegacyCurveTessellationTol:Single;
 
 	/**
 		Creates a new `ImVec4` instance.
@@ -4756,6 +4746,7 @@ enum abstract ImGuiKeyChord(Int) from Int to Int {
 	var ConfigDebugBeginReturnValueOnce:Bool;
 	var ConfigDebugBeginReturnValueLoop:Bool;
 	var ConfigDebugIgnoreFocusLoss:Bool;
+	var ConfigDebugDrawListDefaultsToStrokeLegacy:Bool;
 
 	//------------------------------------------------------------------
 	// Platform Functions

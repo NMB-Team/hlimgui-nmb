@@ -1,5 +1,7 @@
 # Heaps/HashLink native binding for [Dear ImGui](https://github.com/ocornut/imgui)
 
+Uses Dear ImGui [v1.93.0-docking](https://github.com/ocornut/imgui/releases/tag/v1.93.0-docking).
+
 ## Build & Install
 First, make sure that HashLink, CMake and a C/C++ compiler are installed on your system.
 

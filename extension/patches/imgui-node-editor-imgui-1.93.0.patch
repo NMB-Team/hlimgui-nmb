@@ -1,3 +1,26 @@
+diff --git a/imgui_canvas.cpp b/imgui_canvas.cpp
+index 2010ee3..8f20a45 100644
+--- a/imgui_canvas.cpp
++++ b/imgui_canvas.cpp
+@@ -490,7 +490,7 @@ void ImGuiEx::Canvas::EnterLocalSpace()
+ 
+     auto& fringeScale = ImFringeScaleRef(m_DrawList);
+     m_LastFringeScale = fringeScale;
+-    fringeScale *= m_View.InvScale;
++    m_DrawList->_SetPixelDensity(1.0f / (fringeScale * m_View.InvScale));
+ }
+ 
+ void ImGuiEx::Canvas::LeaveLocalSpace()
+@@ -563,8 +563,7 @@ void ImGuiEx::Canvas::LeaveLocalSpace()
+             m_DrawList->CmdBuffer.erase(m_DrawList->CmdBuffer.Data + m_DrawListCommadBufferSize - 1);
+     }
+ 
+-    auto& fringeScale = ImFringeScaleRef(m_DrawList);
+-    fringeScale = m_LastFringeScale;
++    m_DrawList->_SetPixelDensity(1.0f / m_LastFringeScale);
+ 
+     // And pop \o/
+     ImGui::PopClipRect();
 diff --git a/imgui_extra_math.h b/imgui_extra_math.h
 index 3df615a..5b0266c 100644
 --- a/imgui_extra_math.h
@@ -95,3 +118,22 @@ index 3ca9eb3..cd293a1 100644
      {
          auto& selection = Editor->GetSelectedObjects();
          if (!selection.empty())
+diff --git a/imgui_node_editor_internal.h b/imgui_node_editor_internal.h
+index 0d018cf..9ce4907 100644
+--- a/imgui_node_editor_internal.h
++++ b/imgui_node_editor_internal.h
+@@ -118,12 +118,12 @@ struct FringeScaleScope
+     FringeScaleScope(float scale)
+         : m_LastFringeScale(ImFringeScaleRef(ImGui::GetWindowDrawList()))
+     {
+-        ImFringeScaleRef(ImGui::GetWindowDrawList()) = scale;
++        ImGui::GetWindowDrawList()->_SetPixelDensity(1.0f / scale);
+     }
+ 
+     ~FringeScaleScope()
+     {
+-        ImFringeScaleRef(ImGui::GetWindowDrawList()) = m_LastFringeScale;
++        ImGui::GetWindowDrawList()->_SetPixelDensity(1.0f / m_LastFringeScale);
+     }
+ 
+ private:

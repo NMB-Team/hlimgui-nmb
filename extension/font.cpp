@@ -10,6 +10,14 @@ HL_PRIM ImFontAtlas* HL_NAME(get_font_atlas)() {
 	return ImGui::GetIO().Fonts;
 }
 
+HL_PRIM ImFontAtlasFlags F_NAME(get_flags)(ImFontAtlas* fonts) {
+	return fonts->Flags;
+}
+
+HL_PRIM void F_NAME(set_flags)(ImFontAtlas* fonts, ImFontAtlasFlags flags) {
+	fonts->Flags = flags;
+}
+
 HL_PRIM ImFont* F_NAME(add_font)(ImFontAtlas* fonts, ImFontConfig* font_cfg) {
 	return fonts->AddFont(font_cfg);
 }
@@ -196,6 +204,8 @@ HL_PRIM vbyte* HL_NAME(imfont_get_debug_name)(ImFont* font) {
 }
 
 DEFINE_PRIM(_TFONTATLAS, get_font_atlas, _NO_ARG);
+DEFINE_FPRIM(_I32, get_flags, _NO_ARG);
+DEFINE_FPRIM(_VOID, set_flags, _I32);
 DEFINE_FPRIM(_TFONT, add_font, _STRUCT);
 DEFINE_FPRIM(_TFONT, add_font_default, _STRUCT);
 DEFINE_FPRIM(_TFONT, add_font_default_vector, _STRUCT);

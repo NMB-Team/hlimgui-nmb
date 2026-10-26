@@ -74,6 +74,22 @@ HL_PRIM void F_NAME(pop_texture_id)(ImDrawList* drawlist) {
 	drawlist->PopTexture();
 }
 
+HL_PRIM void F_NAME(push_draw_flag)(ImDrawList* drawlist, ImDrawFlags flags, bool enabled) {
+	drawlist->PushDrawFlag(flags, enabled);
+}
+
+HL_PRIM void F_NAME(pop_draw_flag)(ImDrawList* drawlist) {
+	drawlist->PopDrawFlag();
+}
+
+HL_PRIM void F_NAME(add_line_h)(ImDrawList* drawlist, float min_x, float max_x, float y, ImU32 col, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddLineH(min_x, max_x, y, col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
+}
+
+HL_PRIM void F_NAME(add_line_v)(ImDrawList* drawlist, float x, float min_y, float max_y, ImU32 col, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddLineV(x, min_y, max_y, col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
+}
+
 HL_PRIM vimvec2* F_NAME(get_clip_rect_min)(ImDrawList* drawlist) {
 	return drawlist->GetClipRectMin();
 }
@@ -82,12 +98,12 @@ HL_PRIM vimvec2* F_NAME(get_clip_rect_max)(ImDrawList* drawlist) {
 	return drawlist->GetClipRectMax();
 }
 
-HL_PRIM void F_NAME(add_line)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, ImU32 col, float* thickness) {
-	drawlist->AddLine(p1, p2, col, convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_line)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, ImU32 col, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddLine(p1, p2, col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
-HL_PRIM void F_NAME(add_rect)(ImDrawList* drawlist, vimvec2* p_min, vimvec2* p_max, ImU32 col, float* rounding, ImDrawFlags* rounding_corners, float* thickness) {
-	drawlist->AddRect(p_min, p_max, col, convertPtr(rounding, 0.0f), convertPtr(rounding_corners, 0), convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_rect)(ImDrawList* drawlist, vimvec2* p_min, vimvec2* p_max, ImU32 col, float* rounding, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddRect(p_min, p_max, col, convertPtr(rounding, 0.0f), convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_rect_filled)(ImDrawList* drawlist, vimvec2* p_min, vimvec2* p_max, ImU32 col, float* rounding, ImDrawFlags* rounding_corners) {
@@ -98,56 +114,56 @@ HL_PRIM void F_NAME(add_rect_filled_multi_color)(ImDrawList* drawlist, vimvec2* 
 	drawlist->AddRectFilledMultiColor(p_min, p_max, col_upr_left, col_upr_right, col_bot_right, col_bot_left);
 }
 
-HL_PRIM void F_NAME(add_quad)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, ImU32 col, float* thickness) {
-	drawlist->AddQuad(p1, p2, p3, p4, col, convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_quad)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, ImU32 col, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddQuad(p1, p2, p3, p4, col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_quad_filled)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, ImU32 col) {
 	drawlist->AddQuadFilled(p1, p2, p3, p4, col);
 }
 
-HL_PRIM void F_NAME(add_triangle)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, ImU32 col, float* thickness) {
-	drawlist->AddTriangle(p1, p2, p3, col, convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_triangle)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, ImU32 col, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddTriangle(p1, p2, p3, col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_triangle_filled)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, ImU32 col) {
 	drawlist->AddTriangleFilled(p1, p2, p3, col);
 }
 
-HL_PRIM void F_NAME(add_circle)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int* num_segments, float* thickness) {
-	drawlist->AddCircle(center, radius, col, convertPtr(num_segments, 0), convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_circle)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int* num_segments, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddCircle(center, radius, col, convertPtr(num_segments, 0), convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_circle_filled)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int* num_segments) {
 	drawlist->AddCircleFilled(center, radius, col, convertPtr(num_segments, 0));
 }
 
-HL_PRIM void F_NAME(add_ngon)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int num_segments, float* thickness) {
-	drawlist->AddNgon(center, radius, col, num_segments, convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(add_ngon)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int num_segments, float* thickness, ImDrawFlags* flags) {
+	drawlist->AddNgon(center, radius, col, num_segments, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_ngon_filled)(ImDrawList* drawlist, vimvec2* center, float radius, ImU32 col, int num_segments) {
 	drawlist->AddNgonFilled(center, radius, col, num_segments);
 }
 
-HL_PRIM void F_NAME(add_poly_line)(ImDrawList* drawlist, varray* points, ImU32 col, bool closed, float* thickness) {
+HL_PRIM void F_NAME(add_poly_line)(ImDrawList* drawlist, varray* points, ImU32 col, float thickness, ImDrawFlags* flags) {
 	std::vector<ImVec2> vecPoints;
 	auto hlPoints = hl_aptr(points, vimvec2*);
 	for (int i = 0; i < points->size; i++) {
 		vecPoints.push_back(hlPoints[i]);
 	}
 
-	drawlist->AddPolyline(&vecPoints[0], points->size, col, closed, convertPtr(thickness, 1.0f));
+	drawlist->AddPolyline(vecPoints.data(), points->size, col, thickness, convertPtr(flags, 0));
 }
 
-HL_PRIM void F_NAME(add_convex_poly_filled)(ImDrawList* drawlist, varray* points, ImU32 col) {
+HL_PRIM void F_NAME(add_convex_poly_filled)(ImDrawList* drawlist, varray* points, ImU32 col, ImDrawFlags* flags) {
 	std::vector<ImVec2> vecPoints;
 	auto hlPoints = hl_aptr(points, vimvec2*);
 	for (int i = 0; i < points->size; i++) {
 		vecPoints.push_back(hlPoints[i]);
 	}
 
-	drawlist->AddConvexPolyFilled(&vecPoints[0], points->size, col);
+	drawlist->AddConvexPolyFilled(vecPoints.data(), points->size, col, convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_text)(ImDrawList* drawlist, vimvec2* pos, int col, vstring* text) {
@@ -158,12 +174,12 @@ HL_PRIM void F_NAME(add_text2)(ImDrawList* drawlist, ImFont* font, float font_si
 	drawlist->AddText(font, font_size, pos, col, convertString(text), (const char*)NULL, convertPtr(wrap_width, 0.0f), cpu_fine_clip_rect == nullptr ? NULL : cpu_fine_clip_rect->v());
 }
 
-HL_PRIM void F_NAME(add_bezier_cubic)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, int col, float thickness, int* num_segments) {
-	drawlist->AddBezierCubic(p1, p2, p3, p4, col, thickness, convertPtr(num_segments, 0));
+HL_PRIM void F_NAME(add_bezier_cubic)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, vimvec2* p4, int col, float thickness, int* num_segments, ImDrawFlags* flags) {
+	drawlist->AddBezierCubic(p1, p2, p3, p4, col, thickness, convertPtr(num_segments, 0), convertPtr(flags, 0));
 }
 
-HL_PRIM void F_NAME(add_bezier_quadratic)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, int col, float thickness, int* num_segments) {
-	drawlist->AddBezierQuadratic(p1, p2, p3, col, thickness, convertPtr(num_segments, 0));
+HL_PRIM void F_NAME(add_bezier_quadratic)(ImDrawList* drawlist, vimvec2* p1, vimvec2* p2, vimvec2* p3, int col, float thickness, int* num_segments, ImDrawFlags* flags) {
+	drawlist->AddBezierQuadratic(p1, p2, p3, col, thickness, convertPtr(num_segments, 0), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(add_image)(ImDrawList* drawlist, ImTextureID user_texture_id, vimvec2* p_min, vimvec2* p_max, vimvec2* uv_min, vimvec2* uv_max, int* col) {
@@ -191,12 +207,12 @@ HL_PRIM void F_NAME(path_line_to_merge_duplicate)(ImDrawList* drawlist, vimvec2*
 	drawlist->PathLineToMergeDuplicate(pos);
 }
 
-HL_PRIM void F_NAME(path_fill_convex)(ImDrawList* drawlist, int col) {
-	drawlist->PathFillConvex(col);
+HL_PRIM void F_NAME(path_fill_convex)(ImDrawList* drawlist, int col, ImDrawFlags* flags) {
+	drawlist->PathFillConvex(col, convertPtr(flags, 0));
 }
 
-HL_PRIM void F_NAME(path_stroke)(ImDrawList* drawlist, int col, ImDrawFlags* flags, float* thickness) {
-	drawlist->PathStroke(col, convertPtr(flags, 0), convertPtr(thickness, 1.0f));
+HL_PRIM void F_NAME(path_stroke)(ImDrawList* drawlist, int col, float* thickness, ImDrawFlags* flags) {
+	drawlist->PathStroke(col, convertPtr(thickness, 1.0f), convertPtr(flags, 0));
 }
 
 HL_PRIM void F_NAME(path_arc_to)(ImDrawList* drawlist, vimvec2* center, float radius, float a_min, float a_max, int* num_segments) {
@@ -239,25 +255,29 @@ DEFINE_FPRIM(_VOID, push_clip_rect_full_screen, _NO_ARG);
 DEFINE_FPRIM(_VOID, pop_clip_rect, _NO_ARG);
 DEFINE_FPRIM(_VOID, push_texture_id, _DYN);
 DEFINE_FPRIM(_VOID, pop_texture_id, _NO_ARG);
+DEFINE_FPRIM(_VOID, push_draw_flag, _I32 _BOOL);
+DEFINE_FPRIM(_VOID, pop_draw_flag, _NO_ARG);
+DEFINE_FPRIM(_VOID, add_line_h, _F32 _F32 _F32 _I32 _REF(_F32) _REF(_I32));
+DEFINE_FPRIM(_VOID, add_line_v, _F32 _F32 _F32 _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_IMVEC2, get_clip_rect_min, _NO_ARG);
 DEFINE_FPRIM(_IMVEC2, get_clip_rect_max, _NO_ARG);
 
-DEFINE_FPRIM(_VOID, add_line, _IMVEC2 _IMVEC2 _I32 _REF(_F32));
-DEFINE_FPRIM(_VOID, add_rect, _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_I32) _REF(_F32));
+DEFINE_FPRIM(_VOID, add_line, _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_I32));
+DEFINE_FPRIM(_VOID, add_rect, _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_rect_filled, _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_rect_filled_multi_color, _IMVEC2 _IMVEC2 _I32 _I32 _I32 _I32);
-DEFINE_FPRIM(_VOID, add_quad, _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32 _REF(_F32));
+DEFINE_FPRIM(_VOID, add_quad, _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_quad_filled, _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32);
-DEFINE_FPRIM(_VOID, add_triangle, _IMVEC2 _IMVEC2 _IMVEC2 _I32 _REF(_F32));
+DEFINE_FPRIM(_VOID, add_triangle, _IMVEC2 _IMVEC2 _IMVEC2 _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_triangle_filled, _IMVEC2 _IMVEC2 _IMVEC2 _I32);
-DEFINE_FPRIM(_VOID, add_circle, _IMVEC2 _F32 _I32 _REF(_I32) _REF(_F32));
+DEFINE_FPRIM(_VOID, add_circle, _IMVEC2 _F32 _I32 _REF(_I32) _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_circle_filled, _IMVEC2 _F32 _I32 _REF(_I32));
-DEFINE_FPRIM(_VOID, add_ngon, _IMVEC2 _F32 _I32 _I32 _REF(_F32));
+DEFINE_FPRIM(_VOID, add_ngon, _IMVEC2 _F32 _I32 _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, add_ngon_filled, _IMVEC2 _F32 _I32 _I32);
-DEFINE_FPRIM(_VOID, add_poly_line, _ARR _I32 _BOOL _REF(_F32));
-DEFINE_FPRIM(_VOID, add_convex_poly_filled, _ARR _I32);
-DEFINE_FPRIM(_VOID, add_bezier_cubic, _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32 _F32 _REF(_I32));
-DEFINE_FPRIM(_VOID, add_bezier_quadratic, _IMVEC2 _IMVEC2 _IMVEC2 _I32 _F32 _REF(_I32));
+DEFINE_FPRIM(_VOID, add_poly_line, _ARR _I32 _F32 _REF(_I32));
+DEFINE_FPRIM(_VOID, add_convex_poly_filled, _ARR _I32 _REF(_I32));
+DEFINE_FPRIM(_VOID, add_bezier_cubic, _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32 _F32 _REF(_I32) _REF(_I32));
+DEFINE_FPRIM(_VOID, add_bezier_quadratic, _IMVEC2 _IMVEC2 _IMVEC2 _I32 _F32 _REF(_I32) _REF(_I32));
 //
 DEFINE_FPRIM(_VOID, add_text, _IMVEC2 _I32 _STRING);
 DEFINE_FPRIM(_VOID, add_text2, _ABSTRACT(imfont) _F32 _IMVEC2 _I32 _STRING _REF(_F32) _IMVEC4);
@@ -269,8 +289,8 @@ DEFINE_FPRIM(_VOID, add_image_rounded, _DYN _IMVEC2 _IMVEC2 _IMVEC2 _IMVEC2 _I32
 DEFINE_FPRIM(_VOID, path_clear, _NO_ARG);
 DEFINE_FPRIM(_VOID, path_line_to, _IMVEC2);
 DEFINE_FPRIM(_VOID, path_line_to_merge_duplicate, _IMVEC2);
-DEFINE_FPRIM(_VOID, path_fill_convex, _I32);
-DEFINE_FPRIM(_VOID, path_stroke, _I32 _REF(_I32) _REF(_F32));
+DEFINE_FPRIM(_VOID, path_fill_convex, _I32 _REF(_I32));
+DEFINE_FPRIM(_VOID, path_stroke, _I32 _REF(_F32) _REF(_I32));
 DEFINE_FPRIM(_VOID, path_arc_to, _IMVEC2 _F32 _F32 _F32 _REF(_I32));
 DEFINE_FPRIM(_VOID, path_arc_to_fast, _IMVEC2 _F32 _I32 _I32);
 DEFINE_FPRIM(_VOID, path_bezier_cubic_curve_to, _IMVEC2 _IMVEC2 _IMVEC2 _REF(_I32));

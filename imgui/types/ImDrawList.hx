@@ -47,6 +47,23 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	public function popTextureId() {}
 
 	/**
+		Changes drawing defaults for this draw list until popDrawFlag().
+	**/
+	public function pushDrawFlag(flags:ImDrawFlags, enabled:Bool) {}
+
+	public function popDrawFlag() {}
+
+	/**
+		Draws a horizontal line using an inside stroke by default.
+	**/
+	public function addLineH(minX:Single, maxX:Single, y:Single, col:ImU32, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
+
+	/**
+		Draws a vertical line using an inside stroke by default.
+	**/
+	public function addLineV(x:Single, minY:Single, maxY:Single, col:ImU32, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
+
+	/**
 		Returns clip rectangle min.
 	**/
 	public function getClipRectMin():ImVec2 {
@@ -63,12 +80,12 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds line.
 	**/
-	public function addLine(p1:ImVec2, p2:ImVec2, col:ImU32, thickness:Single = 1.0) {}
+	public function addLine(p1:ImVec2, p2:ImVec2, col:ImU32, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		A: upper-left, b: lower-right (== upper-left + size)
 	**/
-	public function addRect(pMin:ImVec2, pMax:ImVec2, col:ImU32, rounding:Single = 0.0, roundingCorners:ImDrawFlags = ImDrawFlags.None, thickness:Single = 1.0) {}
+	public function addRect(pMin:ImVec2, pMax:ImVec2, col:ImU32, rounding:Single = 0.0, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		A: upper-left, b: lower-right (== upper-left + size)
@@ -83,7 +100,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds quad.
 	**/
-	public function addQuad(p1:ImVec2, p2:ImVec2, p3:ImVec2, p4:ImVec2, col:ImU32, thickness:Single = 1.0) {}
+	public function addQuad(p1:ImVec2, p2:ImVec2, p3:ImVec2, p4:ImVec2, col:ImU32, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds quad filled.
@@ -93,7 +110,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds triangle.
 	**/
-	public function addTriangle(p1:ImVec2, p2:ImVec2, p3:ImVec2, col:ImU32, thickness:Single = 1.0) {}
+	public function addTriangle(p1:ImVec2, p2:ImVec2, p3:ImVec2, col:ImU32, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds triangle filled.
@@ -103,7 +120,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds circle.
 	**/
-	public function addCircle(center:ImVec2, radius:Single, col:ImU32, num_segments:Int = 0, thickness:Single = 1.0) {}
+	public function addCircle(center:ImVec2, radius:Single, col:ImU32, num_segments:Int = 0, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds circle filled.
@@ -113,7 +130,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds ngon.
 	**/
-	public function addNgon(center:ImVec2, radius:Single, col:ImU32, num_segments:Int, thickness:Single = 1.0) {}
+	public function addNgon(center:ImVec2, radius:Single, col:ImU32, num_segments:Int, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds ngon filled.
@@ -123,22 +140,22 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds poly line.
 	**/
-	public function addPolyLine(points:hl.NativeArray<ImVec2>, col:ImU32, closed:Bool, thickness:Single = 1.0) {}
+	public function addPolyLine(points:hl.NativeArray<ImVec2>, col:ImU32, thickness:Single, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds convex poly filled.
 	**/
-	public function addConvexPolyFilled(points:hl.NativeArray<ImVec2>, col:ImU32) {}
+	public function addConvexPolyFilled(points:hl.NativeArray<ImVec2>, col:ImU32, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Cubic Bezier (4 control points)
 	**/
-	public function addBezierCubic(p1:ImVec2, p2:ImVec2, p3:ImVec2, p4:ImVec2, col:ImU32, thickness:Single, num_segments:Int = 0) {}
+	public function addBezierCubic(p1:ImVec2, p2:ImVec2, p3:ImVec2, p4:ImVec2, col:ImU32, thickness:Single, num_segments:Int = 0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Quadratic Bezier (3 control points)
 	**/
-	public function addBezierQuadratic(p1:ImVec2, p2:ImVec2, p3:ImVec2, col:ImU32, thickness:Single, num_segments:Int = 0) {}
+	public function addBezierQuadratic(p1:ImVec2, p2:ImVec2, p3:ImVec2, col:ImU32, thickness:Single, num_segments:Int = 0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Add string (each character of the UTF-8 string are added)
@@ -163,7 +180,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds image rounded.
 	**/
-	public function addImageRounded(textureRef:ImTextureRef, pMin:ImVec2, pMax:ImVec2, uvMin:ImVec2, uvMax:ImVec2, col:Int, rounding:Single, roundingCorners:ImDrawFlags = RoundCornersDefault_) {}
+	public function addImageRounded(textureRef:ImTextureRef, pMin:ImVec2, pMax:ImVec2, uvMin:ImVec2, uvMax:ImVec2, col:Int, rounding:Single, roundingCorners:ImDrawFlags = RoundAll) {}
 
 	@:deprecated("Use addBezuerrCubic")
 
@@ -194,12 +211,12 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Fills the current path as a convex polygon.
 	**/
-	public function pathFillConvex(col:Int) {}
+	public function pathFillConvex(col:Int, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
-		OBSOLETED in 1.92.8: NEW FUNCTION SIGNATURE HAS 'thickness' AND 'flags' SWAPPED.
+		Strokes the current path with the specified thickness and drawing flags.
 	**/
-	public function pathStroke(col:Int, flags:ImDrawFlags = 0, thickness:Single = 1.0) {}
+	public function pathStroke(col:Int, thickness:Single = 1.0, flags:ImDrawFlags = ImDrawFlags.None) {}
 
 	/**
 		Adds an arc to the current draw path.

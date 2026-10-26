@@ -230,6 +230,26 @@ abstract ImFontAtlas(ImFontAtlasPtr) from ImFontAtlasPtr to ImFontAtlasPtr {
 	}
 
 	/**
+		Atlas build options. Set before the atlas is built.
+	**/
+	public var flags(get, set):ImFontAtlasFlags;
+
+	private inline function get_flags():ImFontAtlasFlags {
+		return getFlags();
+	}
+
+	private inline function set_flags(value:ImFontAtlasFlags):ImFontAtlasFlags {
+		setFlags(value);
+		return value;
+	}
+
+	private function getFlags():ImFontAtlasFlags {
+		return ImFontAtlasFlags.None;
+	}
+
+	private function setFlags(value:ImFontAtlasFlags) {}
+
+	/**
 		Adds font.
 	**/
 	public function addFont(config:ImFontConfig):ImFont {

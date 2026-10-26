@@ -70,7 +70,7 @@ option(HLIMGUI_RENDER_BENCHMARK "Measure native ImGui render-data preparation ti
 
 if( NODE_EDITOR )
 	set(IMGUI_NODE_EDITOR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/imgui-node-editor")
-	set(IMGUI_NODE_EDITOR_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/patches/imgui-node-editor-imgui-1.92.9b.patch")
+	set(IMGUI_NODE_EDITOR_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/patches/imgui-node-editor-imgui-1.93.0.patch")
 	find_package(Git QUIET)
 
 	if(NOT GIT_FOUND)
