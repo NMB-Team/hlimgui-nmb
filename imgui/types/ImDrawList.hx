@@ -180,7 +180,7 @@ abstract ImDrawList(ImDrawListPtr) from ImDrawListPtr to ImDrawListPtr {
 	/**
 		Adds image rounded.
 	**/
-	public function addImageRounded(textureRef:ImTextureRef, pMin:ImVec2, pMax:ImVec2, uvMin:ImVec2, uvMax:ImVec2, col:Int, rounding:Single, roundingCorners:ImDrawFlags = RoundAll) {}
+	public function addImageRounded(textureRef:ImTextureRef, pMin:ImVec2, pMax:ImVec2, uvMin:ImVec2, uvMax:ImVec2, col:Int, rounding:Single, roundingCorners:ImDrawFlags = ImDrawFlags.None) {}
 
 	@:deprecated("Use addBezuerrCubic")
 
